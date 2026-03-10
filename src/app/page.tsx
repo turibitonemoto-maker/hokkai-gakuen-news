@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -30,10 +31,6 @@ import { signOut } from "firebase/auth";
 
 type ViewMode = "overview" | "articles" | "hero" | "ads" | "president";
 
-/**
- * 管理用ダッシュボード
- * サイドバーナビゲーションを採用し、モジュールごとに表示を切り替えます。
- */
 export default function Home() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
@@ -81,7 +78,6 @@ export default function Home() {
     );
   }
 
-  // ログインしていない場合はログインフォームを表示
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#1e293b] p-4">
@@ -94,7 +90,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
-      {/* サイドバー */}
       <aside 
         className={cn(
           "bg-[#1e293b] text-slate-300 transition-all duration-300 flex flex-col fixed inset-y-0 z-50",
@@ -144,7 +139,6 @@ export default function Home() {
         </div>
       </aside>
 
-      {/* メインコンテンツ */}
       <div 
         className={cn(
           "flex-1 flex flex-col transition-all duration-300",
@@ -188,14 +182,12 @@ export default function Home() {
   );
 }
 
-/**
- * 概要表示用コンポーネント（ダッシュボードのトップ）
- */
 function DashboardOverview({ onNavigate }: { onNavigate: (view: ViewMode) => void }) {
   const [currentTime, setCurrentTime] = useState<string | null>(null);
   const firestore = useFirestore();
 
   useEffect(() => {
+    // クライアントサイドでのみ実行することでハイドレーションエラーを防止
     setCurrentTime(new Date().toLocaleString('ja-JP'));
     const timer = setInterval(() => {
       setCurrentTime(new Date().toLocaleString('ja-JP'));
@@ -203,7 +195,6 @@ function DashboardOverview({ onNavigate }: { onNavigate: (view: ViewMode) => voi
     return () => clearInterval(timer);
   }, []);
 
-  // 実データの取得
   const articlesQuery = useMemoFirebase(() => firestore ? collection(firestore, "articles") : null, [firestore]);
   const adsQuery = useMemoFirebase(() => firestore ? collection(firestore, "ads") : null, [firestore]);
   const heroQuery = useMemoFirebase(() => firestore ? collection(firestore, "hero-images") : null, [firestore]);

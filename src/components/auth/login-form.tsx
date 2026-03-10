@@ -3,7 +3,7 @@
 
 import * as React from "react";
 import { useState, useEffect } from "react";
-import { Lock, Mail, ShieldCheck, Loader2, AlertCircle, Info, CheckCircle2 } from "lucide-react";
+import { Lock, Mail, ShieldCheck, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -28,7 +28,6 @@ import {
 } from "@/components/ui/form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAuth, initiateEmailSignIn, errorEmitter } from "@/firebase";
-import { useToast } from "@/hooks/use-toast";
 import { AUTHORIZED_EMAILS } from "@/lib/auth-constants";
 
 const loginSchema = z.object({
@@ -40,7 +39,6 @@ export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const auth = useAuth();
-  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -56,14 +54,13 @@ export function LoginForm() {
       
       let errorMessage = "ログインに失敗しました。";
       
-      if (error.message.includes("auth/invalid-credential")) {
-        errorMessage = "認証に失敗しました。以下の2点を確認してください：\n1. パスワードが正しいか\n2. Firebaseコンソールの「Users」にこのメールアドレスを登録済みか";
-      } else if (error.message.includes("auth/user-not-found")) {
-        errorMessage = "ユーザーが見つかりません。Firebaseコンソールでユーザーを作成してください。";
-      } else if (error.message.includes("auth/wrong-password")) {
-        errorMessage = "パスワードが間違っています。";
+      // Firebaseの具体的なエラーコードに基づいたメッセージ
+      if (error.message.includes("auth/invalid-credential") || error.message.includes("auth/user-not-found") || error.message.includes("auth/wrong-password")) {
+        errorMessage = "認証に失敗しました。以下の点を確認してください：\n1. パスワードが正しいか\n2. Firebaseコンソールの「Users」にこのメールアドレスを登録済みか\n3. プロバイダー（メール/パスワード）が有効か";
+      } else if (error.message.includes("auth/too-many-requests")) {
+        errorMessage = "短時間に何度も失敗したため、一時的にロックされています。少し時間を置いてから再試行してください。";
       } else {
-        errorMessage = `エラー: ${error.message}`;
+        errorMessage = `エラーが発生しました: ${error.message}`;
       }
 
       setServerError(errorMessage);
@@ -82,14 +79,15 @@ export function LoginForm() {
 
     if (!isAuthorized) {
       setIsLoading(false);
-      setServerError("このメールアドレスは管理システムへのアクセスが許可されていません。lib/auth-constants.ts を確認してください。");
+      setServerError("このメールアドレスは管理システムへのアクセスが許可されていません。lib/auth-constants.ts に登録されているか確認してください。");
       return;
     }
 
+    // ログイン処理を開始
     initiateEmailSignIn(auth, values.email, values.password);
     
     // タイムアウトによるisLoading解除（万が一Firebaseから応答がない場合のため）
-    setTimeout(() => setIsLoading(false), 10000);
+    setTimeout(() => setIsLoading(false), 5000);
   }
 
   return (
