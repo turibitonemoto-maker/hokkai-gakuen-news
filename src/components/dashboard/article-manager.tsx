@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -83,7 +82,7 @@ export function ArticleManager() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800">記事・note管理</h2>
+          <h2 className="text-2xl font-bold text-slate-800">記事管理</h2>
           <p className="text-sm text-slate-500">学内記事とnote連携記事を一括で管理します。</p>
         </div>
         <Button onClick={handleAdd} className="flex items-center gap-2">

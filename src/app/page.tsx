@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -36,7 +35,7 @@ export default function Home() {
 
   const menuItems = [
     { id: "overview", label: "ダッシュボード", icon: LayoutDashboard },
-    { id: "articles", label: "記事・note管理", icon: FileText },
+    { id: "articles", label: "記事管理", icon: FileText },
     { id: "hero", label: "ヒーロー画像", icon: ImageIcon },
     { id: "ads", label: "広告管理", icon: Megaphone },
     { id: "president", label: "会長挨拶設定", icon: UserRound },
