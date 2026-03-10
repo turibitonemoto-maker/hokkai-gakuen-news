@@ -3,7 +3,7 @@
 
 import * as React from "react";
 import { useState, useEffect } from "react";
-import { Lock, Mail, ShieldCheck, Loader2 } from "lucide-react";
+import { Lock, Mail, ShieldCheck, Loader2, AlertCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -26,6 +26,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAuth, initiateEmailSignIn, errorEmitter } from "@/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { AUTHORIZED_EMAILS } from "@/lib/auth-constants";
@@ -37,6 +38,7 @@ const loginSchema = z.object({
 
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
   const auth = useAuth();
   const { toast } = useToast();
 
@@ -51,19 +53,21 @@ export function LoginForm() {
   useEffect(() => {
     const handleAuthError = (error: Error) => {
       setIsLoading(false);
+      console.error("Login component caught error:", error);
       
       let errorMessage = "ログインに失敗しました。";
-      // Firebaseの最新仕様では auth/invalid-credential に集約されることが多いですが、
-      // 互換性のために複数のコードをチェックします
-      if (
-        error.message.includes("auth/invalid-credential") || 
-        error.message.includes("auth/user-not-found") || 
-        error.message.includes("auth/wrong-password") ||
-        error.message.includes("auth/invalid-email")
-      ) {
-        errorMessage = "メールアドレスまたはパスワードが正しくありません。";
+      
+      if (error.message.includes("auth/invalid-credential")) {
+        errorMessage = "メールアドレスまたはパスワードが正しくありません。または、ユーザーがFirebaseに登録されていません。";
+      } else if (error.message.includes("auth/user-not-found")) {
+        errorMessage = "このユーザーは見つかりませんでした。";
+      } else if (error.message.includes("auth/wrong-password")) {
+        errorMessage = "パスワードが正しくありません。";
+      } else if (error.message.includes("auth/operation-not-allowed")) {
+        errorMessage = "Firebaseコンソールで「メール/パスワード認証」が有効になっていません。";
       }
 
+      setServerError(errorMessage);
       toast({
         variant: "destructive",
         title: "認証エラー",
@@ -77,14 +81,16 @@ export function LoginForm() {
 
   async function onSubmit(values: z.infer<typeof loginSchema>) {
     setIsLoading(true);
+    setServerError(null);
 
     // 許可されたメールアドレスリストを事前にチェック
     if (!AUTHORIZED_EMAILS.includes(values.email)) {
       setIsLoading(false);
+      setServerError(`アクセス権限がありません。許可されたメールアドレスを使用してください。`);
       toast({
         variant: "destructive",
-        title: "アクセス権限がありません",
-        description: "入力されたメールアドレスは管理者として登録されていません。",
+        title: "アクセス権限エラー",
+        description: "入力されたメールアドレスは管理者リストに含まれていません。",
       });
       return;
     }
@@ -93,7 +99,7 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="w-full max-w-md shadow-2xl border-none bg-white/80 backdrop-blur-sm">
+    <Card className="w-full max-w-md shadow-2xl border-none bg-white/80 backdrop-blur-sm animate-in fade-in zoom-in duration-300">
       <CardHeader className="space-y-1 pb-6 text-center">
         <div className="flex justify-center mb-4">
           <div className="bg-primary p-3 rounded-2xl text-white shadow-lg">
@@ -108,6 +114,16 @@ export function LoginForm() {
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
+        {serverError && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>ログインエラー</AlertTitle>
+            <AlertDescription className="text-xs">
+              {serverError}
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
@@ -120,7 +136,7 @@ export function LoginForm() {
                     <div className="relative group">
                       <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
                       <Input
-                        placeholder="name@hokkai-shinbun.jp"
+                        placeholder="admin@hokkai-shinbun.jp"
                         className="pl-10 h-11 border-slate-200 focus:border-primary focus:ring-primary transition-all duration-200"
                         {...field}
                       />
@@ -170,8 +186,10 @@ export function LoginForm() {
         </Form>
       </CardContent>
       <CardFooter className="flex flex-col gap-4 text-center pb-8">
-        <div className="text-xs text-muted-foreground">
-          アクセスにお困りですか？ 管理者へお問い合わせください。
+        <div className="text-xs text-muted-foreground bg-slate-50 p-3 rounded-lg border border-slate-100">
+          <p className="font-bold mb-1">管理者へのヒント:</p>
+          <p>Firebase Consoleでユーザーを作成し、以下のいずれかのメールを使用してください:</p>
+          <code className="block mt-1 text-primary">admin@hokkai-shinbun.jp</code>
         </div>
       </CardFooter>
     </Card>
