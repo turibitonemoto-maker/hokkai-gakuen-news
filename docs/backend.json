@@ -73,23 +73,23 @@
   },
   "firestore": {
     "/articles/{articleId}": {
-      "schema": "#/backend/entities/Article",
+      "schema": { "$ref": "#/backend/entities/Article" },
       "description": "記事一覧"
     },
     "/hero-images/{heroId}": {
-      "schema": "#/backend/entities/HeroImage",
+      "schema": { "$ref": "#/backend/entities/HeroImage" },
       "description": "トップ背景用画像"
     },
     "/ads/{adId}": {
-      "schema": "#/backend/entities/Ad",
+      "schema": { "$ref": "#/backend/entities/Ad" },
       "description": "広告バナー"
     },
     "/inquiries/{inquiryId}": {
-      "schema": "#/backend/entities/Inquiry",
+      "schema": { "$ref": "#/backend/entities/Inquiry" },
       "description": "お問い合わせ一覧"
     },
     "/user_profiles/{userId}": {
-      "schema": "#/backend/entities/UserProfile",
+      "schema": { "$ref": "#/backend/entities/UserProfile" },
       "description": "管理者プロファイル"
     }
   }
