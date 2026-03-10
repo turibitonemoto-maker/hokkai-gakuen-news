@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -42,11 +43,17 @@ export function AdForm({ ad, onSuccess }: AdFormProps) {
 
     if (ad?.id) {
       const docRef = doc(firestore, "ads", ad.id);
+      // 既存の閲覧数を保持するように更新
       setDocumentNonBlocking(docRef, { ...values, updatedAt: serverTimestamp() }, { merge: true });
       toast({ title: "更新しました", description: "広告情報を更新しました。" });
     } else {
       const colRef = collection(firestore, "ads");
-      addDocumentNonBlocking(colRef, { ...values, createdAt: serverTimestamp() });
+      // 新規作成時はクリック数を0で初期化
+      addDocumentNonBlocking(colRef, { 
+        ...values, 
+        clickCount: 0,
+        createdAt: serverTimestamp() 
+      });
       toast({ title: "追加しました", description: "新しい広告を登録しました。" });
     }
     onSuccess();

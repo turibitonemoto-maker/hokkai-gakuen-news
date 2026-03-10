@@ -39,7 +39,8 @@
         "id": { "type": "string" },
         "imageUrl": { "type": "string" },
         "linkUrl": { "type": "string" },
-        "title": { "type": "string" }
+        "title": { "type": "string" },
+        "clickCount": { "type": "number", "description": "閲覧数（クリック数）" }
       }
     },
     "PresidentMessage": {
