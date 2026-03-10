@@ -4,5 +4,6 @@ export const AUTHORIZED_EMAILS = [
   "editor@hokkai-shinbun.jp",
   "admin@example.com",
   "test@test.com",
-  "user@example.com"
+  "user@example.com",
+  "test@example.com"
 ];

@@ -59,11 +59,15 @@ export function LoginForm() {
       
       // Firebaseの具体的なエラーコードに基づいたメッセージ
       if (error.message.includes("auth/invalid-credential") || error.message.includes("auth/user-not-found") || error.message.includes("auth/wrong-password")) {
-        errorMessage = "メールアドレスまたはパスワードが正しくありません。Firebaseコンソールでユーザーが正しく作成されているか確認してください。";
+        errorMessage = "メールアドレスまたはパスワードが正しくありません。Firebaseコンソールの 'Users' タブで、このメールアドレスが登録されているか、パスワードが正しいか確認してください。";
       } else if (error.message.includes("auth/operation-not-allowed")) {
-        errorMessage = "Firebaseコンソールで「メール/パスワード」プロバイダーが有効になっていません。";
+        errorMessage = "Firebaseコンソールで「メール/パスワード」ログイン方法が有効になっていません。";
       } else if (error.message.includes("auth/network-request-failed")) {
         errorMessage = "ネットワーク接続に失敗しました。";
+      } else if (error.message.includes("auth/too-many-requests")) {
+        errorMessage = "短時間に何度も失敗したため、一時的にロックされています。少し時間を置いてから再試行してください。";
+      } else {
+        errorMessage = `エラー: ${error.message}`;
       }
 
       setServerError(errorMessage);
@@ -82,10 +86,14 @@ export function LoginForm() {
     setIsLoading(true);
     setServerError(null);
 
+    // 大文字小文字を区別せずにチェック
+    const inputEmail = values.email.toLowerCase();
+    const isAuthorized = AUTHORIZED_EMAILS.some(email => email.toLowerCase() === inputEmail);
+
     // 1. コード内の許可リスト（Whitelist）チェック
-    if (!AUTHORIZED_EMAILS.includes(values.email)) {
+    if (!isAuthorized) {
       setIsLoading(false);
-      const msg = `アクセス権限がありません。src/lib/auth-constants.ts に登録されているメールアドレスを使用してください。`;
+      const msg = `アクセス権限がありません。以下のリストに登録されているメールアドレスを使用してください。`;
       setServerError(msg);
       toast({
         variant: "destructive",
@@ -189,16 +197,17 @@ export function LoginForm() {
       <CardFooter className="flex flex-col gap-4 text-center pb-8">
         <div className="text-xs text-muted-foreground bg-slate-50 p-4 rounded-lg border border-slate-100 text-left w-full space-y-2">
           <p className="font-bold flex items-center gap-1 text-slate-800">
-            <Info className="h-3 w-3" /> ログインできない場合:
+            <Info className="h-3 w-3" /> 確認項目:
           </p>
-          <ol className="list-decimal list-inside space-y-1">
-            <li>Firebaseコンソールで<strong>Authentication</strong>を有効化</li>
-            <li>「Sign-in method」で<strong>メール/パスワード</strong>を有効化</li>
-            <li>「Users」で以下のメールを<strong>パスワード付きで登録</strong></li>
-          </ol>
-          <code className="block mt-2 p-1 bg-slate-200 rounded text-primary font-mono text-center">
-            admin@hokkai-shinbun.jp
-          </code>
+          <ul className="list-disc list-inside space-y-1 text-[11px]">
+            <li>以下のメールアドレスが <strong>Firebase Authentication (Users)</strong> に登録されていますか？</li>
+            <li>Firebase側で <strong>Email/Password 認証</strong> が有効になっていますか？</li>
+            <li>パスワードは大文字・小文字・記号を含め正確ですか？</li>
+          </ul>
+          <div className="mt-2 p-2 bg-slate-200 rounded text-[10px] font-mono break-all">
+            <strong>許可リスト:</strong><br />
+            {AUTHORIZED_EMAILS.join(", ")}
+          </div>
         </div>
       </CardFooter>
     </Card>
