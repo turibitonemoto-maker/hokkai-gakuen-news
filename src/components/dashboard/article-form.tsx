@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { FileText, Share2 } from "lucide-react";
+import { FileText, Share2, Tag } from "lucide-react";
 
 const articleSchema = z.object({
   title: z.string().min(1, "タイトルを入力してください"),
@@ -22,6 +22,7 @@ const articleSchema = z.object({
   content: z.string().optional(),
   noteUrl: z.string().url("有効なURLを入力してください").optional().or(z.literal("")),
   categoryId: z.enum(["Campus", "Event", "Interview", "Sports", "Column", "Opinion"]),
+  tagsInput: z.string().optional(), // 入力用
   publishDate: z.string(),
   mainImageUrl: z.string().url("有効なURLを入力してください").optional().or(z.literal("")),
   isPublished: z.boolean().default(false),
@@ -52,6 +53,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       content: article?.content || "",
       noteUrl: article?.noteUrl || "",
       categoryId: article?.categoryId || "Campus",
+      tagsInput: article?.tags?.join(", ") || "",
       publishDate: article?.publishDate || new Date().toISOString().split("T")[0],
       mainImageUrl: article?.mainImageUrl || "",
       isPublished: article?.isPublished || false,
@@ -63,8 +65,15 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
   function onSubmit(values: ArticleFormValues) {
     if (!firestore) return;
 
+    // タグを配列に変換
+    const tags = values.tagsInput 
+      ? values.tagsInput.split(",").map(t => t.trim()).filter(t => t !== "") 
+      : [];
+
+    const { tagsInput, ...rest } = values;
     const data = {
-      ...values,
+      ...rest,
+      tags,
       updatedAt: serverTimestamp(),
     };
 
@@ -163,6 +172,26 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                 <FormControl>
                   <Input type="date" {...field} />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="tagsInput"
+            render={({ field }) => (
+              <FormItem className="md:col-span-2">
+                <FormLabel className="flex items-center gap-2">
+                  <Tag className="h-4 w-4" />
+                  タグ（カンマ区切り）
+                </FormLabel>
+                <FormControl>
+                  <Input placeholder="例: 新入生, サークル, 特集" {...field} />
+                </FormControl>
+                <FormDescription>
+                  複数のタグを設定する場合はカンマ（ , ）で区切ってください。
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}

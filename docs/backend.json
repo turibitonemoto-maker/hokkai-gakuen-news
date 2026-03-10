@@ -20,6 +20,11 @@
           "enum": ["Campus", "Event", "Interview", "Sports", "Column", "Opinion"],
           "description": "記事のカテゴリー"
         },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "検索や分類用のタグ"
+        },
         "publishDate": { "type": "string", "format": "date-time", "description": "公開日" },
         "mainImageUrl": { "type": "string", "description": "メイン画像のURL" },
         "isPublished": { "type": "boolean", "description": "公開フラグ" }

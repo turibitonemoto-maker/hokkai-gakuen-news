@@ -1,10 +1,11 @@
+
 "use client";
 
 import { useState } from "react";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, doc, orderBy, query } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Eye, EyeOff, Loader2, AlertTriangle, FileText, Share2, ExternalLink } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, Loader2, AlertTriangle, FileText, Share2, ExternalLink, Tag } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -83,7 +84,7 @@ export function ArticleManager() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">記事管理</h2>
-          <p className="text-sm text-slate-500">学内記事とnote連携記事を一括で管理します。</p>
+          <p className="text-sm text-slate-500">学内記事とnote連携記事をタグやカテゴリーで整理・管理します。</p>
         </div>
         <Button onClick={handleAdd} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
@@ -104,7 +105,7 @@ export function ArticleManager() {
                   <TableHead>タイプ</TableHead>
                   <TableHead>ステータス</TableHead>
                   <TableHead>タイトル</TableHead>
-                  <TableHead>カテゴリー</TableHead>
+                  <TableHead>タグ / カテゴリー</TableHead>
                   <TableHead>公開日</TableHead>
                   <TableHead className="text-right">操作</TableHead>
                 </TableRow>
@@ -134,7 +135,7 @@ export function ArticleManager() {
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell className="font-medium max-w-md">
+                    <TableCell className="font-medium max-w-[300px]">
                       <div className="flex flex-col">
                         <span className="truncate">{article.title}</span>
                         {article.articleType === "Note" && article.noteUrl && (
@@ -145,9 +146,18 @@ export function ArticleManager() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{article.categoryId}</Badge>
+                      <div className="flex flex-col gap-1.5">
+                        <Badge variant="outline" className="w-fit">{article.categoryId}</Badge>
+                        <div className="flex flex-wrap gap-1">
+                          {article.tags?.map((tag: string, i: number) => (
+                            <Badge key={i} variant="secondary" className="text-[9px] px-1.5 py-0 h-4 flex items-center gap-0.5">
+                              <Tag className="h-2 w-2" /> {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
                     </TableCell>
-                    <TableCell className="text-sm">
+                    <TableCell className="text-sm whitespace-nowrap">
                       {new Date(article.publishDate).toLocaleDateString("ja-JP")}
                     </TableCell>
                     <TableCell className="text-right">
