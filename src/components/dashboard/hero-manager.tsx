@@ -58,7 +58,7 @@ export function HeroManager() {
               <div className="relative h-48 bg-slate-200">
                 <Image 
                   src={image.imageUrl} 
-                  alt={image.title} 
+                  alt={image.title || "ヒーロー画像"} 
                   fill 
                   className="object-cover"
                 />
@@ -69,7 +69,7 @@ export function HeroManager() {
                 </div>
               </div>
               <CardContent className="p-4">
-                <p className="font-medium truncate">{image.title}</p>
+                <p className="font-medium truncate">{image.title || "無題の画像"}</p>
               </CardContent>
             </Card>
           ))}

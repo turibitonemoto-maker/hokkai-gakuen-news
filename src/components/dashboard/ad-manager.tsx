@@ -57,14 +57,14 @@ export function AdManager() {
               <div className="relative h-32 bg-slate-100">
                 <Image 
                   src={ad.imageUrl} 
-                  alt={ad.title} 
+                  alt={ad.title || "広告バナー"} 
                   fill 
                   className="object-contain p-2"
                 />
               </div>
               <CardContent className="p-4 flex items-center justify-between">
                 <div className="truncate mr-4">
-                  <p className="font-medium truncate">{ad.title}</p>
+                  <p className="font-medium truncate">{ad.title || "無題の広告"}</p>
                   <p className="text-xs text-slate-500 truncate flex items-center">
                     <ExternalLink className="h-3 w-3 mr-1" /> {ad.linkUrl}
                   </p>
