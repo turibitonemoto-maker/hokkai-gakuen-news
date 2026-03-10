@@ -2,9 +2,20 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // 開発用：ログインなしで全てのコレクションを読み書き可能に設定
-    // ※後ほどログインシステムを統合する際に元のルールに戻します
+    // 開発・管理用：ログインなしで全てのコレクションを読み書き可能に設定
+    // サイトの構築を優先するため、一時的に全開放します
     match /{path=**} {
+      allow read, write: if true;
+    }
+    
+    // 特定のパスを明示的に指定（念のため）
+    match /articles/{articleId} {
+      allow read, write: if true;
+    }
+    match /hero-images/{heroId} {
+      allow read, write: if true;
+    }
+    match /ads/{adId} {
       allow read, write: if true;
     }
   }
