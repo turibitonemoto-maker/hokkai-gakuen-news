@@ -1,15 +1,18 @@
+
 "use client";
 
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2, Loader2, ExternalLink } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import Image from "next/image";
+import { useToast } from "@/hooks/use-toast";
 
 export function AdManager() {
   const firestore = useFirestore();
+  const { toast } = useToast();
 
   const adsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -26,13 +29,21 @@ export function AdManager() {
     if (title && imageUrl && linkUrl && firestore) {
       const colRef = collection(firestore, "ads");
       addDocumentNonBlocking(colRef, { title, imageUrl, linkUrl });
+      toast({
+        title: "追加しました",
+        description: "広告を追加しました。",
+      });
     }
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("この広告を削除しますか？") && firestore) {
+  const handleDelete = (id: string, title: string) => {
+    if (confirm(`広告「${title}」を削除しますか？`) && firestore) {
       const docRef = doc(firestore, "ads", id);
       deleteDocumentNonBlocking(docRef);
+      toast({
+        title: "削除しました",
+        description: "広告を削除しました。",
+      });
     }
   };
 
@@ -69,7 +80,7 @@ export function AdManager() {
                     <ExternalLink className="h-3 w-3 mr-1" /> {ad.linkUrl}
                   </p>
                 </div>
-                <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(ad.id)}>
+                <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(ad.id, ad.title)}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </CardContent>

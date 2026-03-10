@@ -1,15 +1,18 @@
+
 "use client";
 
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Loader2, Image as ImageIcon } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Plus, Trash2, Loader2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import Image from "next/image";
+import { useToast } from "@/hooks/use-toast";
 
 export function HeroManager() {
   const firestore = useFirestore();
+  const { toast } = useToast();
 
   const heroQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -27,6 +30,10 @@ export function HeroManager() {
         title: "新しい背景",
         order: (heroImages?.length || 0) + 1
       });
+      toast({
+        title: "追加しました",
+        description: "ヒーロー画像を追加しました。",
+      });
     }
   };
 
@@ -34,6 +41,10 @@ export function HeroManager() {
     if (confirm("この画像を削除しますか？") && firestore) {
       const docRef = doc(firestore, "hero-images", id);
       deleteDocumentNonBlocking(docRef);
+      toast({
+        title: "削除しました",
+        description: "ヒーロー画像を削除しました。",
+      });
     }
   };
 
@@ -58,7 +69,7 @@ export function HeroManager() {
               <div className="relative h-48 bg-slate-200">
                 <Image 
                   src={image.imageUrl} 
-                  alt={image.title || "ヒーロー画像"} 
+                  alt={image.title || "背景画像"} 
                   fill 
                   className="object-cover"
                 />

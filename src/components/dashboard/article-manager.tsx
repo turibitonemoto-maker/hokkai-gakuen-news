@@ -1,8 +1,9 @@
+
 "use client";
 
 import { useState } from "react";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, deleteDoc, doc, serverTimestamp } from "firebase/firestore";
+import { collection, doc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil, Trash2, Eye, EyeOff, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,11 +11,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { ArticleForm } from "./article-form";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { useToast } from "@/hooks/use-toast";
 
 export function ArticleManager() {
   const [isEditing, setIsEditing] = useState(false);
   const [currentArticle, setCurrentArticle] = useState<any>(null);
   const firestore = useFirestore();
+  const { toast } = useToast();
 
   const articlesQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -33,10 +36,15 @@ export function ArticleManager() {
     setIsEditing(true);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("この記事を削除してもよろしいですか？")) {
+  const handleDelete = (id: string, title: string) => {
+    if (confirm(`記事「${title}」を削除してもよろしいですか？`)) {
+      if (!firestore) return;
       const docRef = doc(firestore, "articles", id);
       deleteDocumentNonBlocking(docRef);
+      toast({
+        title: "削除しました",
+        description: "記事を削除しました。",
+      });
     }
   };
 
@@ -112,7 +120,7 @@ export function ArticleManager() {
                         <Button variant="outline" size="icon" onClick={() => handleEdit(article)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="icon" className="text-destructive" onClick={() => handleDelete(article.id)}>
+                        <Button variant="outline" size="icon" className="text-destructive" onClick={() => handleDelete(article.id, article.title)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
