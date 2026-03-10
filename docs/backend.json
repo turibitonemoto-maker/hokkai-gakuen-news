@@ -8,7 +8,13 @@
       "properties": {
         "id": { "type": "string" },
         "title": { "type": "string", "description": "記事のタイトル" },
-        "content": { "type": "string", "description": "記事の本文 (プレーンテキスト)" },
+        "content": { "type": "string", "description": "記事の本文 (標準記事の場合)" },
+        "noteUrl": { "type": "string", "description": "note記事のURL (note連携の場合)" },
+        "articleType": { 
+          "type": "string", 
+          "enum": ["Standard", "Note"],
+          "description": "記事のタイプ（標準またはnote連携）"
+        },
         "categoryId": { 
           "type": "string", 
           "enum": ["Campus", "Event", "Interview", "Sports", "Column", "Opinion"],
@@ -18,7 +24,7 @@
         "mainImageUrl": { "type": "string", "description": "メイン画像のURL" },
         "isPublished": { "type": "boolean", "description": "公開フラグ" }
       },
-      "required": ["title", "content", "categoryId", "publishDate", "isPublished"]
+      "required": ["title", "articleType", "categoryId", "publishDate", "isPublished"]
     },
     "HeroImage": {
       "title": "HeroImage",

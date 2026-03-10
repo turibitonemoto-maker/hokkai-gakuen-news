@@ -12,15 +12,26 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { FileText, Share2 } from "lucide-react";
 
 const articleSchema = z.object({
   title: z.string().min(1, "タイトルを入力してください"),
-  content: z.string().min(1, "本文を入力してください"),
+  articleType: z.enum(["Standard", "Note"]),
+  content: z.string().optional(),
+  noteUrl: z.string().url("有効なURLを入力してください").optional().or(z.literal("")),
   categoryId: z.enum(["Campus", "Event", "Interview", "Sports", "Column", "Opinion"]),
   publishDate: z.string(),
   mainImageUrl: z.string().url("有効なURLを入力してください").optional().or(z.literal("")),
   isPublished: z.boolean().default(false),
+}).refine((data) => {
+  if (data.articleType === "Standard" && !data.content) return false;
+  if (data.articleType === "Note" && !data.noteUrl) return false;
+  return true;
+}, {
+  message: "タイプに応じた内容を入力してください",
+  path: ["content"]
 });
 
 type ArticleFormValues = z.infer<typeof articleSchema>;
@@ -37,7 +48,9 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     resolver: zodResolver(articleSchema),
     defaultValues: {
       title: article?.title || "",
-      content: article?.content || article?.htmlContent || "", // 互換性のために htmlContent も考慮
+      articleType: article?.articleType || "Standard",
+      content: article?.content || "",
+      noteUrl: article?.noteUrl || "",
       categoryId: article?.categoryId || "Campus",
       publishDate: article?.publishDate || new Date().toISOString().split("T")[0],
       mainImageUrl: article?.mainImageUrl || "",
@@ -45,15 +58,22 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     },
   });
 
+  const articleType = form.watch("articleType");
+
   function onSubmit(values: ArticleFormValues) {
     if (!firestore) return;
 
+    const data = {
+      ...values,
+      updatedAt: serverTimestamp(),
+    };
+
     if (article?.id) {
       const docRef = doc(firestore, "articles", article.id);
-      setDocumentNonBlocking(docRef, { ...values, updatedAt: serverTimestamp() }, { merge: true });
+      setDocumentNonBlocking(docRef, data, { merge: true });
     } else {
       const colRef = collection(firestore, "articles");
-      addDocumentNonBlocking(colRef, { ...values, createdAt: serverTimestamp() });
+      addDocumentNonBlocking(colRef, { ...data, createdAt: serverTimestamp() });
     }
     onSuccess();
   }
@@ -62,6 +82,38 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FormField
+            control={form.control}
+            name="articleType"
+            render={({ field }) => (
+              <FormItem className="md:col-span-2">
+                <FormLabel>記事のタイプ</FormLabel>
+                <Tabs 
+                  onValueChange={field.onChange} 
+                  defaultValue={field.value} 
+                  className="w-full"
+                >
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="Standard" className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      標準記事（学内）
+                    </TabsTrigger>
+                    <TabsTrigger value="Note" className="flex items-center gap-2">
+                      <Share2 className="h-4 w-4" />
+                      note連携記事
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+                <FormDescription>
+                  {articleType === "Standard" 
+                    ? "このサイトのデータベースに保存される通常の記事です。" 
+                    : "外部のnote記事へ誘導するリンク記事です。"}
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <FormField
             control={form.control}
             name="title"
@@ -126,33 +178,49 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                   <Input placeholder="https://example.com/image.jpg" {...field} />
                 </FormControl>
                 <FormDescription>
-                  Unsplashなどの画像URLをここに貼り付けてください。
+                  アイキャッチ画像として使用されます。
                 </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="content"
-            render={({ field }) => (
-              <FormItem className="md:col-span-2">
-                <FormLabel>本文</FormLabel>
-                <FormControl>
-                  <Textarea 
-                    placeholder="原稿をここに貼り付けてください。改行はそのまま保存されます。" 
-                    className="min-h-[400px] text-base leading-relaxed resize-y" 
-                    {...field} 
-                  />
-                </FormControl>
-                <FormDescription>
-                  HTMLタグを入力する必要はありません。テキストをそのまま入力してください。
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {articleType === "Standard" ? (
+            <FormField
+              control={form.control}
+              name="content"
+              render={({ field }) => (
+                <FormItem className="md:col-span-2">
+                  <FormLabel>本文（標準記事）</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="原稿をここに貼り付けてください..." 
+                      className="min-h-[400px] text-base leading-relaxed resize-y" 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          ) : (
+            <FormField
+              control={form.control}
+              name="noteUrl"
+              render={({ field }) => (
+                <FormItem className="md:col-span-2">
+                  <FormLabel>note記事URL</FormLabel>
+                  <FormControl>
+                    <Input placeholder="https://note.com/your_account/n/..." {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    クリックした際に遷移するnote記事のURLを入力してください。
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
 
           <FormField
             control={form.control}
@@ -160,9 +228,9 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
             render={({ field }) => (
               <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 bg-slate-50">
                 <div className="space-y-0.5">
-                  <FormLabel className="text-base font-semibold">すぐに公開する</FormLabel>
+                  <FormLabel className="text-base font-semibold">公開状態</FormLabel>
                   <FormDescription>
-                    オフにすると「下書き」として保存されます。
+                    オフにすると公式サイトには表示されません。
                   </FormDescription>
                 </div>
                 <FormControl>
@@ -178,7 +246,9 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
 
         <div className="flex justify-end gap-4 pt-4 border-t">
           <Button type="button" variant="outline" onClick={onSuccess}>キャンセル</Button>
-          <Button type="submit" className="px-8">記事を保存する</Button>
+          <Button type="submit" className="px-8">
+            {article?.id ? "変更を保存" : "記事を登録"}
+          </Button>
         </div>
       </form>
     </Form>
