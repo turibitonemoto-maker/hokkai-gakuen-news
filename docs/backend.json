@@ -40,7 +40,9 @@
         "imageUrl": { "type": "string" },
         "linkUrl": { "type": "string" },
         "title": { "type": "string" },
-        "clickCount": { "type": "number", "description": "閲覧数（クリック数）" }
+        "clickCount": { "type": "number", "description": "閲覧数（クリック数）" },
+        "startDate": { "type": "string", "format": "date-time", "description": "表示開始日時" },
+        "endDate": { "type": "string", "format": "date-time", "description": "表示終了日時" }
       }
     },
     "PresidentMessage": {

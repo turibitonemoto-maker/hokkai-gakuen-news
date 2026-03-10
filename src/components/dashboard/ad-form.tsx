@@ -16,6 +16,8 @@ const adSchema = z.object({
   title: z.string().min(1, "広告名を入力してください"),
   imageUrl: z.string().url("有効な画像URLを入力してください"),
   linkUrl: z.string().url("有効な遷移先URLを入力してください"),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
 });
 
 type AdFormValues = z.infer<typeof adSchema>;
@@ -23,9 +25,10 @@ type AdFormValues = z.infer<typeof adSchema>;
 interface AdFormProps {
   ad?: any;
   onSuccess: () => void;
+  onCancel: () => void;
 }
 
-export function AdForm({ ad, onSuccess }: AdFormProps) {
+export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
   const firestore = useFirestore();
   const { toast } = useToast();
   
@@ -35,6 +38,8 @@ export function AdForm({ ad, onSuccess }: AdFormProps) {
       title: ad?.title || "",
       imageUrl: ad?.imageUrl || "",
       linkUrl: ad?.linkUrl || "",
+      startDate: ad?.startDate || new Date().toISOString().slice(0, 16),
+      endDate: ad?.endDate || "",
     },
   });
 
@@ -43,12 +48,10 @@ export function AdForm({ ad, onSuccess }: AdFormProps) {
 
     if (ad?.id) {
       const docRef = doc(firestore, "ads", ad.id);
-      // 既存の閲覧数を保持するように更新
       setDocumentNonBlocking(docRef, { ...values, updatedAt: serverTimestamp() }, { merge: true });
       toast({ title: "更新しました", description: "広告情報を更新しました。" });
     } else {
       const colRef = collection(firestore, "ads");
-      // 新規作成時はクリック数を0で初期化
       addDocumentNonBlocking(colRef, { 
         ...values, 
         clickCount: 0,
@@ -61,7 +64,7 @@ export function AdForm({ ad, onSuccess }: AdFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="title"
@@ -105,9 +108,40 @@ export function AdForm({ ad, onSuccess }: AdFormProps) {
           )}
         />
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="startDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>表示開始日時</FormLabel>
+                <FormControl>
+                  <Input type="datetime-local" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="endDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>表示終了日時</FormLabel>
+                <FormControl>
+                  <Input type="datetime-local" {...field} />
+                </FormControl>
+                <FormDescription>無期限の場合は空欄にしてください。</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
         <div className="flex justify-end gap-3 pt-4 border-t">
-          <Button type="button" variant="outline" onClick={onSuccess}>キャンセル</Button>
-          <Button type="submit">{ad ? "保存する" : "追加する"}</Button>
+          <Button type="button" variant="outline" onClick={onCancel}>キャンセル</Button>
+          <Button type="submit">{ad ? "変更を保存" : "追加する"}</Button>
         </div>
       </form>
     </Form>
