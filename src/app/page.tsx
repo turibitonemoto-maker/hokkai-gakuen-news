@@ -1,11 +1,12 @@
 
 "use client";
 
-import { LayoutDashboard, FileText, ImageIcon, Megaphone } from "lucide-react";
+import { LayoutDashboard, FileText, ImageIcon, Megaphone, UserRound } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArticleManager } from "@/components/dashboard/article-manager";
 import { HeroManager } from "@/components/dashboard/hero-manager";
 import { AdManager } from "@/components/dashboard/ad-manager";
+import { PresidentMessageManager } from "@/components/dashboard/president-message-manager";
 
 /**
  * 管理用ダッシュボード
@@ -42,6 +43,10 @@ export default function Home() {
                 <Megaphone className="h-4 w-4" />
                 広告管理
               </TabsTrigger>
+              <TabsTrigger value="president" className="flex items-center gap-2">
+                <UserRound className="h-4 w-4" />
+                会長挨拶
+              </TabsTrigger>
             </TabsList>
           </div>
 
@@ -53,6 +58,9 @@ export default function Home() {
           </TabsContent>
           <TabsContent value="ads" className="mt-0 outline-none">
             <AdManager />
+          </TabsContent>
+          <TabsContent value="president" className="mt-0 outline-none">
+            <PresidentMessageManager />
           </TabsContent>
         </Tabs>
       </main>

@@ -42,6 +42,18 @@
         "title": { "type": "string" }
       }
     },
+    "PresidentMessage": {
+      "title": "PresidentMessage",
+      "description": "会長の挨拶メッセージ",
+      "type": "object",
+      "properties": {
+        "content": { "type": "string", "description": "挨拶の本文" },
+        "authorName": { "type": "string", "description": "会長の氏名" },
+        "authorImageUrl": { "type": "string", "description": "会長の顔写真URL" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["content", "authorName"]
+    },
     "UserProfile": {
       "title": "UserProfile",
       "type": "object",
@@ -68,6 +80,10 @@
     "/ads/{adId}": {
       "schema": { "$ref": "#/backend/entities/Ad" },
       "description": "広告バナー"
+    },
+    "/settings/president-message": {
+      "schema": { "$ref": "#/backend/entities/PresidentMessage" },
+      "description": "会長挨拶の設定（ドキュメント）"
     },
     "/user_profiles/{userId}": {
       "schema": { "$ref": "#/backend/entities/UserProfile" },
