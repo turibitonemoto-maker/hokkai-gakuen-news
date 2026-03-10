@@ -1,11 +1,11 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, doc, orderBy, query } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Eye, EyeOff, Loader2, AlertTriangle, FileText, Share2, ExternalLink, Tag } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, Loader2, AlertTriangle, FileText, Share2, ExternalLink, Tag, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -22,11 +22,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { cn } from "@/lib/utils";
 
 export function ArticleManager() {
   const [isEditing, setIsEditing] = useState(false);
   const [currentArticle, setCurrentArticle] = useState<any>(null);
   const [articleToDelete, setArticleToDelete] = useState<any>(null);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
   
   const firestore = useFirestore();
   const { toast } = useToast();
@@ -37,6 +39,23 @@ export function ArticleManager() {
   }, [firestore]);
 
   const { data: articles, isLoading } = useCollection(articlesQuery);
+
+  // 全記事からユニークなタグを抽出
+  const allTags = useMemo(() => {
+    if (!articles) return [];
+    const tags = new Set<string>();
+    articles.forEach(article => {
+      article.tags?.forEach((tag: string) => tags.add(tag));
+    });
+    return Array.from(tags).sort();
+  }, [articles]);
+
+  // 選択されたタグで記事をフィルタリング
+  const filteredArticles = useMemo(() => {
+    if (!articles) return [];
+    if (!selectedTag) return articles;
+    return articles.filter(article => article.tags?.includes(selectedTag));
+  }, [articles, selectedTag]);
 
   const handleEdit = (article: any) => {
     setCurrentArticle(article);
@@ -80,7 +99,7 @@ export function ArticleManager() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">記事管理</h2>
@@ -91,6 +110,42 @@ export function ArticleManager() {
           新規作成
         </Button>
       </div>
+
+      {/* タグフィルター */}
+      {!isLoading && allTags.length > 0 && (
+        <Card className="bg-white/50 border-slate-200">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="text-xs font-bold text-slate-500 flex items-center gap-1">
+                <Tag className="h-3 w-3" /> タグで絞り込む:
+              </span>
+              <Button
+                variant={selectedTag === null ? "default" : "outline"}
+                size="sm"
+                className="h-7 px-3 text-xs rounded-full"
+                onClick={() => setSelectedTag(null)}
+              >
+                すべて
+              </Button>
+              {allTags.map(tag => (
+                <Button
+                  key={tag}
+                  variant={selectedTag === tag ? "default" : "outline"}
+                  size="sm"
+                  className={cn(
+                    "h-7 px-3 text-xs rounded-full flex items-center gap-1.5",
+                    selectedTag === tag ? "bg-primary" : "hover:bg-slate-100"
+                  )}
+                  onClick={() => setSelectedTag(tag)}
+                >
+                  {tag}
+                  {selectedTag === tag && <X className="h-3 w-3 opacity-70" />}
+                </Button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardContent className="p-0">
@@ -111,7 +166,7 @@ export function ArticleManager() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {articles?.map((article) => (
+                {filteredArticles.map((article) => (
                   <TableRow key={article.id}>
                     <TableCell>
                       {article.articleType === "Note" ? (
@@ -150,7 +205,18 @@ export function ArticleManager() {
                         <Badge variant="outline" className="w-fit">{article.categoryId}</Badge>
                         <div className="flex flex-wrap gap-1">
                           {article.tags?.map((tag: string, i: number) => (
-                            <Badge key={i} variant="secondary" className="text-[9px] px-1.5 py-0 h-4 flex items-center gap-0.5">
+                            <Badge 
+                              key={i} 
+                              variant={selectedTag === tag ? "default" : "secondary"} 
+                              className={cn(
+                                "text-[9px] px-1.5 py-0 h-4 flex items-center gap-0.5 cursor-pointer transition-colors",
+                                selectedTag === tag ? "" : "hover:bg-slate-200"
+                              )}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedTag(tag);
+                              }}
+                            >
                               <Tag className="h-2 w-2" /> {tag}
                             </Badge>
                           ))}
@@ -177,10 +243,12 @@ export function ArticleManager() {
                     </TableCell>
                   </TableRow>
                 ))}
-                {articles?.length === 0 && (
+                {filteredArticles.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-12 text-slate-400">
-                      記事がありません。新しい記事を作成してください。
+                      {selectedTag 
+                        ? `タグ「${selectedTag}」に一致する記事は見つかりませんでした。` 
+                        : "記事がありません。新しい記事を作成してください。"}
                     </TableCell>
                   </TableRow>
                 )}
