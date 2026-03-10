@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -27,6 +28,7 @@ import {
 } from "@/components/ui/form";
 import { useAuth, initiateEmailSignIn, errorEmitter } from "@/firebase";
 import { useToast } from "@/hooks/use-toast";
+import { AUTHORIZED_EMAILS } from "@/lib/auth-constants";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "有効なメールアドレスを入力してください。" }),
@@ -49,10 +51,16 @@ export function LoginForm() {
   useEffect(() => {
     const handleAuthError = (error: Error) => {
       setIsLoading(false);
-      console.error("Login Error:", error);
       
       let errorMessage = "ログインに失敗しました。";
-      if (error.message.includes("auth/invalid-credential") || error.message.includes("auth/user-not-found") || error.message.includes("auth/wrong-password")) {
+      // Firebaseの最新仕様では auth/invalid-credential に集約されることが多いですが、
+      // 互換性のために複数のコードをチェックします
+      if (
+        error.message.includes("auth/invalid-credential") || 
+        error.message.includes("auth/user-not-found") || 
+        error.message.includes("auth/wrong-password") ||
+        error.message.includes("auth/invalid-email")
+      ) {
         errorMessage = "メールアドレスまたはパスワードが正しくありません。";
       }
 
@@ -69,6 +77,18 @@ export function LoginForm() {
 
   async function onSubmit(values: z.infer<typeof loginSchema>) {
     setIsLoading(true);
+
+    // 許可されたメールアドレスリストを事前にチェック
+    if (!AUTHORIZED_EMAILS.includes(values.email)) {
+      setIsLoading(false);
+      toast({
+        variant: "destructive",
+        title: "アクセス権限がありません",
+        description: "入力されたメールアドレスは管理者として登録されていません。",
+      });
+      return;
+    }
+
     initiateEmailSignIn(auth, values.email, values.password);
   }
 
@@ -81,10 +101,10 @@ export function LoginForm() {
           </div>
         </div>
         <CardTitle className="text-2xl font-headline font-bold text-primary tracking-tight">
-          SecureEntry
+          北海学園一部新聞会
         </CardTitle>
         <CardDescription className="text-muted-foreground">
-          許可されたメールアドレスでログインしてください
+          CMS 管理パネルへログイン
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
@@ -100,7 +120,7 @@ export function LoginForm() {
                     <div className="relative group">
                       <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
                       <Input
-                        placeholder="name@example.com"
+                        placeholder="name@hokkai-shinbun.jp"
                         className="pl-10 h-11 border-slate-200 focus:border-primary focus:ring-primary transition-all duration-200"
                         {...field}
                       />

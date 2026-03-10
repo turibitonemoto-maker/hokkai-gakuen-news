@@ -1,3 +1,4 @@
+
 'use client';
 import {
   Auth,
@@ -26,11 +27,14 @@ export function initiateEmailSignUp(authInstance: Auth, email: string, password:
 /** Initiate email/password sign-in (non-blocking with session persistence). */
 export function initiateEmailSignIn(authInstance: Auth, email: string, password: string): void {
   // Set persistence to session before signing in
-  setPersistence(authInstance, browserSessionPersistence)
-    .then(() => {
-      return signInWithEmailAndPassword(authInstance, email, password);
-    })
-    .catch(error => {
+  // ensure it is truly non-blocking by wrapping in async and catching
+  (async () => {
+    try {
+      await setPersistence(authInstance, browserSessionPersistence);
+      await signInWithEmailAndPassword(authInstance, email, password);
+    } catch (error: any) {
+      console.warn("Firebase Auth Error caught in non-blocking-login:", error.code);
       errorEmitter.emit('auth-error', error);
-    });
+    }
+  })();
 }
