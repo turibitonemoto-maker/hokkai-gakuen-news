@@ -1,16 +1,28 @@
 
 "use client";
 
+import { useState } from "react";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Loader2 } from "lucide-react";
+import { Plus, Trash2, Loader2, AlertTriangle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export function HeroManager() {
+  const [imageToDelete, setImageToDelete] = useState<any>(null);
   const firestore = useFirestore();
   const { toast } = useToast();
 
@@ -31,21 +43,24 @@ export function HeroManager() {
         order: (heroImages?.length || 0) + 1
       });
       toast({
-        title: "追加しました",
-        description: "ヒーロー画像を追加しました。",
+        title: "画像を追加しました",
+        description: "ヒーロー画像を一覧に追加しました。",
       });
     }
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("この画像を削除しますか？") && firestore) {
-      const docRef = doc(firestore, "hero-images", id);
-      deleteDocumentNonBlocking(docRef);
-      toast({
-        title: "削除しました",
-        description: "ヒーロー画像を削除しました。",
-      });
-    }
+  const confirmDelete = () => {
+    if (!imageToDelete || !firestore) return;
+    
+    const docRef = doc(firestore, "hero-images", imageToDelete.id);
+    deleteDocumentNonBlocking(docRef);
+    
+    toast({
+      title: "画像を削除しました",
+      description: "ヒーロー画像を削除しました。",
+    });
+    
+    setImageToDelete(null);
   };
 
   return (
@@ -74,7 +89,7 @@ export function HeroManager() {
                   className="object-cover"
                 />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <Button variant="destructive" size="icon" onClick={() => handleDelete(image.id)}>
+                  <Button variant="destructive" size="icon" onClick={() => setImageToDelete(image)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -86,11 +101,32 @@ export function HeroManager() {
           ))}
           {heroImages?.length === 0 && (
             <div className="col-span-full py-12 text-center border-2 border-dashed rounded-xl text-slate-400">
-              画像がありません。
+              登録されている画像はありません。
             </div>
           )}
         </div>
       )}
+
+      {/* 削除確認ダイアログ */}
+      <AlertDialog open={!!imageToDelete} onOpenChange={(open) => !open && setImageToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex items-center gap-2 text-destructive mb-2">
+              <AlertTriangle className="h-5 w-5" />
+              <AlertDialogTitle>画像を削除しますか？</AlertDialogTitle>
+            </div>
+            <AlertDialogDescription>
+              この画像をヒーロー背景から削除します。この操作は取り消せません。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>キャンセル</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              削除する
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

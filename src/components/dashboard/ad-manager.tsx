@@ -1,16 +1,28 @@
 
 "use client";
 
+import { useState } from "react";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Loader2, ExternalLink } from "lucide-react";
+import { Plus, Trash2, Loader2, ExternalLink, AlertTriangle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export function AdManager() {
+  const [adToDelete, setAdToDelete] = useState<any>(null);
   const firestore = useFirestore();
   const { toast } = useToast();
 
@@ -30,21 +42,24 @@ export function AdManager() {
       const colRef = collection(firestore, "ads");
       addDocumentNonBlocking(colRef, { title, imageUrl, linkUrl });
       toast({
-        title: "追加しました",
-        description: "広告を追加しました。",
+        title: "広告を追加しました",
+        description: "新しいバナーを登録しました。",
       });
     }
   };
 
-  const handleDelete = (id: string, title: string) => {
-    if (confirm(`広告「${title}」を削除しますか？`) && firestore) {
-      const docRef = doc(firestore, "ads", id);
-      deleteDocumentNonBlocking(docRef);
-      toast({
-        title: "削除しました",
-        description: "広告を削除しました。",
-      });
-    }
+  const confirmDelete = () => {
+    if (!adToDelete || !firestore) return;
+    
+    const docRef = doc(firestore, "ads", adToDelete.id);
+    deleteDocumentNonBlocking(docRef);
+    
+    toast({
+      title: "広告を削除しました",
+      description: `「${adToDelete.title}」を削除しました。`,
+    });
+    
+    setAdToDelete(null);
   };
 
   return (
@@ -80,7 +95,12 @@ export function AdManager() {
                     <ExternalLink className="h-3 w-3 mr-1" /> {ad.linkUrl}
                   </p>
                 </div>
-                <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(ad.id, ad.title)}>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="text-destructive hover:bg-destructive/10" 
+                  onClick={() => setAdToDelete(ad)}
+                >
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </CardContent>
@@ -93,6 +113,27 @@ export function AdManager() {
           )}
         </div>
       )}
+
+      {/* 削除確認ダイアログ */}
+      <AlertDialog open={!!adToDelete} onOpenChange={(open) => !open && setAdToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex items-center gap-2 text-destructive mb-2">
+              <AlertTriangle className="h-5 w-5" />
+              <AlertDialogTitle>広告を削除しますか？</AlertDialogTitle>
+            </div>
+            <AlertDialogDescription>
+              広告「<span className="font-bold text-slate-900">{adToDelete?.title}</span>」を削除します。この操作は取り消せません。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>キャンセル</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              削除する
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

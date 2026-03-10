@@ -5,17 +5,29 @@ import { useState } from "react";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, Loader2, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { ArticleForm } from "./article-form";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export function ArticleManager() {
   const [isEditing, setIsEditing] = useState(false);
   const [currentArticle, setCurrentArticle] = useState<any>(null);
+  const [articleToDelete, setArticleToDelete] = useState<any>(null);
+  
   const firestore = useFirestore();
   const { toast } = useToast();
 
@@ -36,16 +48,18 @@ export function ArticleManager() {
     setIsEditing(true);
   };
 
-  const handleDelete = (id: string, title: string) => {
-    if (confirm(`記事「${title}」を削除してもよろしいですか？`)) {
-      if (!firestore) return;
-      const docRef = doc(firestore, "articles", id);
-      deleteDocumentNonBlocking(docRef);
-      toast({
-        title: "削除しました",
-        description: "記事を削除しました。",
-      });
-    }
+  const confirmDelete = () => {
+    if (!articleToDelete || !firestore) return;
+    
+    const docRef = doc(firestore, "articles", articleToDelete.id);
+    deleteDocumentNonBlocking(docRef);
+    
+    toast({
+      title: "記事を削除しました",
+      description: `「${articleToDelete.title}」を削除しました。`,
+    });
+    
+    setArticleToDelete(null);
   };
 
   if (isEditing) {
@@ -120,7 +134,12 @@ export function ArticleManager() {
                         <Button variant="outline" size="icon" onClick={() => handleEdit(article)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="icon" className="text-destructive" onClick={() => handleDelete(article.id, article.title)}>
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          className="text-destructive hover:bg-destructive/10" 
+                          onClick={() => setArticleToDelete(article)}
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -139,6 +158,27 @@ export function ArticleManager() {
           )}
         </CardContent>
       </Card>
+
+      {/* 削除確認ダイアログ */}
+      <AlertDialog open={!!articleToDelete} onOpenChange={(open) => !open && setArticleToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex items-center gap-2 text-destructive mb-2">
+              <AlertTriangle className="h-5 w-5" />
+              <AlertDialogTitle>記事を削除しますか？</AlertDialogTitle>
+            </div>
+            <AlertDialogDescription>
+              記事「<span className="font-bold text-slate-900">{articleToDelete?.title}</span>」を削除します。この操作は取り消せません。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>キャンセル</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              削除する
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
