@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "Article": {
@@ -7,7 +8,7 @@
       "properties": {
         "id": { "type": "string" },
         "title": { "type": "string", "description": "記事のタイトル" },
-        "htmlContent": { "type": "string", "description": "記事の本文 (HTML形式)" },
+        "content": { "type": "string", "description": "記事の本文 (プレーンテキスト)" },
         "categoryId": { 
           "type": "string", 
           "enum": ["Campus", "Event", "Interview", "Sports", "Column", "Opinion"],
@@ -17,7 +18,7 @@
         "mainImageUrl": { "type": "string", "description": "メイン画像のURL" },
         "isPublished": { "type": "boolean", "description": "公開フラグ" }
       },
-      "required": ["title", "htmlContent", "categoryId", "publishDate", "isPublished"]
+      "required": ["title", "content", "categoryId", "publishDate", "isPublished"]
     },
     "HeroImage": {
       "title": "HeroImage",
