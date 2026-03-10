@@ -7,7 +7,7 @@ service cloud.firestore {
     // 管理サイトからの削除を含む書き込みを許可するため、開発中は以下のルールを維持してください。
     
     // 全パスへのアクセス許可（開発モード：管理サイトからの削除・更新を確実に可能にするため）
-    // タイムスタンプを更新して再デプロイを促します: 2026-02-09T16:00:00
+    // タイムスタンプを更新して再デプロイを促します: 2026-03-10T14:15:00
     match /{document=**} {
       allow read, write: if true;
     }
@@ -24,6 +24,11 @@ service cloud.firestore {
     
     // 広告コレクション
     match /ads/{adId} {
+      allow read, write: if true;
+    }
+
+    // お問い合わせコレクション
+    match /inquiries/{inquiryId} {
       allow read, write: if true;
     }
   }
