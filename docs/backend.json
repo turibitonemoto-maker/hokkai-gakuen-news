@@ -1,0 +1,67 @@
+{
+  "entities": {
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
+      "type": "object",
+      "description": "このエンティティは、SecureEntry アプリケーションにおける認証済みユーザーのプロファイルを表現します。ログイン認証に使用される許可されたメールアドレスを保存します。",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "UserProfile エンティティの一意の識別子。"
+        },
+        "email": {
+          "type": "string",
+          "description": "ユーザーの許可されたメールアドレス。ログインフォームでの認証照合に使用されます。",
+          "format": "email"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "ユーザーに表示されるフレンドリーな名前。"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ユーザープロファイルが作成された日付と時刻。",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ユーザープロファイルが最後に更新された日付と時刻。"
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "displayName",
+        "createdAt"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/user_profiles/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "認証済みユーザーのプロファイルを保存します。ドキュメントIDはFirebase AuthenticationのUIDと一致します。所有者のみが自身のプロファイルにアクセスできます。事前承認済みアカウントは、管理プロセスによってこのコレクションにドキュメントが事前に作成されることで実装されます。ドキュメントには、承認の独立性のために`request.auth.uid`と一致する`id`フィールドと、`request.auth.token.email`と一致する`email`フィールドが含まれます。",
+          "params": [
+            {
+              "name": "userId",
+              "description": "Firebase Authenticationによって提供されるユーザーの一意の識別子（UID）。"
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "SecureEntryアプリケーションのFirestoreデータ構造は、主にユーザープロファイル管理の要件に焦点を当てています。承認の独立性、デバッグの容易さ、および「事前承認済みアカウント」という核心的な要件を満たすように設計されています。\n\n**データ構造の論理的根拠と原則への準拠:**\n\n1.  **承認の独立性 (Authorization Independence):**\n    *   各ユーザープロファイルのドキュメントID (`userId`) は、Firebase AuthenticationのUID (`request.auth.uid`) と直接関連付けられています。これにより、セキュリティルールが特定のユーザープロファイルへのアクセスを許可するかどうかを判断するために必要なチェックは、`request.auth.uid == userId`のみとなります。\n    *   この設計は、親ドキュメントや外部の承認コレクションへの`get()`呼び出しを不要にします。これにより、ルールはアトミックで効率的になり、デバッグが非常に容易になります。ユーザーは自分のプロファイルのみにアクセスし、その所有権はパス自体によって明確に定義されます。\n\n2.  **QAPs (クエリはフィルタではない - Query as Authorization Patterns):**\n    *   通常のユーザーは、自分の特定のプロファイル (`/user_profiles/{request.auth.uid}`) を`get`操作で取得します。このパスベースの所有権により、`list`操作がデフォルトで制限され、ユーザーが他のユーザーのプロファイルを一覧表示するのを防ぎます。\n    *   もし管理者がすべてのユーザープロファイルを一覧表示する必要がある場合（アプリケーションの要件には明示されていませんが）、これは専用の管理者ロールコレクション（例：`/roles_admin/{uid}`）に対する`exists()`チェックを通じて許可されます。これにより、`list`操作は安全であり、クライアント側でのフィルタリングに依存することはありません。\n\n3.  **事前承認済みアカウントの処理:**\n    *   「事前承認済みユーザーアカウント」という重要な要件は、`UserProfile`ドキュメントの初期作成プロセスによって処理されます。これは、アプリケーションのセキュリティルールに複雑な`get()`呼び出しを追加することなく実現されます。\n    *   具体的には、管理者プロセス（管理アプリケーションまたは外部の承認リストをチェックするバックエンド関数など）が、承認されたユーザーに対して`/user_profiles/{userId}`ドキュメントを作成する責任を負います。一度作成されると、その`UserProfile`ドキュメント自体がSecureEntryアプリケーション内での承認済みユーザーの存在を示します。\n    *   これにより、ユーザーは自分のプロファイルが既に存在する場合にのみ、それを読み書きできます。ユーザー自身が任意のメールアドレスで新しいプロファイルを作成することはできません。これは、DBAC（データベースベースのアクセス制御）原則に沿って、ロール（管理者など）によって駆動される「プロファイル作成」のメカニズムを確立します。\n\n4.  **構造的分離 (Structural Segregation):**\n    *   `/user_profiles`コレクション内のすべてのドキュメントは、一貫したセキュリティ姿勢（個人の所有権）を持つ`UserProfile`エンティティを表します。これにより、コレクション内のドキュメントの内容に基づいてアクセスを区別する必要がなくなり、セキュリティルールが簡素化されます。\n\n5.  **アクセスモデリング:**\n    *   パスベースの所有権 (`/user_profiles/{userId}`) は、プライベートなユーザーデータに採用されており、これは非常に安全で監査が容易なパターンです。`userId`ワイルドカードはユーザーのFirebase UIDに直接マッピングされ、承認を非常に直接的にします。\n\n6.  **データの一貫性と予測可能性:**\n    *   `UserProfile`エンティティは明確に定義されたフィールドを持ち、ドキュメント内の`id`フィールドはパス内の`userId`と一致することが期待されます。これは、データの整合性と可読性を向上させます。"
+  }
+}
