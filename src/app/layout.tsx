@@ -3,8 +3,8 @@ import './globals.css';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
-  title: 'SecureEntry | Authorized Access',
-  description: 'Secure login portal for authorized personnel.',
+  title: '北海学園大学一部新聞会 | コンテンツ管理システム',
+  description: '北海学園大学一部新聞会の公式コンテンツ管理システムです。',
 };
 
 export default function RootLayout({

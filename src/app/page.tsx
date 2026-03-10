@@ -25,10 +25,10 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="flex-1 p-6 md:p-8 max-w-7xl mx-auto w-full">
+      <main className="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full">
         <Tabs defaultValue="articles" className="space-y-6">
-          <div className="flex items-center justify-between mb-2">
-            <TabsList className="bg-white border">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
+            <TabsList className="bg-white border w-full md:w-auto overflow-x-auto justify-start">
               <TabsTrigger value="articles" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
                 記事管理
@@ -44,13 +44,13 @@ export default function Home() {
             </TabsList>
           </div>
 
-          <TabsContent value="articles" className="mt-0">
+          <TabsContent value="articles" className="mt-0 outline-none">
             <ArticleManager />
           </TabsContent>
-          <TabsContent value="hero" className="mt-0">
+          <TabsContent value="hero" className="mt-0 outline-none">
             <HeroManager />
           </TabsContent>
-          <TabsContent value="ads" className="mt-0">
+          <TabsContent value="ads" className="mt-0 outline-none">
             <AdManager />
           </TabsContent>
         </Tabs>
