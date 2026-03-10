@@ -2,40 +2,10 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- ヘルパー関数 ---
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-    // --- 各コレクションのルール ---
-
-    // ユーザープロファイル: 本人のみ
-    match /user_profiles/{userId} {
-      allow read, write: if isOwner(userId);
-    }
-
-    // 記事管理: ログイン済みユーザーなら誰でも管理可能（プロトタイプ仕様）
-    match /articles/{articleId} {
-      allow read, write: if isSignedIn();
-    }
-
-    // ヒーロー画像管理: ログイン済みユーザー
-    match /hero-images/{heroId} {
-      allow read, write: if isSignedIn();
-    }
-
-    // 広告管理: ログイン済みユーザー
-    match /ads/{adId} {
-      allow read, write: if isSignedIn();
-    }
-
-    // デフォルト拒否
+    // 開発用：ログインなしで全てのコレクションを読み書き可能に設定
+    // ※後ほどログインシステムを統合する際に元のルールに戻します
     match /{path=**} {
-      allow read, write: if false;
+      allow read, write: if true;
     }
   }
 }

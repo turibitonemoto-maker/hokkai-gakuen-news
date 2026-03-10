@@ -1,41 +1,16 @@
 "use client";
 
-import { useUser, useAuth } from "@/firebase";
-import { LoginForm } from "@/components/auth/login-form";
-import { Button } from "@/components/ui/button";
-import { LogOut, User as UserIcon, LayoutDashboard, FileText, ImageIcon, Megaphone, Loader2 } from "lucide-react";
-import { signOut } from "firebase/auth";
+import { LayoutDashboard, FileText, ImageIcon, Megaphone } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArticleManager } from "@/components/dashboard/article-manager";
 import { HeroManager } from "@/components/dashboard/hero-manager";
 import { AdManager } from "@/components/dashboard/ad-manager";
 
+/**
+ * 管理用ダッシュボード
+ * ログイン機能を一時的にバイパスし、直接管理機能を表示します。
+ */
 export default function Home() {
-  const { user, isUserLoading } = useUser();
-  const auth = useAuth();
-
-  const handleLogout = () => {
-    signOut(auth);
-  };
-
-  if (isUserLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <main className="min-h-screen flex items-center justify-center p-4 bg-slate-100">
-        <div className="w-full max-w-md">
-          <LoginForm />
-        </div>
-      </main>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm sticky top-0 z-50">
@@ -45,23 +20,8 @@ export default function Home() {
           </div>
           <div>
             <h1 className="text-lg font-bold text-primary leading-tight">北海学園大学一部新聞会</h1>
-            <p className="text-xs text-slate-500">コンテンツ管理システム</p>
+            <p className="text-xs text-slate-500">コンテンツ管理システム（開発モード）</p>
           </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="hidden md:flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200">
-            <UserIcon className="h-4 w-4 text-slate-500" />
-            <span className="text-sm font-medium text-slate-700">{user.email}</span>
-          </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleLogout}
-            className="text-slate-600 hover:text-destructive transition-colors"
-          >
-            <LogOut className="h-4 w-4 mr-2" />
-            ログアウト
-          </Button>
         </div>
       </header>
 
