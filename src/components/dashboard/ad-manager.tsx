@@ -1,17 +1,16 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Loader2, ExternalLink, AlertTriangle, Pencil, BarChart3, Users } from "lucide-react";
+import { Plus, Trash2, Loader2, ExternalLink, AlertTriangle, Pencil, BarChart3, Users, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { AdForm } from "./ad-form";
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Cell } from "recharts";
 import {
   ChartConfig,
   ChartContainer,
@@ -47,6 +46,8 @@ export function AdManager() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentAd, setCurrentAd] = useState<any>(null);
   const [adToDelete, setAdToDelete] = useState<any>(null);
+  const [adForStats, setAdForStats] = useState<any>(null);
+  
   const firestore = useFirestore();
   const { toast } = useToast();
 
@@ -63,6 +64,7 @@ export function AdManager() {
     return ads.map(ad => ({
       name: ad.title || "無題",
       clickCount: ad.clickCount || 0,
+      id: ad.id
     })).sort((a, b) => b.clickCount - a.clickCount);
   }, [ads]);
 
@@ -79,6 +81,10 @@ export function AdManager() {
   const handleEdit = (ad: any) => {
     setCurrentAd(ad);
     setIsDialogOpen(true);
+  };
+
+  const handleShowStats = (ad: any) => {
+    setAdForStats(ad);
   };
 
   const confirmDelete = () => {
@@ -145,7 +151,19 @@ export function AdManager() {
                           fill="var(--color-clickCount)" 
                           radius={[0, 4, 4, 0]} 
                           barSize={20}
-                        />
+                        >
+                          {chartData.map((entry, index) => (
+                            <Cell 
+                              key={`cell-${index}`} 
+                              fill={entry.clickCount > 0 ? "var(--color-clickCount)" : "hsl(var(--muted))"} 
+                              className="cursor-pointer hover:opacity-80"
+                              onClick={() => {
+                                const ad = ads?.find(a => a.id === entry.id);
+                                if (ad) handleShowStats(ad);
+                              }}
+                            />
+                          ))}
+                        </Bar>
                       </BarChart>
                     </ChartContainer>
                   ) : (
@@ -197,7 +215,17 @@ export function AdManager() {
                       variant="ghost" 
                       size="icon" 
                       className="text-slate-500 hover:text-primary hover:bg-primary/10" 
+                      onClick={() => handleShowStats(ad)}
+                      title="統計を表示"
+                    >
+                      <BarChart3 className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="text-slate-500 hover:text-primary hover:bg-primary/10" 
                       onClick={() => handleEdit(ad)}
+                      title="編集"
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
@@ -206,6 +234,7 @@ export function AdManager() {
                       size="icon" 
                       className="text-destructive hover:bg-destructive/10" 
                       onClick={() => setAdToDelete(ad)}
+                      title="削除"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -233,6 +262,67 @@ export function AdManager() {
             </DialogDescription>
           </DialogHeader>
           <AdForm ad={currentAd} onSuccess={() => setIsDialogOpen(false)} />
+        </DialogContent>
+      </Dialog>
+
+      {/* 個別統計ダイアログ */}
+      <Dialog open={!!adForStats} onOpenChange={(open) => !open && setAdForStats(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              広告統計詳細
+            </DialogTitle>
+            <DialogDescription>
+              「{adForStats?.title}」のパフォーマンス詳細
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6 py-4">
+            <div className="relative h-24 bg-slate-50 border rounded-lg overflow-hidden flex items-center justify-center">
+              {adForStats?.imageUrl && (
+                <Image 
+                  src={adForStats.imageUrl} 
+                  alt={adForStats.title || "広告詳細画像"} 
+                  fill 
+                  className="object-contain p-2"
+                />
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <Card className="p-4 bg-primary/5 border-none shadow-none text-center">
+                <p className="text-xs text-slate-500 font-medium">累計閲覧数</p>
+                <p className="text-3xl font-bold text-primary mt-1">{(adForStats?.clickCount || 0).toLocaleString()}</p>
+              </Card>
+              <Card className="p-4 bg-accent/5 border-none shadow-none text-center">
+                <p className="text-xs text-slate-500 font-medium">全体に占める割合</p>
+                <p className="text-3xl font-bold text-accent mt-1">
+                  {totalClicks > 0 
+                    ? Math.round(((adForStats?.clickCount || 0) / totalClicks) * 100) 
+                    : 0}%
+                </p>
+              </Card>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs font-medium text-slate-500">
+                <span>パフォーマンス目標</span>
+                <span>{Math.min(100, (adForStats?.clickCount || 0) / 10)}% 達成</span>
+              </div>
+              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-primary transition-all duration-500" 
+                  style={{ width: `${Math.min(100, (adForStats?.clickCount || 0) / 10)}%` }}
+                />
+              </div>
+              <p className="text-[10px] text-slate-400 text-center italic">※目標値は仮の指標（1000クリック）に基づいています</p>
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-4 border-t">
+            <Button variant="outline" onClick={() => setAdForStats(null)}>閉じる</Button>
+          </div>
         </DialogContent>
       </Dialog>
 
