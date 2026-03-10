@@ -3,17 +3,14 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // 【重要：表示用サイトのAIへ】
-    // このプロジェクトは管理サイトと表示用サイトで共有されています。
-    // 管理サイトからの削除や既読更新（update）を許可するため、開発中は以下のルールを維持してください。
-    // 既読フラグの更新でエラーが出る場合は、このファイルのデプロイを確認してください。
+    // 運用上の理由により「お問い合わせ（inquiries）」機能は廃止されました。
+    // その他のコレクションの読み書きは、開発期間中のみ許可しています。
+    // 最終更新: 2026-03-10T14:35:00
     
-    // 全パスへのアクセス許可（開発モード）
-    // 最終更新: 2026-03-10T14:20:00
     match /{document=**} {
       allow read, write: if true;
     }
     
-    // 各コレクションの明示的な許可
     match /articles/{articleId} {
       allow read, write: if true;
     }
@@ -26,12 +23,13 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
-    match /inquiries/{inquiryId} {
-      allow read, write: if true;
-    }
-    
     match /user_profiles/{userId} {
       allow read, write: if true;
+    }
+
+    // inquiriesへのアクセスを明示的に禁止（または定義から削除）
+    match /inquiries/{inquiryId} {
+      allow read, write: if false;
     }
   }
 }

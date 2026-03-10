@@ -1,31 +1,17 @@
 
 "use client";
 
-import { LayoutDashboard, FileText, ImageIcon, Megaphone, Mail } from "lucide-react";
+import { LayoutDashboard, FileText, ImageIcon, Megaphone } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArticleManager } from "@/components/dashboard/article-manager";
 import { HeroManager } from "@/components/dashboard/hero-manager";
 import { AdManager } from "@/components/dashboard/ad-manager";
-import { InquiryManager } from "@/components/dashboard/inquiry-manager";
-import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, where } from "firebase/firestore";
 
 /**
  * 管理用ダッシュボード
  * ログイン機能を一時的にバイパスし、直接管理機能を表示します。
  */
 export default function Home() {
-  const firestore = useFirestore();
-  
-  // 未読メッセージ数を取得
-  const unreadInquiriesQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, "inquiries"), where("isRead", "==", false));
-  }, [firestore]);
-  
-  const { data: unreadInquiries } = useCollection(unreadInquiriesQuery);
-  const unreadCount = unreadInquiries?.length || 0;
-
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm sticky top-0 z-50">
@@ -56,15 +42,6 @@ export default function Home() {
                 <Megaphone className="h-4 w-4" />
                 広告管理
               </TabsTrigger>
-              <TabsTrigger value="inquiries" className="flex items-center gap-2 relative">
-                <Mail className="h-4 w-4" />
-                お問い合わせ
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-destructive text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
-                    {unreadCount}
-                  </span>
-                )}
-              </TabsTrigger>
             </TabsList>
           </div>
 
@@ -76,9 +53,6 @@ export default function Home() {
           </TabsContent>
           <TabsContent value="ads" className="mt-0 outline-none">
             <AdManager />
-          </TabsContent>
-          <TabsContent value="inquiries" className="mt-0 outline-none">
-            <InquiryManager />
           </TabsContent>
         </Tabs>
       </main>

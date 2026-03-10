@@ -42,21 +42,6 @@
         "title": { "type": "string" }
       }
     },
-    "Inquiry": {
-      "title": "Inquiry",
-      "description": "お問い合わせメッセージ",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string", "description": "氏名" },
-        "email": { "type": "string", "format": "email", "description": "メールアドレス" },
-        "subject": { "type": "string", "description": "件名" },
-        "message": { "type": "string", "description": "本文" },
-        "createdAt": { "type": "string", "format": "date-time", "description": "送信日時" },
-        "isRead": { "type": "boolean", "description": "既読フラグ" }
-      },
-      "required": ["name", "email", "message", "createdAt"]
-    },
     "UserProfile": {
       "title": "UserProfile",
       "type": "object",
@@ -83,10 +68,6 @@
     "/ads/{adId}": {
       "schema": { "$ref": "#/backend/entities/Ad" },
       "description": "広告バナー"
-    },
-    "/inquiries/{inquiryId}": {
-      "schema": { "$ref": "#/backend/entities/Inquiry" },
-      "description": "お問い合わせ一覧"
     },
     "/user_profiles/{userId}": {
       "schema": { "$ref": "#/backend/entities/UserProfile" },
