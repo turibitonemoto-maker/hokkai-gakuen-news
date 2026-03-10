@@ -3,7 +3,7 @@
 
 import * as React from "react";
 import { useState, useEffect } from "react";
-import { Lock, Mail, ShieldCheck, Loader2, AlertCircle, Info } from "lucide-react";
+import { Lock, Mail, ShieldCheck, Loader2, AlertCircle, Info, CheckCircle2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -33,7 +33,7 @@ import { AUTHORIZED_EMAILS } from "@/lib/auth-constants";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "有効なメールアドレスを入力してください。" }),
-  password: z.string().min(6, { message: "パスワードは6文字以上で入力してください。" }),
+  password: z.string().min(6, { message: "パスワードは6文字以上である必要があります。" }),
 });
 
 export function LoginForm() {
@@ -53,62 +53,47 @@ export function LoginForm() {
   useEffect(() => {
     const handleAuthError = (error: Error) => {
       setIsLoading(false);
-      console.error("Login component caught error:", error);
       
       let errorMessage = "ログインに失敗しました。";
       
-      // Firebaseの具体的なエラーコードに基づいたメッセージ
-      if (error.message.includes("auth/invalid-credential") || error.message.includes("auth/user-not-found") || error.message.includes("auth/wrong-password")) {
-        errorMessage = "メールアドレスまたはパスワードが正しくありません。Firebaseコンソールの 'Users' タブで、このメールアドレスが登録されているか、パスワードが正しいか確認してください。";
-      } else if (error.message.includes("auth/operation-not-allowed")) {
-        errorMessage = "Firebaseコンソールで「メール/パスワード」ログイン方法が有効になっていません。";
-      } else if (error.message.includes("auth/network-request-failed")) {
-        errorMessage = "ネットワーク接続に失敗しました。";
-      } else if (error.message.includes("auth/too-many-requests")) {
-        errorMessage = "短時間に何度も失敗したため、一時的にロックされています。少し時間を置いてから再試行してください。";
+      if (error.message.includes("auth/invalid-credential")) {
+        errorMessage = "認証に失敗しました。以下の2点を確認してください：\n1. パスワードが正しいか\n2. Firebaseコンソールの「Users」にこのメールアドレスを登録済みか";
+      } else if (error.message.includes("auth/user-not-found")) {
+        errorMessage = "ユーザーが見つかりません。Firebaseコンソールでユーザーを作成してください。";
+      } else if (error.message.includes("auth/wrong-password")) {
+        errorMessage = "パスワードが間違っています。";
       } else {
         errorMessage = `エラー: ${error.message}`;
       }
 
       setServerError(errorMessage);
-      toast({
-        variant: "destructive",
-        title: "認証エラー",
-        description: errorMessage,
-      });
     };
 
     errorEmitter.on('auth-error', handleAuthError);
     return () => errorEmitter.off('auth-error', handleAuthError);
-  }, [toast]);
+  }, []);
 
   async function onSubmit(values: z.infer<typeof loginSchema>) {
     setIsLoading(true);
     setServerError(null);
 
-    // 大文字小文字を区別せずにチェック
     const inputEmail = values.email.toLowerCase();
     const isAuthorized = AUTHORIZED_EMAILS.some(email => email.toLowerCase() === inputEmail);
 
-    // 1. コード内の許可リスト（Whitelist）チェック
     if (!isAuthorized) {
       setIsLoading(false);
-      const msg = `アクセス権限がありません。以下のリストに登録されているメールアドレスを使用してください。`;
-      setServerError(msg);
-      toast({
-        variant: "destructive",
-        title: "アクセス制限",
-        description: "入力されたメールアドレスは管理者リストに含まれていません。",
-      });
+      setServerError("このメールアドレスは管理システムへのアクセスが許可されていません。lib/auth-constants.ts を確認してください。");
       return;
     }
 
-    // 2. Firebase Authでの認証試行
     initiateEmailSignIn(auth, values.email, values.password);
+    
+    // タイムアウトによるisLoading解除（万が一Firebaseから応答がない場合のため）
+    setTimeout(() => setIsLoading(false), 10000);
   }
 
   return (
-    <Card className="w-full max-w-md shadow-2xl border-none bg-white/80 backdrop-blur-sm animate-in fade-in zoom-in duration-300">
+    <Card className="w-full max-w-md shadow-2xl border-none bg-white/90 backdrop-blur-sm animate-in fade-in zoom-in duration-300">
       <CardHeader className="space-y-1 pb-6 text-center">
         <div className="flex justify-center mb-4">
           <div className="bg-primary p-3 rounded-2xl text-white shadow-lg">
@@ -116,18 +101,18 @@ export function LoginForm() {
           </div>
         </div>
         <CardTitle className="text-2xl font-bold text-primary tracking-tight">
-          北海学園一部新聞会
+          Hokkai Gakuen News 1
         </CardTitle>
         <CardDescription className="text-muted-foreground">
-          CMS 管理パネル
+          コンテンツ管理システム
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
         {serverError && (
-          <Alert variant="destructive" className="mb-4 bg-destructive/5">
+          <Alert variant="destructive" className="mb-4 bg-destructive/5 border-destructive/20 text-destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>認証に失敗しました</AlertTitle>
-            <AlertDescription className="text-xs">
+            <AlertTitle className="text-xs font-bold">ログインできません</AlertTitle>
+            <AlertDescription className="text-[11px] whitespace-pre-wrap leading-relaxed">
               {serverError}
             </AlertDescription>
           </Alert>
@@ -140,7 +125,7 @@ export function LoginForm() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-semibold text-slate-700">メールアドレス</FormLabel>
+                  <FormLabel className="text-xs font-bold text-slate-600">メールアドレス</FormLabel>
                   <FormControl>
                     <div className="relative group">
                       <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
@@ -151,7 +136,7 @@ export function LoginForm() {
                       />
                     </div>
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-[10px]" />
                 </FormItem>
               )}
             />
@@ -160,32 +145,32 @@ export function LoginForm() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-semibold text-slate-700">パスワード</FormLabel>
+                  <FormLabel className="text-xs font-bold text-slate-600">パスワード</FormLabel>
                   <FormControl>
                     <div className="relative group">
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
                       <Input
                         type="password"
-                        placeholder="••••••••"
+                        placeholder="6文字以上のパスワード"
                         className="pl-10 h-11 border-slate-200 focus:border-primary focus:ring-primary transition-all duration-200"
                         {...field}
                       />
                     </div>
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-[10px]" />
                 </FormItem>
               )}
             />
 
             <Button
               type="submit"
-              className="w-full h-11 bg-primary hover:bg-primary/90 text-white font-semibold shadow-md transition-all duration-200"
+              className="w-full h-11 bg-primary hover:bg-primary/90 text-white font-bold shadow-md transition-all duration-200"
               disabled={isLoading}
             >
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  認証中...
+                  認証処理中...
                 </>
               ) : (
                 "ログイン"
@@ -194,19 +179,21 @@ export function LoginForm() {
           </form>
         </Form>
       </CardContent>
-      <CardFooter className="flex flex-col gap-4 text-center pb-8">
-        <div className="text-xs text-muted-foreground bg-slate-50 p-4 rounded-lg border border-slate-100 text-left w-full space-y-2">
-          <p className="font-bold flex items-center gap-1 text-slate-800">
-            <Info className="h-3 w-3" /> 確認項目:
+      <CardFooter className="flex flex-col gap-4 text-center pb-8 px-6">
+        <div className="text-[11px] text-muted-foreground bg-slate-50 p-4 rounded-xl border border-slate-100 text-left w-full space-y-3">
+          <p className="font-bold flex items-center gap-1 text-slate-700">
+            <CheckCircle2 className="h-3 w-3 text-green-500" /> ログインできない場合：
           </p>
-          <ul className="list-disc list-inside space-y-1 text-[11px]">
-            <li>以下のメールアドレスが <strong>Firebase Authentication (Users)</strong> に登録されていますか？</li>
-            <li>Firebase側で <strong>Email/Password 認証</strong> が有効になっていますか？</li>
-            <li>パスワードは大文字・小文字・記号を含め正確ですか？</li>
-          </ul>
-          <div className="mt-2 p-2 bg-slate-200 rounded text-[10px] font-mono break-all">
-            <strong>許可リスト:</strong><br />
-            {AUTHORIZED_EMAILS.join(", ")}
+          <ol className="list-decimal list-inside space-y-1 text-slate-500 pl-1">
+            <li>Firebaseコンソールで<strong>メール/パスワード認証</strong>を有効にしましたか？</li>
+            <li><strong>Authentication &gt; Users</strong>タブで、このメールアドレスのユーザーを登録しましたか？</li>
+            <li>パスワードは<strong>6文字以上</strong>入力していますか？</li>
+          </ol>
+          <div className="pt-2 border-t border-slate-200">
+            <p className="font-bold text-slate-700 mb-1">許可リストに含まれるアドレス:</p>
+            <p className="font-mono text-[9px] break-all leading-tight opacity-70">
+              {AUTHORIZED_EMAILS.slice(0, 3).join(", ")} ...他
+            </p>
           </div>
         </div>
       </CardFooter>

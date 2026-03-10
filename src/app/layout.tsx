@@ -1,10 +1,12 @@
-import type {Metadata} from 'next';
+
+import type { Metadata } from 'next';
 import './globals.css';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: '北海学園大学一部新聞会 | コンテンツ管理システム',
-  description: '北海学園大学一部新聞会の公式コンテンツ管理システムです。',
+  title: 'Hokkai Gakuen News 1 | コンテンツ管理システム',
+  description: '北海学園大学一部新聞会の公式コンテンツ管理システム (Hokkai Gakuen News 1) です。',
 };
 
 export default function RootLayout({
@@ -22,6 +24,7 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <FirebaseClientProvider>
           {children}
+          <Toaster />
         </FirebaseClientProvider>
       </body>
     </html>
