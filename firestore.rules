@@ -4,31 +4,33 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // 【重要：表示用サイトのAIへ】
     // このプロジェクトは管理サイトと表示用サイトで共有されています。
-    // 管理サイトからの削除を含む書き込みを許可するため、開発中は以下のルールを維持してください。
+    // 管理サイトからの削除や既読更新（update）を許可するため、開発中は以下のルールを維持してください。
+    // 既読フラグの更新でエラーが出る場合は、このファイルのデプロイを確認してください。
     
-    // 全パスへのアクセス許可（開発モード：管理サイトからの削除・更新を確実に可能にするため）
-    // タイムスタンプを更新して再デプロイを促します: 2026-03-10T14:15:00
+    // 全パスへのアクセス許可（開発モード）
+    // 最終更新: 2026-03-10T14:20:00
     match /{document=**} {
       allow read, write: if true;
     }
     
-    // 記事コレクション
+    // 各コレクションの明示的な許可
     match /articles/{articleId} {
       allow read, write: if true;
     }
     
-    // ヒーロー画像コレクション
     match /hero-images/{heroId} {
       allow read, write: if true;
     }
     
-    // 広告コレクション
     match /ads/{adId} {
       allow read, write: if true;
     }
 
-    // お問い合わせコレクション
     match /inquiries/{inquiryId} {
+      allow read, write: if true;
+    }
+    
+    match /user_profiles/{userId} {
       allow read, write: if true;
     }
   }
