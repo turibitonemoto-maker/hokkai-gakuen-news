@@ -19,12 +19,14 @@ import { ArticleManager } from "@/components/dashboard/article-manager";
 import { HeroManager } from "@/components/dashboard/hero-manager";
 import { AdManager } from "@/components/dashboard/ad-manager";
 import { PresidentMessageManager } from "@/components/dashboard/president-message-manager";
+import { LoginForm } from "@/components/auth/login-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase, useUser, useAuth } from "@/firebase";
 import { collection, query, orderBy, limit } from "firebase/firestore";
+import { signOut } from "firebase/auth";
 
 type ViewMode = "overview" | "articles" | "hero" | "ads" | "president";
 
@@ -33,6 +35,8 @@ type ViewMode = "overview" | "articles" | "hero" | "ads" | "president";
  * サイドバーナビゲーションを採用し、モジュールごとに表示を切り替えます。
  */
 export default function Home() {
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
   const [activeView, setActiveView] = useState<ViewMode>("overview");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [mounted, setMounted] = useState(false);
@@ -48,6 +52,10 @@ export default function Home() {
     { id: "ads", label: "広告管理", icon: Megaphone },
     { id: "president", label: "会長挨拶設定", icon: UserRound },
   ];
+
+  const handleLogout = async () => {
+    await signOut(auth);
+  };
 
   const renderContent = () => {
     switch (activeView) {
@@ -65,7 +73,24 @@ export default function Home() {
     }
   };
 
-  if (!mounted) return null;
+  if (!mounted || isUserLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // ログインしていない場合はログインフォームを表示
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#1e293b] p-4">
+        <div className="w-full max-w-md">
+          <LoginForm />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
@@ -111,7 +136,7 @@ export default function Home() {
           <Button 
             variant="ghost" 
             className="w-full text-slate-400 hover:text-white hover:bg-slate-800 justify-start gap-3 px-3"
-            onClick={() => window.location.reload()}
+            onClick={handleLogout}
           >
             <LogOut className="h-5 w-5 shrink-0" />
             {isSidebarOpen && <span className="text-sm font-medium">ログアウト</span>}
@@ -137,10 +162,10 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-3">
             <Badge variant="outline" className="bg-slate-50 text-slate-500 font-normal">
-              サーバー: 正常稼働中
+              ユーザー: {user.email}
             </Badge>
-            <div className="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 font-bold text-xs">
-              AD
+            <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-white font-bold text-xs">
+              {user.email?.[0].toUpperCase()}
             </div>
           </div>
         </header>
@@ -151,7 +176,7 @@ export default function Home() {
 
         <footer className="py-6 px-8 text-slate-400 text-xs border-t border-slate-200 bg-white">
           <div className="max-w-7xl mx-auto flex justify-between items-center">
-            <p>&copy; {mounted ? new Date().getFullYear() : "----"} 北海学園大学一部新聞会. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} 北海学園大学一部新聞会. All rights reserved.</p>
             <div className="flex gap-4">
               <span className="hover:text-primary cursor-pointer">ドキュメント</span>
               <span className="hover:text-primary cursor-pointer">サポート</span>
@@ -172,6 +197,10 @@ function DashboardOverview({ onNavigate }: { onNavigate: (view: ViewMode) => voi
 
   useEffect(() => {
     setCurrentTime(new Date().toLocaleString('ja-JP'));
+    const timer = setInterval(() => {
+      setCurrentTime(new Date().toLocaleString('ja-JP'));
+    }, 1000);
+    return () => clearInterval(timer);
   }, []);
 
   // 実データの取得

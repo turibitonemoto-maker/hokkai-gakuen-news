@@ -4,6 +4,8 @@ import {
   signInAnonymously,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  setPersistence,
+  browserSessionPersistence,
 } from 'firebase/auth';
 import { errorEmitter } from '@/firebase/error-emitter';
 
@@ -21,9 +23,14 @@ export function initiateEmailSignUp(authInstance: Auth, email: string, password:
   });
 }
 
-/** Initiate email/password sign-in (non-blocking). */
+/** Initiate email/password sign-in (non-blocking with session persistence). */
 export function initiateEmailSignIn(authInstance: Auth, email: string, password: string): void {
-  signInWithEmailAndPassword(authInstance, email, password).catch(error => {
-    errorEmitter.emit('auth-error', error);
-  });
+  // Set persistence to session before signing in
+  setPersistence(authInstance, browserSessionPersistence)
+    .then(() => {
+      return signInWithEmailAndPassword(authInstance, email, password);
+    })
+    .catch(error => {
+      errorEmitter.emit('auth-error', error);
+    });
 }
