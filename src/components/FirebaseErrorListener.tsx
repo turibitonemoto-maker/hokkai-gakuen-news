@@ -5,22 +5,22 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
 /**
- * An invisible component that listens for globally emitted 'permission-error' events.
- * It throws any received error to be caught by Next.js's global-error.tsx.
+ * Firestoreの権限エラーを監視し、開発時に分かりやすいエラー画面を表示するコンポーネント。
+ * 認証エラー（ログイン失敗など）はアプリをクラッシュさせないよう、ここでは無視します。
  */
 export function FirebaseErrorListener() {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     const handlePermissionError = (error: FirestorePermissionError) => {
+      // セキュリティルール違反は開発者に知らせるためスローする
       setError(error);
     };
 
     const handleAuthError = (error: Error) => {
-      // Auth errors are often user-level (invalid credentials), 
-      // so we might not want to crash the whole app in production.
-      // But for the developer loop, we propagate it.
-      setError(error);
+      // ログイン失敗などの認証エラーは、各コンポーネント（LoginFormなど）で処理するため
+      // ここではスロー（クラッシュ）させません。
+      console.warn("Auth Error handled contextually:", error.message);
     };
 
     errorEmitter.on('permission-error', handlePermissionError);

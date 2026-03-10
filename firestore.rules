@@ -2,68 +2,38 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    /**
-     * 【SecureEntry セキュリティルール概要】
-     * 
-     * ■ 設計哲学
-     * このルールセットは「厳格なユーザー所有権モデル」を採用しています。
-     * 「承認の独立性」を重視し、他のドキュメントを読み込む（get/exists）ことなく、
-     * パス情報と認証情報のみでアクセス可否を判断する設計になっています。
-     *
-     * ■ データ構造
-     * すべてのユーザーデータは `/user_profiles/{userId}` に格納されます。
-     * userId は Firebase Authentication の UID と完全に一致する必要があります。
-     *
-     * ■ 主要なセキュリティ決定
-     * 1. 自己所有権: ユーザーは自分のプロファイルのみを読み書きできます。
-     * 2. リスト制限: ユーザー一覧の取得（list）は禁止されており、自分のデータのみ取得可能です。
-     * 3. 事前承認制: 管理プロセスによってドキュメントが作成される運用を想定していますが、
-     *    プロトタイプ版として UID が一致する場合のみ作成を許可しています。
-     * 4. 整合性保護: ドキュメント内の `id` フィールドがパスの `userId` と一致することを強制します。
-     */
-
     // --- ヘルパー関数 ---
-
-    // ユーザーがサインインしているか確認
     function isSignedIn() {
       return request.auth != null;
     }
 
-    // リクエストされたパスのUIDが、操作中のユーザーのUIDと一致するか確認
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // 更新・削除時に、既存のドキュメントの所有者であることを確認
-    function isExistingOwner(userId) {
-      return resource != null && isOwner(userId);
-    }
+    // --- 各コレクションのルール ---
 
-    // --- コレクションルール ---
-
-    /**
-     * @description ユーザープロファイルへのアクセス制御。所有者のみが自身のデータにアクセス可能。
-     * @path /user_profiles/{userId}
-     * @allow (get, list, create, update, delete) 認証UIDがドキュメントID(userId)と一致する場合。
-     * @deny 他人のUIDでアクセスしようとした場合。
-     * @principle パスベースの所有権とリレーショナル整合性の強制。
-     */
+    // ユーザープロファイル: 本人のみ
     match /user_profiles/{userId} {
-      
-      // 読み取り: 自分のプロファイルのみ取得・リスト表示可能
-      allow get, list: if isOwner(userId);
-      
-      // 作成: 自分のUIDで、かつデータ内のIDも一致する場合のみ許可
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      
-      // 更新: 既存の所有者であり、かつIDフィールド（所有権紐付け）を変更しない場合のみ許可
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
-      
-      // 削除: 既存の所有者のみ許可
-      allow delete: if isExistingOwner(userId);
+      allow read, write: if isOwner(userId);
     }
 
-    // デフォルトで全てのアクセスを拒否（ホワイトリスト形式）
+    // 記事管理: ログイン済みユーザーなら誰でも管理可能（プロトタイプ仕様）
+    match /articles/{articleId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // ヒーロー画像管理: ログイン済みユーザー
+    match /hero-images/{heroId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // 広告管理: ログイン済みユーザー
+    match /ads/{adId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // デフォルト拒否
     match /{path=**} {
       allow read, write: if false;
     }
