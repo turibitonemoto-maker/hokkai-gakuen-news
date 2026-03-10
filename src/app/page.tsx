@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   LayoutDashboard, 
   FileText, 
@@ -32,6 +32,11 @@ type ViewMode = "overview" | "articles" | "hero" | "ads" | "president";
 export default function Home() {
   const [activeView, setActiveView] = useState<ViewMode>("overview");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const menuItems = [
     { id: "overview", label: "ダッシュボード", icon: LayoutDashboard },
@@ -141,7 +146,7 @@ export default function Home() {
 
         <footer className="py-6 px-8 text-slate-400 text-xs border-t border-slate-200 bg-white">
           <div className="max-w-7xl mx-auto flex justify-between items-center">
-            <p>&copy; {new Date().getFullYear()} 北海学園大学一部新聞会. All rights reserved.</p>
+            <p>&copy; {mounted ? new Date().getFullYear() : "----"} 北海学園大学一部新聞会. All rights reserved.</p>
             <div className="flex gap-4">
               <span className="hover:text-primary cursor-pointer">ドキュメント</span>
               <span className="hover:text-primary cursor-pointer">サポート</span>
@@ -157,12 +162,18 @@ export default function Home() {
  * 概要表示用コンポーネント（ダッシュボードのトップ）
  */
 function DashboardOverview({ onNavigate }: { onNavigate: (view: ViewMode) => void }) {
+  const [currentTime, setCurrentTime] = useState<string | null>(null);
+
+  useEffect(() => {
+    setCurrentTime(new Date().toLocaleString('ja-JP'));
+  }, []);
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col gap-1">
         <h3 className="text-2xl font-bold text-slate-800">こんにちは、管理者様</h3>
         <p className="text-slate-500 text-sm font-medium flex items-center gap-2">
-          <Clock className="h-4 w-4" /> 最終更新: {new Date().toLocaleString('ja-JP')}
+          <Clock className="h-4 w-4" /> 最終更新: {currentTime || "読み込み中..."}
         </p>
       </div>
 
