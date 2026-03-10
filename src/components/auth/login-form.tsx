@@ -3,7 +3,7 @@
 
 import * as React from "react";
 import { useState, useEffect } from "react";
-import { Lock, Mail, ShieldCheck, Loader2, AlertCircle } from "lucide-react";
+import { Lock, Mail, ShieldCheck, Loader2, AlertCircle, Info } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -57,14 +57,13 @@ export function LoginForm() {
       
       let errorMessage = "ログインに失敗しました。";
       
-      if (error.message.includes("auth/invalid-credential")) {
-        errorMessage = "メールアドレスまたはパスワードが正しくありません。または、ユーザーがFirebaseに登録されていません。";
-      } else if (error.message.includes("auth/user-not-found")) {
-        errorMessage = "このユーザーは見つかりませんでした。";
-      } else if (error.message.includes("auth/wrong-password")) {
-        errorMessage = "パスワードが正しくありません。";
+      // Firebaseの具体的なエラーコードに基づいたメッセージ
+      if (error.message.includes("auth/invalid-credential") || error.message.includes("auth/user-not-found") || error.message.includes("auth/wrong-password")) {
+        errorMessage = "メールアドレスまたはパスワードが正しくありません。Firebaseコンソールでユーザーが正しく作成されているか確認してください。";
       } else if (error.message.includes("auth/operation-not-allowed")) {
-        errorMessage = "Firebaseコンソールで「メール/パスワード認証」が有効になっていません。";
+        errorMessage = "Firebaseコンソールで「メール/パスワード」プロバイダーが有効になっていません。";
+      } else if (error.message.includes("auth/network-request-failed")) {
+        errorMessage = "ネットワーク接続に失敗しました。";
       }
 
       setServerError(errorMessage);
@@ -83,18 +82,20 @@ export function LoginForm() {
     setIsLoading(true);
     setServerError(null);
 
-    // 許可されたメールアドレスリストを事前にチェック
+    // 1. コード内の許可リスト（Whitelist）チェック
     if (!AUTHORIZED_EMAILS.includes(values.email)) {
       setIsLoading(false);
-      setServerError(`アクセス権限がありません。許可されたメールアドレスを使用してください。`);
+      const msg = `アクセス権限がありません。src/lib/auth-constants.ts に登録されているメールアドレスを使用してください。`;
+      setServerError(msg);
       toast({
         variant: "destructive",
-        title: "アクセス権限エラー",
+        title: "アクセス制限",
         description: "入力されたメールアドレスは管理者リストに含まれていません。",
       });
       return;
     }
 
+    // 2. Firebase Authでの認証試行
     initiateEmailSignIn(auth, values.email, values.password);
   }
 
@@ -106,18 +107,18 @@ export function LoginForm() {
             <ShieldCheck className="h-8 w-8" />
           </div>
         </div>
-        <CardTitle className="text-2xl font-headline font-bold text-primary tracking-tight">
+        <CardTitle className="text-2xl font-bold text-primary tracking-tight">
           北海学園一部新聞会
         </CardTitle>
         <CardDescription className="text-muted-foreground">
-          CMS 管理パネルへログイン
+          CMS 管理パネル
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
         {serverError && (
-          <Alert variant="destructive" className="mb-4">
+          <Alert variant="destructive" className="mb-4 bg-destructive/5">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>ログインエラー</AlertTitle>
+            <AlertTitle>認証に失敗しました</AlertTitle>
             <AlertDescription className="text-xs">
               {serverError}
             </AlertDescription>
@@ -170,7 +171,7 @@ export function LoginForm() {
 
             <Button
               type="submit"
-              className="w-full h-11 bg-primary hover:bg-primary/90 text-white font-semibold shadow-md transition-all duration-200 active:scale-[0.98]"
+              className="w-full h-11 bg-primary hover:bg-primary/90 text-white font-semibold shadow-md transition-all duration-200"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -186,10 +187,18 @@ export function LoginForm() {
         </Form>
       </CardContent>
       <CardFooter className="flex flex-col gap-4 text-center pb-8">
-        <div className="text-xs text-muted-foreground bg-slate-50 p-3 rounded-lg border border-slate-100">
-          <p className="font-bold mb-1">管理者へのヒント:</p>
-          <p>Firebase Consoleでユーザーを作成し、以下のいずれかのメールを使用してください:</p>
-          <code className="block mt-1 text-primary">admin@hokkai-shinbun.jp</code>
+        <div className="text-xs text-muted-foreground bg-slate-50 p-4 rounded-lg border border-slate-100 text-left w-full space-y-2">
+          <p className="font-bold flex items-center gap-1 text-slate-800">
+            <Info className="h-3 w-3" /> ログインできない場合:
+          </p>
+          <ol className="list-decimal list-inside space-y-1">
+            <li>Firebaseコンソールで<strong>Authentication</strong>を有効化</li>
+            <li>「Sign-in method」で<strong>メール/パスワード</strong>を有効化</li>
+            <li>「Users」で以下のメールを<strong>パスワード付きで登録</strong></li>
+          </ol>
+          <code className="block mt-2 p-1 bg-slate-200 rounded text-primary font-mono text-center">
+            admin@hokkai-shinbun.jp
+          </code>
         </div>
       </CardFooter>
     </Card>
