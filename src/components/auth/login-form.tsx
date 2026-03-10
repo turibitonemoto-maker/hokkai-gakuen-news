@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useState } from "react";
-import { Lock, Mail, User, ShieldCheck, Loader2 } from "lucide-react";
+import { Lock, Mail, ShieldCheck, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -17,7 +17,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Form,
   FormControl,
@@ -26,20 +25,16 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { AUTHORIZED_EMAILS } from "@/lib/auth-constants";
+import { useAuth, initiateEmailSignIn } from "@/firebase";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "有効なメールアドレスを入力してください。" }),
   password: z.string().min(6, { message: "パスワードは6文字以上で入力してください。" }),
 });
 
-interface LoginFormProps {
-  onSuccess: (email: string) => void;
-}
-
-export function LoginForm({ onSuccess }: LoginFormProps) {
+export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
-  const [authError, setAuthError] = useState<string | null>(null);
+  const auth = useAuth();
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -51,21 +46,11 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
 
   async function onSubmit(values: z.infer<typeof loginSchema>) {
     setIsLoading(true);
-    setAuthError(null);
-
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    if (AUTHORIZED_EMAILS.includes(values.email)) {
-      if (values.password === "password123") {
-        onSuccess(values.email);
-      } else {
-        setAuthError("パスワードが正しくありません。");
-      }
-    } else {
-      setAuthError("このメールアドレスは許可されていません。");
-    }
-    setIsLoading(false);
+    // initiateEmailSignInは非ブロッキングなので、成功/失敗はFirebaseProviderの
+    // onAuthStateChangedが自動的に検知します。
+    initiateEmailSignIn(auth, values.email, values.password);
+    // 画面のローディング状態を維持し、Provider側の状態変化を待ちます。
+    // エラーハンドリングはFirebaseErrorListenerが担当します。
   }
 
   return (
@@ -127,12 +112,6 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                 </FormItem>
               )}
             />
-
-            {authError && (
-              <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md flex items-center gap-2 animate-in fade-in slide-in-from-top-1">
-                <span>{authError}</span>
-              </div>
-            )}
 
             <Button
               type="submit"

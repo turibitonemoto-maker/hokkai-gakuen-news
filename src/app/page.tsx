@@ -1,33 +1,26 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useUser, useAuth } from "@/firebase";
 import { LoginForm } from "@/components/auth/login-form";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, CheckCircle2, LayoutDashboard } from "lucide-react";
+import { LogOut, User as UserIcon, CheckCircle2, LayoutDashboard, Loader2 } from "lucide-react";
+import { signOut } from "firebase/auth";
 
 export default function Home() {
-  const [user, setUser] = useState<string | null>(null);
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-    const savedUser = localStorage.getItem("secure_entry_user");
-    if (savedUser) {
-      setUser(savedUser);
-    }
-  }, []);
-
-  const handleLoginSuccess = (email: string) => {
-    setUser(email);
-    localStorage.setItem("secure_entry_user", email);
-  };
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
 
   const handleLogout = () => {
-    setUser(null);
-    localStorage.removeItem("secure_entry_user");
+    signOut(auth);
   };
 
-  if (!isMounted) return null;
+  if (isUserLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (!user) {
     return (
@@ -37,7 +30,7 @@ export default function Home() {
           <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent rounded-full blur-[120px]" />
         </div>
         <div className="relative z-10 w-full animate-in fade-in zoom-in-95 duration-500">
-          <LoginForm onSuccess={handleLoginSuccess} />
+          <LoginForm />
         </div>
       </main>
     );
@@ -54,8 +47,8 @@ export default function Home() {
         </div>
         <div className="flex items-center gap-4">
           <div className="hidden md:flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200">
-            <User className="h-4 w-4 text-slate-500" />
-            <span className="text-sm font-medium text-slate-700">{user}</span>
+            <UserIcon className="h-4 w-4 text-slate-500" />
+            <span className="text-sm font-medium text-slate-700">{user.email}</span>
           </div>
           <Button 
             variant="outline" 
