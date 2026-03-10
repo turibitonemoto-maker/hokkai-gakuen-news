@@ -12,7 +12,8 @@ import {
   LogOut,
   BarChart3,
   Clock,
-  ArrowUpRight
+  ArrowUpRight,
+  Loader2
 } from "lucide-react";
 import { ArticleManager } from "@/components/dashboard/article-manager";
 import { HeroManager } from "@/components/dashboard/hero-manager";
@@ -22,6 +23,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection, query, orderBy, limit } from "firebase/firestore";
 
 type ViewMode = "overview" | "articles" | "hero" | "ads" | "president";
 
@@ -61,6 +64,8 @@ export default function Home() {
         return <DashboardOverview onNavigate={(view) => setActiveView(view)} />;
     }
   };
+
+  if (!mounted) return null;
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
@@ -163,49 +168,71 @@ export default function Home() {
  */
 function DashboardOverview({ onNavigate }: { onNavigate: (view: ViewMode) => void }) {
   const [currentTime, setCurrentTime] = useState<string | null>(null);
+  const firestore = useFirestore();
 
   useEffect(() => {
     setCurrentTime(new Date().toLocaleString('ja-JP'));
   }, []);
+
+  // 実データの取得
+  const articlesQuery = useMemoFirebase(() => firestore ? collection(firestore, "articles") : null, [firestore]);
+  const adsQuery = useMemoFirebase(() => firestore ? collection(firestore, "ads") : null, [firestore]);
+  const heroQuery = useMemoFirebase(() => firestore ? collection(firestore, "hero-images") : null, [firestore]);
+  const recentActivityQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, "articles"), orderBy("updatedAt", "desc"), limit(4));
+  }, [firestore]);
+
+  const { data: articles, isLoading: isArticlesLoading } = useCollection(articlesQuery);
+  const { data: ads, isLoading: isAdsLoading } = useCollection(adsQuery);
+  const { data: heroImages, isLoading: isHeroLoading } = useCollection(heroQuery);
+  const { data: recentArticles, isLoading: isActivityLoading } = useCollection(recentActivityQuery);
+
+  const stats = {
+    articles: articles?.length || 0,
+    publishedArticles: articles?.filter(a => a.isPublished).length || 0,
+    totalAdClicks: ads?.reduce((sum, ad) => sum + (ad.clickCount || 0), 0) || 0,
+    heroImages: heroImages?.length || 0,
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col gap-1">
         <h3 className="text-2xl font-bold text-slate-800">こんにちは、管理者様</h3>
         <p className="text-slate-500 text-sm font-medium flex items-center gap-2">
-          <Clock className="h-4 w-4" /> 最終更新: {currentTime || "読み込み中..."}
+          <Clock className="h-4 w-4" /> 現在時刻: {currentTime || "読み込み中..."}
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <QuickStatCard 
           title="公開済み記事" 
-          value="24" 
-          delta="+3 (今週)" 
+          value={isArticlesLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : stats.publishedArticles} 
+          delta={`全${stats.articles}件中`} 
           icon={FileText} 
           color="blue"
           onClick={() => onNavigate("articles")}
         />
         <QuickStatCard 
           title="広告総閲覧数" 
-          value="1,280" 
-          delta="+12% (前月比)" 
+          value={isAdsLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : stats.totalAdClicks.toLocaleString()} 
+          delta={`${ads?.length || 0}件の広告合計`} 
           icon={BarChart3} 
           color="green"
           onClick={() => onNavigate("ads")}
         />
         <QuickStatCard 
           title="ヒーロー画像数" 
-          value="5" 
-          delta="上限なし" 
+          value={isHeroLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : stats.heroImages} 
+          delta="スライド設定中" 
           icon={ImageIcon} 
           color="purple"
           onClick={() => onNavigate("hero")}
         />
         <QuickStatCard 
-          title="未対応事項" 
-          value="0" 
-          delta="良好" 
+          title="システム状態" 
+          value="良好" 
+          delta="正常稼働中" 
           icon={LayoutDashboard} 
           color="orange"
           onClick={() => onNavigate("overview")}
@@ -217,25 +244,28 @@ function DashboardOverview({ onNavigate }: { onNavigate: (view: ViewMode) => voi
           <CardHeader className="bg-white border-b border-slate-50">
             <CardTitle className="text-base font-bold flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-primary" />
-              最近のアクティビティ
+              最近の更新記事
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <div className="divide-y divide-slate-100">
-              {[
-                { title: "新入生歓迎特設ページ用記事を公開しました", time: "2時間前", user: "管理者" },
-                { title: "トップページヒーロー画像を更新しました", time: "5時間前", user: "編集者A" },
-                { title: "学内生協広告の掲載期間を延長しました", time: "昨日", user: "管理者" },
-                { title: "会長挨拶のメッセージを更新しました", time: "3日前", user: "管理者" },
-              ].map((item, i) => (
-                <div key={i} className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between">
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium text-slate-700">{item.title}</span>
-                    <span className="text-[10px] text-slate-400 mt-1">{item.time} • 実行者: {item.user}</span>
+              {isActivityLoading ? (
+                <div className="p-8 flex justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+              ) : recentArticles && recentArticles.length > 0 ? (
+                recentArticles.map((article) => (
+                  <div key={article.id} className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-slate-700">{article.title}</span>
+                      <span className="text-[10px] text-slate-400 mt-1">
+                        {article.updatedAt?.toDate?.() ? article.updatedAt.toDate().toLocaleString('ja-JP') : "不明"} • タイプ: {article.articleType === "Note" ? "note連携" : "標準記事"}
+                      </span>
+                    </div>
+                    <ArrowUpRight className="h-4 w-4 text-slate-300 opacity-0 group-hover:opacity-100" />
                   </div>
-                  <ArrowUpRight className="h-4 w-4 text-slate-300 opacity-0 group-hover:opacity-100" />
-                </div>
-              ))}
+                )
+              )) : (
+                <div className="p-8 text-center text-slate-400 text-sm">更新履歴がありません</div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -289,7 +319,9 @@ function QuickStatCard({ title, value, delta, icon: Icon, color, onClick }: any)
         </div>
         <div className="mt-4">
           <p className="text-sm font-medium text-slate-500">{title}</p>
-          <h4 className="text-2xl font-bold text-slate-800 mt-1">{value}</h4>
+          <div className="text-2xl font-bold text-slate-800 mt-1 flex items-center gap-2">
+            {value}
+          </div>
           <p className="text-[10px] text-slate-400 mt-1 font-medium">{delta}</p>
         </div>
       </CardContent>
