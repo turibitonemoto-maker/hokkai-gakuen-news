@@ -1,24 +1,26 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // 管理サイト開発フェーズのため、一時的に全コレクションへの認証なしアクセスを許可します
-    // 注意: 本番運用時には、特定の管理者のみが書き込めるようにルールを制限する必要があります
+    // 開発フェーズおよび管理サイト分離のため、一時的に全コレクションへの認証なしアクセスを許可します
+    // 注意: 本番運用時には、特定のIP制限や管理者認証を導入することを強く推奨します
     
-    match /{path=**} {
+    // 全パスへのワイルドカード許可（強制適用のためコメントを更新: 2024-05-20）
+    match /{document=**} {
       allow read, write: if true;
     }
     
-    // 特定のパスを明示的に指定して、ルールの適用を確実にする
+    // 記事コレクションへの明示的な許可
     match /articles/{articleId} {
       allow read, write: if true;
     }
+    
+    // ヒーロー画像コレクションへの明示的な許可
     match /hero-images/{heroId} {
       allow read, write: if true;
     }
+    
+    // 広告コレクションへの明示的な許可
     match /ads/{adId} {
-      allow read, write: if true;
-    }
-    match /user_profiles/{userId} {
       allow read, write: if true;
     }
   }
