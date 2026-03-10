@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Lock, Mail, ShieldCheck, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,7 +25,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useAuth, initiateEmailSignIn } from "@/firebase";
+import { useAuth, initiateEmailSignIn, errorEmitter } from "@/firebase";
+import { useToast } from "@/hooks/use-toast";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "有効なメールアドレスを入力してください。" }),
@@ -35,6 +36,7 @@ const loginSchema = z.object({
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const auth = useAuth();
+  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -44,13 +46,30 @@ export function LoginForm() {
     },
   });
 
+  useEffect(() => {
+    const handleAuthError = (error: Error) => {
+      setIsLoading(false);
+      console.error("Login Error:", error);
+      
+      let errorMessage = "ログインに失敗しました。";
+      if (error.message.includes("auth/invalid-credential") || error.message.includes("auth/user-not-found") || error.message.includes("auth/wrong-password")) {
+        errorMessage = "メールアドレスまたはパスワードが正しくありません。";
+      }
+
+      toast({
+        variant: "destructive",
+        title: "認証エラー",
+        description: errorMessage,
+      });
+    };
+
+    errorEmitter.on('auth-error', handleAuthError);
+    return () => errorEmitter.off('auth-error', handleAuthError);
+  }, [toast]);
+
   async function onSubmit(values: z.infer<typeof loginSchema>) {
     setIsLoading(true);
-    // initiateEmailSignInは非ブロッキングなので、成功/失敗はFirebaseProviderの
-    // onAuthStateChangedが自動的に検知します。
     initiateEmailSignIn(auth, values.email, values.password);
-    // 画面のローディング状態を維持し、Provider側の状態変化を待ちます。
-    // エラーハンドリングはFirebaseErrorListenerが担当します。
   }
 
   return (
