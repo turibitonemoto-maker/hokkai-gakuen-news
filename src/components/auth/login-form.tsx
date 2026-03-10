@@ -28,7 +28,6 @@ import {
 } from "@/components/ui/form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAuth, initiateEmailSignIn, errorEmitter } from "@/firebase";
-import { AUTHORIZED_EMAILS } from "@/lib/auth-constants";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "有効なメールアドレスを入力してください。" }),
@@ -54,7 +53,6 @@ export function LoginForm() {
       
       let errorMessage = "ログインに失敗しました。";
       
-      // Firebaseの具体的なエラーコードに基づいたメッセージ
       if (error.message.includes("auth/invalid-credential") || error.message.includes("auth/user-not-found") || error.message.includes("auth/wrong-password")) {
         errorMessage = "認証に失敗しました。以下の点を確認してください：\n1. パスワードが正しいか\n2. Firebaseコンソールの「Users」にこのメールアドレスを登録済みか\n3. プロバイダー（メール/パスワード）が有効か";
       } else if (error.message.includes("auth/too-many-requests")) {
@@ -74,19 +72,10 @@ export function LoginForm() {
     setIsLoading(true);
     setServerError(null);
 
-    const inputEmail = values.email.toLowerCase();
-    const isAuthorized = AUTHORIZED_EMAILS.some(email => email.toLowerCase() === inputEmail);
-
-    if (!isAuthorized) {
-      setIsLoading(false);
-      setServerError("このメールアドレスは管理システムへのアクセスが許可されていません。lib/auth-constants.ts に登録されているか確認してください。");
-      return;
-    }
-
-    // ログイン処理を開始
+    // ログイン処理を開始（許可リストチェックは削除されました）
     initiateEmailSignIn(auth, values.email, values.password);
     
-    // タイムアウトによるisLoading解除（万が一Firebaseから応答がない場合のため）
+    // タイムアウトによるisLoading解除
     setTimeout(() => setIsLoading(false), 5000);
   }
 
@@ -187,12 +176,6 @@ export function LoginForm() {
             <li><strong>Authentication &gt; Users</strong>タブで、このメールアドレスのユーザーを登録しましたか？</li>
             <li>パスワードは<strong>6文字以上</strong>入力していますか？</li>
           </ol>
-          <div className="pt-2 border-t border-slate-200">
-            <p className="font-bold text-slate-700 mb-1">許可リストに含まれるアドレス:</p>
-            <p className="font-mono text-[9px] break-all leading-tight opacity-70">
-              {AUTHORIZED_EMAILS.slice(0, 3).join(", ")} ...他
-            </p>
-          </div>
         </div>
       </CardFooter>
     </Card>
