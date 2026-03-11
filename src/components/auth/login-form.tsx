@@ -3,7 +3,7 @@
 
 import * as React from "react";
 import { useState, useEffect } from "react";
-import { Lock, Mail, ShieldCheck, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Lock, Mail, ShieldCheck, Loader2, AlertCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -13,7 +13,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -54,7 +53,7 @@ export function LoginForm() {
       let errorMessage = "ログインに失敗しました。";
       
       if (error.message.includes("auth/invalid-credential") || error.message.includes("auth/user-not-found") || error.message.includes("auth/wrong-password")) {
-        errorMessage = "認証に失敗しました。以下の点を確認してください：\n1. パスワードが正しいか\n2. Firebaseコンソールの「Users」にこのメールアドレスを登録済みか\n3. プロバイダー（メール/パスワード）が有効か";
+        errorMessage = "認証に失敗しました。メールアドレスまたはパスワードが正しくありません。";
       } else if (error.message.includes("auth/too-many-requests")) {
         errorMessage = "短時間に何度も失敗したため、一時的にロックされています。少し時間を置いてから再試行してください。";
       } else {
@@ -72,10 +71,8 @@ export function LoginForm() {
     setIsLoading(true);
     setServerError(null);
 
-    // ログイン処理を開始（許可リストチェックは削除されました）
     initiateEmailSignIn(auth, values.email, values.password);
     
-    // タイムアウトによるisLoading解除
     setTimeout(() => setIsLoading(false), 5000);
   }
 
@@ -94,7 +91,7 @@ export function LoginForm() {
           コンテンツ管理システム
         </CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-4">
+      <CardContent className="grid gap-4 pb-8">
         {serverError && (
           <Alert variant="destructive" className="mb-4 bg-destructive/5 border-destructive/20 text-destructive">
             <AlertCircle className="h-4 w-4" />
@@ -138,7 +135,7 @@ export function LoginForm() {
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
                       <Input
                         type="password"
-                        placeholder="6文字以上のパスワード"
+                        placeholder="パスワード"
                         className="pl-10 h-11 border-slate-200 focus:border-primary focus:ring-primary transition-all duration-200"
                         {...field}
                       />
@@ -151,7 +148,7 @@ export function LoginForm() {
 
             <Button
               type="submit"
-              className="w-full h-11 bg-primary hover:bg-primary/90 text-white font-bold shadow-md transition-all duration-200"
+              className="w-full h-11 bg-primary hover:bg-primary/90 text-white font-bold shadow-md transition-all duration-200 mt-2"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -166,18 +163,6 @@ export function LoginForm() {
           </form>
         </Form>
       </CardContent>
-      <CardFooter className="flex flex-col gap-4 text-center pb-8 px-6">
-        <div className="text-[11px] text-muted-foreground bg-slate-50 p-4 rounded-xl border border-slate-100 text-left w-full space-y-3">
-          <p className="font-bold flex items-center gap-1 text-slate-700">
-            <CheckCircle2 className="h-3 w-3 text-green-500" /> ログインできない場合：
-          </p>
-          <ol className="list-decimal list-inside space-y-1 text-slate-500 pl-1">
-            <li>Firebaseコンソールで<strong>メール/パスワード認証</strong>を有効にしましたか？</li>
-            <li><strong>Authentication &gt; Users</strong>タブで、このメールアドレスのユーザーを登録しましたか？</li>
-            <li>パスワードは<strong>6文字以上</strong>入力していますか？</li>
-          </ol>
-        </div>
-      </CardFooter>
     </Card>
   );
 }
