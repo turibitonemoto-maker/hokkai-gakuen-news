@@ -16,7 +16,8 @@ import {
   ArrowUpRight,
   Loader2,
   ShieldAlert,
-  Settings
+  Settings,
+  Globe
 } from "lucide-react";
 import { ArticleManager } from "@/components/dashboard/article-manager";
 import { HeroManager } from "@/components/dashboard/hero-manager";
@@ -232,12 +233,23 @@ function DashboardOverview({ onNavigate }: { onNavigate: (view: ViewMode) => voi
             <Clock className="h-4 w-4" /> 現在時刻: {currentTime || "読み込み中..."}
           </p>
         </div>
-        {maintenanceConfig?.isMaintenanceMode && (
-          <Badge variant="destructive" className="h-8 px-4 flex gap-2 items-center animate-bounce">
-            <ShieldAlert className="h-4 w-4" />
-            メンテナンス中
-          </Badge>
-        )}
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex items-center gap-2 h-8"
+            onClick={() => window.open('https://hokkai-shinbun.jp', '_blank')}
+          >
+            <Globe className="h-4 w-4" />
+            公開サイトを確認
+          </Button>
+          {maintenanceConfig?.isMaintenanceMode && (
+            <Badge variant="destructive" className="h-8 px-4 flex gap-2 items-center animate-pulse">
+              <ShieldAlert className="h-4 w-4" />
+              メンテナンス中（表示サイト停止）
+            </Badge>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -267,9 +279,9 @@ function DashboardOverview({ onNavigate }: { onNavigate: (view: ViewMode) => voi
         />
         <QuickStatCard 
           title="システム状態" 
-          value={maintenanceConfig?.isMaintenanceMode ? "停止中" : "稼働中"} 
-          delta={maintenanceConfig?.isMaintenanceMode ? "一般アクセス不可" : "正常稼働中"} 
-          icon={Settings} 
+          value={maintenanceConfig?.isMaintenanceMode ? "停止中" : "正常"} 
+          delta={maintenanceConfig?.isMaintenanceMode ? "メンテナンス画面表示中" : "サイト稼働中"} 
+          icon={maintenanceConfig?.isMaintenanceMode ? ShieldAlert : Globe} 
           color={maintenanceConfig?.isMaintenanceMode ? "orange" : "blue"}
           onClick={() => onNavigate("maintenance")}
         />
@@ -293,7 +305,7 @@ function DashboardOverview({ onNavigate }: { onNavigate: (view: ViewMode) => voi
                     <div className="flex flex-col">
                       <span className="text-sm font-medium text-slate-700">{article.title}</span>
                       <span className="text-[10px] text-slate-400 mt-1">
-                        {article.updatedAt?.toDate?.() ? article.updatedAt.toDate().toLocaleString('ja-JP') : "不明"} • タイプ: {article.articleType === "Note" ? "note連携" : "標準記事"}
+                        {article.publishDate} • {article.articleType === "Note" ? "note連携" : "標準記事"}
                       </span>
                     </div>
                     <ArrowUpRight className="h-4 w-4 text-slate-300 opacity-0 group-hover:opacity-100" />

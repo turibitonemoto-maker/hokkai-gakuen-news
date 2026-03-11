@@ -14,7 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, ShieldAlert, AlertTriangle } from "lucide-react";
+import { Loader2, Save, ShieldAlert, AlertTriangle, Globe } from "lucide-react";
 import { useEffect } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -56,16 +56,17 @@ export function MaintenanceManager() {
   function onSubmit(values: MaintenanceValues) {
     if (!firestore || !docRef) return;
 
+    // 非同期での書き込み（伝令：Firestore経由で全サイトに通知）
     setDocumentNonBlocking(docRef, {
       ...values,
       updatedAt: serverTimestamp(),
     }, { merge: true });
 
     toast({
-      title: "設定を更新しました",
+      title: "システム状態を更新しました",
       description: values.isMaintenanceMode 
-        ? "メンテナンスモードを有効にしました。表示用サイトは停止されます。" 
-        : "メンテナンスモードを解除しました。サイトを再開します。",
+        ? "メンテナンスモードを有効にしました。公開サイトには休止メッセージが表示されます。" 
+        : "メンテナンスモードを解除しました。公開サイトが通常通り稼働します。",
     });
   }
 
@@ -82,15 +83,32 @@ export function MaintenanceManager() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-slate-800">システムメンテナンス設定</h2>
+        <h2 className="text-2xl font-bold text-slate-800">公開サイト連動設定</h2>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="flex items-center gap-2"
+          onClick={() => window.open('https://hokkai-shinbun.jp', '_blank')}
+        >
+          <Globe className="h-4 w-4" />
+          実際の表示を確認
+        </Button>
       </div>
 
-      {isCurrentModeActive && (
-        <Alert variant="destructive" className="animate-pulse">
+      {isCurrentModeActive ? (
+        <Alert variant="destructive" className="animate-pulse bg-destructive/10">
           <ShieldAlert className="h-4 w-4" />
-          <AlertTitle>メンテナンスモード有効中</AlertTitle>
+          <AlertTitle className="font-bold">メンテナンスモード実行中</AlertTitle>
           <AlertDescription>
-            現在、公式サイトは一時停止状態です。一般の訪問者はアクセスできません。
+            現在、公式サイトは一時停止状態です。外部からの訪問者にはメンテナンス画面が表示されます。
+          </AlertDescription>
+        </Alert>
+      ) : (
+        <Alert className="bg-green-50 border-green-200">
+          <Globe className="h-4 w-4 text-green-600" />
+          <AlertTitle className="text-green-800 font-bold">システム正常稼働中</AlertTitle>
+          <AlertDescription className="text-green-700">
+            公式サイトは一般公開されています。
           </AlertDescription>
         </Alert>
       )}
@@ -99,10 +117,10 @@ export function MaintenanceManager() {
         <CardHeader>
           <CardTitle className="text-xl flex items-center gap-2">
             <ShieldAlert className="h-5 w-5 text-primary" />
-            サイト停止・再開の管理
+            サイト停止・再開の制御
           </CardTitle>
           <CardDescription>
-            表示用サーバーの更新作業や、緊急の不具合対応時にサイトを一時的に停止できます。
+            このスイッチを切り替えると、即座に「表示用サイト」へステータスが通知されます。
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -115,11 +133,11 @@ export function MaintenanceManager() {
                   <FormItem className="flex flex-row items-center justify-between rounded-xl border-2 border-slate-100 p-6 bg-slate-50/50">
                     <div className="space-y-0.5">
                       <FormLabel className="text-lg font-bold flex items-center gap-2">
-                        メンテナンスモード
+                        メンテナンスモードを有効にする
                         {field.value && <span className="bg-red-100 text-red-600 text-[10px] px-2 py-0.5 rounded-full">実行中</span>}
                       </FormLabel>
                       <FormDescription className="text-sm">
-                        オンにすると、公式サイトにメンテナンス画面が表示され、通常のコンテンツが非表示になります。
+                        オンにすると、公式サイトの全ページが遮断され、指定のメッセージのみが表示されます。
                       </FormDescription>
                     </div>
                     <FormControl>
@@ -138,7 +156,7 @@ export function MaintenanceManager() {
                 name="maintenanceMessage"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-bold">メンテナンス中に表示するメッセージ</FormLabel>
+                    <FormLabel className="font-bold">表示用メッセージ（一般訪問者向け）</FormLabel>
                     <FormControl>
                       <Textarea 
                         placeholder="例：2024年4月1日 10:00 〜 15:00 までメンテナンスを行います。" 
@@ -147,7 +165,7 @@ export function MaintenanceManager() {
                       />
                     </FormControl>
                     <FormDescription>
-                      サイト停止理由や再開予定時刻などを記載してください。
+                      メンテナンスの理由、終了予定時刻、お問い合わせ先などを入力してください。
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -156,15 +174,16 @@ export function MaintenanceManager() {
 
               <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 flex gap-3 text-orange-800">
                 <AlertTriangle className="h-5 w-5 shrink-0" />
-                <p className="text-xs leading-relaxed">
-                  <strong>注意:</strong> この設定は「表示用サイト」に即座に反映されます。管理パネル自体は引き続き利用可能ですが、作業が完了したら必ず「オフ」にしてサイトを再開してください。
-                </p>
+                <div className="text-xs leading-relaxed">
+                  <p className="font-bold mb-1">管理者へのリマインド:</p>
+                  <p>この設定はFirestoreを通じて、公開中の全クライアントへ即座に同期されます。作業完了後は忘れずに解除してください。</p>
+                </div>
               </div>
 
               <div className="flex justify-end pt-4 border-t">
                 <Button type="submit" className="flex items-center gap-2 px-8 h-11">
                   <Save className="h-4 w-4" />
-                  設定を保存して適用
+                  設定を保存してサイトに反映
                 </Button>
               </div>
             </form>
