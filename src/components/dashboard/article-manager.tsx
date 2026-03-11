@@ -93,7 +93,6 @@ export function ArticleManager() {
     if (!articles) return [];
     if (selectedTags.length === 0) return articles;
 
-    // すべての選択中タグを含む記事をフィルタリング
     return articles.filter(article => {
       const articleTags = [
         CATEGORY_LABELS[article.categoryId] || article.categoryId,
