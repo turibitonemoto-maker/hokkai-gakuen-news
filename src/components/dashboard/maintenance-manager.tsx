@@ -62,7 +62,7 @@ export function MaintenanceManager() {
     }, { merge: true });
 
     toast({
-      title: "伝令を送信しました",
+      title: "設定を保存しました",
       description: values.isMaintenanceMode 
         ? "メンテナンスモードを【有効】にしました。公開サイトは即座に停止します。" 
         : "メンテナンスモードを【解除】しました。公開サイトが復旧します。",
@@ -83,7 +83,7 @@ export function MaintenanceManager() {
     <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-500">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800">公開サイト連動設定 (伝令)</h2>
+          <h2 className="text-2xl font-bold text-slate-800">公開サイト連動設定</h2>
           <p className="text-sm text-slate-500">ここでの変更は Firestore を通じて、即座に表示用サイトへ反映されます。</p>
         </div>
         <Button 
@@ -122,7 +122,7 @@ export function MaintenanceManager() {
             サイト停止・再開の制御
           </CardTitle>
           <CardDescription>
-            スイッチを切り替えて「設定を保存」すると、伝令が送信されます。
+            スイッチを切り替えて「設定を保存」すると、即座に反映されます。
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
@@ -177,15 +177,15 @@ export function MaintenanceManager() {
               <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 flex gap-4 text-orange-900 shadow-inner">
                 <AlertTriangle className="h-6 w-6 shrink-0 mt-0.5" />
                 <div className="text-xs leading-relaxed space-y-1">
-                  <p className="font-bold text-sm">【重要】伝令の仕組みについて</p>
-                  <p>保存ボタンを押すと、Firestore の共通設定ドキュメントが更新されます。表示用サイト（フロントエンド）はこのドキュメントをリアルタイムで監視しており、ミリ秒単位で表示が切り替わります。</p>
+                  <p className="font-bold text-sm">【重要】反映の仕組みについて</p>
+                  <p>保存ボタンを押すと、Firestore の共通設定ドキュメントが更新されます。表示用サイト（フロントエンド）はこのドキュメントをリアルタイムで監視しており、即座に表示が切り替わります。</p>
                 </div>
               </div>
 
               <div className="flex justify-end pt-6 border-t">
                 <Button type="submit" className="flex items-center gap-2 px-10 h-12 text-base font-bold shadow-lg hover:translate-y-[-1px] transition-all">
                   <Save className="h-5 w-5" />
-                  設定を保存して伝令を送る
+                  設定を保存する
                 </Button>
               </div>
             </form>

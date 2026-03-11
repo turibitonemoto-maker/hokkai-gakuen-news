@@ -25,7 +25,7 @@ import {
 export default function DisplaySite() {
   const firestore = useFirestore();
 
-  // 1. メンテナンス設定を最優先で監視 (伝令の受信)
+  // 1. メンテナンス設定を最優先で監視
   const maintenanceDocRef = useMemoFirebase(() => 
     firestore ? doc(firestore, "settings", "maintenance") : null, 
   [firestore]);
