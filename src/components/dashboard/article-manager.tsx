@@ -68,7 +68,7 @@ export function ArticleManager() {
     return Array.from(tags).sort();
   }, [articles]);
 
-  // 選択されたタグ（カテゴリー含む）で記事をフィルタリング (AND検索: 全ての条件を満たす)
+  // 選択されたタグ（カテゴリー含む）で記事をフィルタリング (AND検索)
   const filteredArticles = useMemo(() => {
     if (!articles) return [];
     if (selectedTags.length === 0) return articles;
@@ -94,10 +94,6 @@ export function ArticleManager() {
     setSelectedTags(prev => 
       prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
     );
-  };
-
-  const removeTag = (tagToRemove: string) => {
-    setSelectedTags(prev => prev.filter(tag => tag !== tagToRemove));
   };
 
   const confirmDelete = () => {
@@ -144,82 +140,56 @@ export function ArticleManager() {
         </Button>
       </div>
 
-      {/* 高度なフィルターUI */}
+      {/* 統合されたフィルターUI */}
       <Card className="border-slate-200 bg-white shadow-sm overflow-hidden">
         <CardHeader className="pb-3 bg-slate-50/30 border-b">
           <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-600">
             <Filter className="h-4 w-4" />
-            カテゴリー・タグで絞り込み
+            分類フィルター
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-6 space-y-6">
-          {/* 選択中のタグ (赤いタグチップ UI) */}
-          <div className="space-y-2">
-            <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">選択中の条件:</div>
-            <div className="flex flex-wrap gap-3 min-h-[50px] items-center p-4 rounded-2xl border-2 border-dashed border-slate-100 bg-slate-50/50">
-              {selectedTags.length > 0 ? (
-                selectedTags.map(tag => (
-                  <Badge 
-                    key={tag} 
-                    className="pl-4 pr-2 py-1.5 gap-2 bg-[#e5484d] text-white hover:bg-[#e5484d] shadow-md border-none rounded-full text-sm font-bold animate-in zoom-in duration-200"
-                  >
-                    {tag}
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeTag(tag);
-                      }}
-                      className="ml-1 bg-black/20 hover:bg-black/40 rounded-full p-0.5 transition-colors"
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  </Badge>
-                ))
-              ) : (
-                <span className="text-sm text-slate-400 italic">下のカテゴリーやタグを選択してください（複数選択可）</span>
-              )}
-              {selectedTags.length > 0 && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => setSelectedTags([])}
-                  className="text-xs h-7 text-slate-400 hover:text-destructive"
-                >
-                  リセット
-                </Button>
-              )}
-            </div>
-          </div>
-
-          {/* 利用可能な全分類（カテゴリー含む） */}
-          {!isLoading && allTags.length > 0 && (
-            <div className="space-y-2">
+        <CardContent className="p-6">
+          {!isLoading && allTags.length > 0 ? (
+            <div className="space-y-4">
               <div className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                 <Tag className="h-3 w-3" />
-                利用可能な分類:
+                利用可能な分類（クリックで絞り込み）:
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-3">
                 {allTags.map(tag => {
                   const isSelected = selectedTags.includes(tag);
                   return (
-                    <Button
+                    <button
                       key={tag}
-                      variant={isSelected ? "secondary" : "outline"}
-                      size="sm"
+                      onClick={() => toggleTag(tag)}
                       className={cn(
-                        "h-9 rounded-full px-4 transition-all duration-200",
+                        "inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 border shadow-sm",
                         isSelected 
-                          ? "bg-slate-200 text-slate-400 cursor-default opacity-60" 
-                          : "hover:border-primary hover:text-primary hover:bg-primary/5 active:scale-95"
+                          ? "bg-[#e5484d] text-white border-transparent scale-105" 
+                          : "bg-white text-slate-600 border-slate-200 hover:border-primary hover:text-primary active:scale-95"
                       )}
-                      onClick={() => !isSelected && toggleTag(tag)}
                     >
                       {tag}
-                    </Button>
+                      {isSelected && <X className="h-3.5 w-3.5" />}
+                    </button>
                   );
                 })}
               </div>
+              {selectedTags.length > 0 && (
+                <div className="pt-2">
+                  <Button 
+                    variant="link" 
+                    size="sm" 
+                    onClick={() => setSelectedTags([])}
+                    className="text-xs text-slate-400 hover:text-destructive p-0 h-auto"
+                  >
+                    すべてのフィルターを解除する
+                  </Button>
+                </div>
+              )}
             </div>
+          ) : !isLoading && (
+            <div className="text-sm text-slate-400 italic">記事を登録すると分類タグが表示されます。</div>
           )}
         </CardContent>
       </Card>
