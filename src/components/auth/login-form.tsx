@@ -72,6 +72,7 @@ export function LoginForm() {
 
     initiateEmailSignIn(auth, values.email, values.password);
     
+    // タイムアウト設定（念のため）
     setTimeout(() => setIsLoading(false), 5000);
   }
 

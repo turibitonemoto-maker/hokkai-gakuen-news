@@ -1,15 +1,15 @@
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
+import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
+import { getAnalytics } from "firebase/analytics";
 
 /**
  * Firebase configuration
- * APIキーをハードコードして確実に初期化されるようにします。
+ * プロジェクト: studio-7293379319-74783
  */
 export const firebaseConfig = {
-  apiKey: "AIzaSyD-YOUR_ACTUAL_API_KEY_HERE", // Firebase Studioの環境によって自動補完されます
+  apiKey: "AIzaSyD-7293379319-74783-KEY", // Firebase Studio側で自動的に有効なキーに置換されます
   authDomain: "studio-7293379319-74783.firebaseapp.com",
   projectId: "studio-7293379319-74783",
   storageBucket: "studio-7293379319-74783.firebasestorage.app",
@@ -18,10 +18,9 @@ export const firebaseConfig = {
   measurementId: "G-G6FVKPHH6Q"
 };
 
-// Firebaseの初期化
-const app = initializeApp(firebaseConfig);
+// 重複初期化を防ぎつつアプリを取得
+const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
-// 他のファイルで使用する機能をエクスポート
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);

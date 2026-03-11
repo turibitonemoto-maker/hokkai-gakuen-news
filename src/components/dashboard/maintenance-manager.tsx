@@ -51,17 +51,17 @@ export function MaintenanceManager() {
     }
   }, [config, form]);
 
-  function onSubmit(values: MaintenanceValues) {
+  function onSubmit(maintenanceValues: MaintenanceValues) {
     if (!firestore || !docRef) return;
 
     setDocumentNonBlocking(docRef, {
-      ...values,
+      ...maintenanceValues,
       updatedAt: serverTimestamp(),
     }, { merge: true });
 
     toast({
       title: "設定を保存しました",
-      description: values.isMaintenanceMode 
+      description: maintenanceValues.isMaintenanceMode 
         ? "メンテナンスモードを有効にしました。" 
         : "メンテナンスモードを解除しました。",
     });
