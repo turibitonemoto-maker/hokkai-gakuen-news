@@ -18,13 +18,15 @@ import {
   ShieldAlert,
   Settings,
   Globe,
-  ExternalLink
+  ExternalLink,
+  Share2
 } from "lucide-react";
 import { ArticleManager } from "@/components/dashboard/article-manager";
 import { HeroManager } from "@/components/dashboard/hero-manager";
 import { AdManager } from "@/components/dashboard/ad-manager";
 import { PresidentMessageManager } from "@/components/dashboard/president-message-manager";
 import { MaintenanceManager } from "@/components/dashboard/maintenance-manager";
+import { NoteManager } from "@/components/dashboard/note-manager";
 import { LoginForm } from "@/components/auth/login-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -35,7 +37,7 @@ import { collection, query, orderBy, limit, doc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 import Link from "next/link";
 
-type ViewMode = "overview" | "articles" | "hero" | "ads" | "president" | "maintenance";
+type ViewMode = "overview" | "articles" | "note" | "hero" | "ads" | "president" | "maintenance";
 
 export default function Home() {
   const { user, isUserLoading } = useUser();
@@ -51,6 +53,7 @@ export default function Home() {
   const menuItems = [
     { id: "overview", label: "ダッシュボード", icon: LayoutDashboard },
     { id: "articles", label: "記事管理", icon: FileText },
+    { id: "note", label: "note連動", icon: Share2 },
     { id: "hero", label: "ヒーロー画像", icon: ImageIcon },
     { id: "ads", label: "広告管理", icon: Megaphone },
     { id: "president", label: "会長挨拶設定", icon: UserRound },
@@ -65,6 +68,8 @@ export default function Home() {
     switch (activeView) {
       case "articles":
         return <ArticleManager />;
+      case "note":
+        return <NoteManager />;
       case "hero":
         return <HeroManager />;
       case "ads":
@@ -214,8 +219,8 @@ function DashboardOverview({ onNavigate }: { onNavigate: (view: ViewMode) => voi
   const { data: maintenanceConfig } = useDoc(maintenanceDocRef);
 
   const stats = {
-    articles: articles?.length || 0,
-    publishedArticles: articles?.filter(a => a.isPublished).length || 0,
+    articles: articles?.filter(a => a.articleType === "Standard").length || 0,
+    noteArticles: articles?.filter(a => a.articleType === "Note").length || 0,
     totalAdClicks: ads?.reduce((sum, ad) => sum + (ad.clickCount || 0), 0) || 0,
     heroImages: heroImages?.length || 0,
   };
@@ -241,9 +246,9 @@ function DashboardOverview({ onNavigate }: { onNavigate: (view: ViewMode) => voi
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <QuickStatCard 
-          title="公開済み記事" 
-          value={isArticlesLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : stats.publishedArticles} 
-          delta={`全${stats.articles}件`} 
+          title="学内記事数" 
+          value={isArticlesLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : stats.articles} 
+          delta={`note記事 ${stats.noteArticles}件`} 
           icon={FileText} 
           color="blue"
           onClick={() => onNavigate("articles")}
@@ -257,12 +262,12 @@ function DashboardOverview({ onNavigate }: { onNavigate: (view: ViewMode) => voi
           onClick={() => onNavigate("ads")}
         />
         <QuickStatCard 
-          title="ヒーロー画像" 
-          value={isHeroLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : stats.heroImages} 
-          delta="スライド表示中" 
-          icon={ImageIcon} 
+          title="note連動記事" 
+          value={isArticlesLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : stats.noteArticles} 
+          delta="外部メディア連携" 
+          icon={Share2} 
           color="purple"
-          onClick={() => onNavigate("hero")}
+          onClick={() => onNavigate("note")}
         />
         <QuickStatCard 
           title="システム状態" 
@@ -279,7 +284,7 @@ function DashboardOverview({ onNavigate }: { onNavigate: (view: ViewMode) => voi
           <CardHeader className="bg-white border-b border-slate-50">
             <CardTitle className="text-base font-bold flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-primary" />
-              最近更新された記事
+              最近の更新履歴
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
@@ -314,14 +319,12 @@ function DashboardOverview({ onNavigate }: { onNavigate: (view: ViewMode) => voi
           <CardContent className="space-y-3">
             <Button variant="outline" className="w-full justify-start gap-3 h-11 text-slate-600" onClick={() => onNavigate("articles")}>
               <FileText className="h-4 w-4 text-blue-500" />
-              新しい記事を投稿
+              学内記事を投稿
             </Button>
-            <Link href="/site" target="_blank" className="block">
-              <Button variant="outline" className="w-full justify-start gap-3 h-11 text-slate-600">
-                <Globe className="h-4 w-4 text-green-500" />
-                公開サイトをプレビュー
-              </Button>
-            </Link>
+            <Button variant="outline" className="w-full justify-start gap-3 h-11 text-slate-600" onClick={() => onNavigate("note")}>
+              <Share2 className="h-4 w-4 text-purple-500" />
+              noteを同期する
+            </Button>
             <Button variant="outline" className="w-full justify-start gap-3 h-11 text-slate-600" onClick={() => onNavigate("maintenance")}>
               <ShieldAlert className="h-4 w-4 text-orange-500" />
               メンテモード切替
