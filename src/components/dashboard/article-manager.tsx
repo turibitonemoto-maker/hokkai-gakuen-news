@@ -47,7 +47,7 @@ const getTagColor = (tag: string, isActive: boolean) => {
 
   if (!isActive) return "bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200";
 
-  // 選択中は固有のカラー、それ以外はローズレッド（警告色に近い目立つ色）
+  // 選択中は固有のカラー、それ以外はローズレッド（鮮やかな警告色に近い目立つ色）
   const baseColor = colorMap[tag] || "bg-rose-500";
   return `${baseColor} text-white border-transparent shadow-sm`;
 };

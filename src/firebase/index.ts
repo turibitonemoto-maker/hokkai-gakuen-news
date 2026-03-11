@@ -1,7 +1,7 @@
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
-import { initializeApp, getApps, deleteApp } from 'firebase/app';
+import { initializeApp, getApps, deleteApp, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
@@ -28,15 +28,25 @@ export function initializeFirebase() {
     }
   }
 
-  const firebaseApp = initializeApp(firebaseConfig);
-  const firestore = getFirestore(firebaseApp);
-  const auth = getAuth(firebaseApp);
+  try {
+    const firebaseApp = initializeApp(firebaseConfig);
+    const firestore = getFirestore(firebaseApp);
+    const auth = getAuth(firebaseApp);
 
-  return {
-    firebaseApp,
-    auth,
-    firestore
-  };
+    return {
+      firebaseApp,
+      auth,
+      firestore
+    };
+  } catch (e) {
+    // 万が一の初期化エラー時は既存のアプリを強制取得
+    const firebaseApp = getApp();
+    return {
+      firebaseApp,
+      auth: getAuth(firebaseApp),
+      firestore: getFirestore(firebaseApp)
+    };
+  }
 }
 
 export * from './provider';
