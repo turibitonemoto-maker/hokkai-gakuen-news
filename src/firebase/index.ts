@@ -21,6 +21,7 @@ export function initializeFirebase() {
       firebaseApp = getApp();
     }
   } else {
+    // 既存のアプリがある場合、取得を確実にする
     firebaseApp = getApp();
   }
 
