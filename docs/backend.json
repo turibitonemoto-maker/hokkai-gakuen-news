@@ -68,6 +68,16 @@
       },
       "required": ["content", "authorName"]
     },
+    "MaintenanceConfig": {
+      "title": "MaintenanceConfig",
+      "description": "メンテナンスモードの設定",
+      "type": "object",
+      "properties": {
+        "isMaintenanceMode": { "type": "boolean", "description": "メンテナンスモードの有効/無効" },
+        "maintenanceMessage": { "type": "string", "description": "メンテナンス中に表示するメッセージ" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    },
     "UserProfile": {
       "title": "UserProfile",
       "type": "object",
@@ -98,6 +108,10 @@
     "/settings/president-message": {
       "schema": { "$ref": "#/backend/entities/PresidentMessage" },
       "description": "会長挨拶の設定（ドキュメント）"
+    },
+    "/settings/maintenance": {
+      "schema": { "$ref": "#/backend/entities/MaintenanceConfig" },
+      "description": "メンテナンスモードの設定（ドキュメント）"
     },
     "/user_profiles/{userId}": {
       "schema": { "$ref": "#/backend/entities/UserProfile" },

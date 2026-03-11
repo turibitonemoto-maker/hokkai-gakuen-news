@@ -14,22 +14,25 @@ import {
   BarChart3,
   Clock,
   ArrowUpRight,
-  Loader2
+  Loader2,
+  ShieldAlert,
+  Settings
 } from "lucide-react";
 import { ArticleManager } from "@/components/dashboard/article-manager";
 import { HeroManager } from "@/components/dashboard/hero-manager";
 import { AdManager } from "@/components/dashboard/ad-manager";
 import { PresidentMessageManager } from "@/components/dashboard/president-message-manager";
+import { MaintenanceManager } from "@/components/dashboard/maintenance-manager";
 import { LoginForm } from "@/components/auth/login-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { useCollection, useFirestore, useMemoFirebase, useUser, useAuth } from "@/firebase";
-import { collection, query, orderBy, limit } from "firebase/firestore";
+import { useCollection, useDoc, useFirestore, useMemoFirebase, useUser, useAuth } from "@/firebase";
+import { collection, query, orderBy, limit, doc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 
-type ViewMode = "overview" | "articles" | "hero" | "ads" | "president";
+type ViewMode = "overview" | "articles" | "hero" | "ads" | "president" | "maintenance";
 
 export default function Home() {
   const { user, isUserLoading } = useUser();
@@ -48,6 +51,7 @@ export default function Home() {
     { id: "hero", label: "ヒーロー画像", icon: ImageIcon },
     { id: "ads", label: "広告管理", icon: Megaphone },
     { id: "president", label: "会長挨拶設定", icon: UserRound },
+    { id: "maintenance", label: "メンテナンス管理", icon: ShieldAlert },
   ];
 
   const handleLogout = async () => {
@@ -64,6 +68,8 @@ export default function Home() {
         return <AdManager />;
       case "president":
         return <PresidentMessageManager />;
+      case "maintenance":
+        return <MaintenanceManager />;
       case "overview":
       default:
         return <DashboardOverview onNavigate={(view) => setActiveView(view)} />;
@@ -187,7 +193,6 @@ function DashboardOverview({ onNavigate }: { onNavigate: (view: ViewMode) => voi
   const firestore = useFirestore();
 
   useEffect(() => {
-    // クライアントサイドでのみ実行することでハイドレーションエラーを防止
     setCurrentTime(new Date().toLocaleString('ja-JP'));
     const timer = setInterval(() => {
       setCurrentTime(new Date().toLocaleString('ja-JP'));
@@ -202,11 +207,14 @@ function DashboardOverview({ onNavigate }: { onNavigate: (view: ViewMode) => voi
     if (!firestore) return null;
     return query(collection(firestore, "articles"), orderBy("updatedAt", "desc"), limit(4));
   }, [firestore]);
+  
+  const maintenanceDocRef = useMemoFirebase(() => firestore ? doc(firestore, "settings", "maintenance") : null, [firestore]);
 
   const { data: articles, isLoading: isArticlesLoading } = useCollection(articlesQuery);
   const { data: ads, isLoading: isAdsLoading } = useCollection(adsQuery);
   const { data: heroImages, isLoading: isHeroLoading } = useCollection(heroQuery);
   const { data: recentArticles, isLoading: isActivityLoading } = useCollection(recentActivityQuery);
+  const { data: maintenanceConfig } = useDoc(maintenanceDocRef);
 
   const stats = {
     articles: articles?.length || 0,
@@ -217,11 +225,19 @@ function DashboardOverview({ onNavigate }: { onNavigate: (view: ViewMode) => voi
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col gap-1">
-        <h3 className="text-2xl font-bold text-slate-800">こんにちは、管理者様</h3>
-        <p className="text-slate-500 text-sm font-medium flex items-center gap-2">
-          <Clock className="h-4 w-4" /> 現在時刻: {currentTime || "読み込み中..."}
-        </p>
+      <div className="flex justify-between items-start">
+        <div className="flex flex-col gap-1">
+          <h3 className="text-2xl font-bold text-slate-800">こんにちは、管理者様</h3>
+          <p className="text-slate-500 text-sm font-medium flex items-center gap-2">
+            <Clock className="h-4 w-4" /> 現在時刻: {currentTime || "読み込み中..."}
+          </p>
+        </div>
+        {maintenanceConfig?.isMaintenanceMode && (
+          <Badge variant="destructive" className="h-8 px-4 flex gap-2 items-center animate-bounce">
+            <ShieldAlert className="h-4 w-4" />
+            メンテナンス中
+          </Badge>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -251,11 +267,11 @@ function DashboardOverview({ onNavigate }: { onNavigate: (view: ViewMode) => voi
         />
         <QuickStatCard 
           title="システム状態" 
-          value="良好" 
-          delta="正常稼働中" 
-          icon={LayoutDashboard} 
-          color="orange"
-          onClick={() => onNavigate("overview")}
+          value={maintenanceConfig?.isMaintenanceMode ? "停止中" : "稼働中"} 
+          delta={maintenanceConfig?.isMaintenanceMode ? "一般アクセス不可" : "正常稼働中"} 
+          icon={Settings} 
+          color={maintenanceConfig?.isMaintenanceMode ? "orange" : "blue"}
+          onClick={() => onNavigate("maintenance")}
         />
       </div>
 
@@ -304,9 +320,9 @@ function DashboardOverview({ onNavigate }: { onNavigate: (view: ViewMode) => voi
               <Megaphone className="h-4 w-4 text-green-500" />
               広告の状況を確認
             </Button>
-            <Button variant="outline" className="w-full justify-start gap-3 h-11 text-slate-600" onClick={() => onNavigate("hero")}>
-              <ImageIcon className="h-4 w-4 text-purple-500" />
-              背景画像を差し替える
+            <Button variant="outline" className="w-full justify-start gap-3 h-11 text-slate-600" onClick={() => onNavigate("maintenance")}>
+              <ShieldAlert className="h-4 w-4 text-orange-500" />
+              メンテナンスの設定
             </Button>
           </CardContent>
         </Card>
