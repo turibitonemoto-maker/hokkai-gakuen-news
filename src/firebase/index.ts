@@ -1,32 +1,24 @@
-
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
-import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
+import { initializeApp, getApps, deleteApp, FirebaseApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore'
+import { getFirestore } from 'firebase/firestore';
 
 /**
  * Firebase SDKを初期化してサービスを返す関数。
- * 接続先プロジェクト（studio-7293379319-74783）との不一致を防ぐため、
- * 既存のアプリがある場合は設定を検証し、必要に応じて再初期化します。
+ * キャッシュや古い接続情報を完全にクリアするため、既存のアプリを一度削除してから
+ * 正しいプロジェクトID (studio-7293379319-74783) で再初期化します。
  */
 export function initializeFirebase() {
-  let firebaseApp: FirebaseApp;
-
   const existingApps = getApps();
-  if (existingApps.length > 0) {
-    firebaseApp = getApp();
-    // プロジェクトIDが一致しない場合は初期化し直す（キャッシュ対策）
-    if (firebaseApp.options.projectId !== firebaseConfig.projectId) {
-      console.warn('Firebase project ID mismatch. Re-initializing...');
-      // 既存のアプリがあっても initializeApp を強制実行（名前付きで衝突回避）
-      firebaseApp = initializeApp(firebaseConfig, `app-${Date.now()}`);
-    }
-  } else {
-    firebaseApp = initializeApp(firebaseConfig);
+  
+  // 既存のアプリをすべて削除して、強制的に最新の設定でリロードする
+  for (const app of existingApps) {
+    deleteApp(app).catch(err => console.warn('Failed to delete existing app:', err));
   }
 
+  const firebaseApp = initializeApp(firebaseConfig);
   const firestore = getFirestore(firebaseApp);
   const auth = getAuth(firebaseApp);
 

@@ -1,0 +1,13 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    match /{document=**} {
+      // 読み取りはログインしているユーザー全員OK
+      allow read: if request.auth != null;
+      
+      // 書き込みは、指定された管理者（turibitonemoto@gmail.com）のみOK
+      allow write: if request.auth != null && request.auth.token.email == "turibitonemoto@gmail.com";
+    }
+  }
+}
