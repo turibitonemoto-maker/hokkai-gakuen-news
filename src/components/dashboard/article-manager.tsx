@@ -5,7 +5,7 @@ import { useState, useMemo } from "react";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, doc, orderBy, query } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Loader2, AlertTriangle, FileText, Share2, ExternalLink, Tag, X, Filter } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, AlertTriangle, FileText, Share2, ExternalLink, Tag, X, Filter, Search } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +28,7 @@ export function ArticleManager() {
   const [isEditing, setIsEditing] = useState(false);
   const [currentArticle, setCurrentArticle] = useState<any>(null);
   const [articleToDelete, setArticleToDelete] = useState<any>(null);
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   
   const firestore = useFirestore();
   const { toast } = useToast();
@@ -52,12 +52,14 @@ export function ArticleManager() {
     return Array.from(tags).sort();
   }, [articles]);
 
-  // タグで記事をフィルタリング
+  // タグで記事をフィルタリング（AND条件：すべての選択タグを含む記事）
   const filteredArticles = useMemo(() => {
     if (!articles) return [];
-    if (!selectedTag) return articles;
-    return articles.filter(article => article.tags?.includes(selectedTag));
-  }, [articles, selectedTag]);
+    if (selectedTags.length === 0) return articles;
+    return articles.filter(article => 
+      selectedTags.every(selectedTag => article.tags?.includes(selectedTag))
+    );
+  }, [articles, selectedTags]);
 
   const handleEdit = (article: any) => {
     setCurrentArticle(article);
@@ -70,7 +72,13 @@ export function ArticleManager() {
   };
 
   const toggleTag = (tag: string) => {
-    setSelectedTag(prev => prev === tag ? null : tag);
+    setSelectedTags(prev => 
+      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+    );
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    setSelectedTags(prev => prev.filter(tag => tag !== tagToRemove));
   };
 
   const confirmDelete = () => {
@@ -117,43 +125,81 @@ export function ArticleManager() {
         </Button>
       </div>
 
-      {/* タグフィルターセクション */}
-      {!isLoading && allTags.length > 0 && (
-        <Card className="border-slate-200 bg-white shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="flex items-center gap-2 mr-2 text-slate-400">
-                <Filter className="h-4 w-4" />
-                <span className="text-xs font-bold uppercase tracking-wider">絞り込み:</span>
-              </div>
-              <Button
-                variant={selectedTag === null ? "default" : "outline"}
-                size="sm"
-                className="h-8 rounded-full text-xs"
-                onClick={() => setSelectedTag(null)}
-              >
-                すべて表示
-              </Button>
-              {allTags.map(tag => (
-                <Button
-                  key={tag}
-                  variant={selectedTag === tag ? "default" : "outline"}
-                  size="sm"
-                  className={cn(
-                    "h-8 rounded-full text-xs flex items-center gap-1",
-                    selectedTag === tag ? "bg-primary text-white" : "text-slate-600"
-                  )}
-                  onClick={() => toggleTag(tag)}
+      {/* 高度なフィルターUI */}
+      <Card className="border-slate-200 bg-white shadow-sm overflow-hidden">
+        <CardHeader className="pb-3 bg-slate-50/30 border-b">
+          <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-600">
+            <Search className="h-4 w-4" />
+            記事の絞り込み
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6 space-y-6">
+          {/* 選択中のタグ (タグチップ) */}
+          <div className="space-y-2">
+            <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">選択中のフィルター:</div>
+            <div className="flex flex-wrap gap-2 min-h-[40px] items-center p-3 rounded-xl border-2 border-dashed border-slate-100 bg-slate-50/50">
+              {selectedTags.length > 0 ? (
+                selectedTags.map(tag => (
+                  <Badge 
+                    key={tag} 
+                    className="pl-3 pr-1 py-1 gap-1 bg-primary text-white hover:bg-primary shadow-sm border-none rounded-full"
+                  >
+                    {tag}
+                    <button 
+                      onClick={() => removeTag(tag)}
+                      className="ml-1 hover:bg-white/20 rounded-full p-0.5 transition-colors"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))
+              ) : (
+                <span className="text-xs text-slate-400 italic">タグを選択して記事を絞り込んでください</span>
+              )}
+              {selectedTags.length > 0 && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setSelectedTags([])}
+                  className="text-xs h-7 text-slate-400 hover:text-destructive"
                 >
-                  <Tag className="h-3 w-3" />
-                  {tag}
-                  {selectedTag === tag && <X className="h-3 w-3 ml-1" />}
+                  すべてクリア
                 </Button>
-              ))}
+              )}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+
+          {/* 利用可能なタグ一覧 */}
+          {!isLoading && allTags.length > 0 && (
+            <div className="space-y-2">
+              <div className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                <Tag className="h-3 w-3" />
+                利用可能なタグ:
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {allTags.map(tag => {
+                  const isSelected = selectedTags.includes(tag);
+                  return (
+                    <Button
+                      key={tag}
+                      variant={isSelected ? "secondary" : "outline"}
+                      size="sm"
+                      className={cn(
+                        "h-8 rounded-full text-xs transition-all",
+                        isSelected ? "opacity-50 cursor-not-allowed bg-slate-100" : "hover:border-primary hover:text-primary"
+                      )}
+                      onClick={() => !isSelected && toggleTag(tag)}
+                      disabled={isSelected}
+                    >
+                      {tag}
+                    </Button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card className="border-slate-200 shadow-sm overflow-hidden">
         <CardContent className="p-0">
@@ -214,7 +260,7 @@ export function ArticleManager() {
                             key={i} 
                             className={cn(
                               "text-[10px] px-1.5 py-0.5 rounded border transition-colors cursor-pointer",
-                              selectedTag === tag 
+                              selectedTags.includes(tag)
                                 ? "bg-primary text-white border-primary" 
                                 : "bg-white text-slate-400 border-slate-100 hover:border-slate-300"
                             )}
@@ -244,8 +290,8 @@ export function ArticleManager() {
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-20 text-slate-400">
                       該当する記事が見つかりません。
-                      {selectedTag && (
-                        <Button variant="link" className="text-primary ml-2" onClick={() => setSelectedTag(null)}>
+                      {selectedTags.length > 0 && (
+                        <Button variant="link" className="text-primary ml-2" onClick={() => setSelectedTags([])}>
                           条件をクリア
                         </Button>
                       )}

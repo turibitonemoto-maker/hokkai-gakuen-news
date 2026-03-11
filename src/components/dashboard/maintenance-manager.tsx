@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Save, ShieldAlert, AlertTriangle, Globe, Send } from "lucide-react";
 import { useEffect } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 
 const maintenanceSchema = z.object({
   isMaintenanceMode: z.boolean(),
