@@ -1,31 +1,32 @@
+
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
-import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
+import { initializeApp, getApps, getApp, FirebaseApp, deleteApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore'
 
 /**
- * Firebase SDKを初期化してサービスを返す関数
- * キャッシュや以前の状態に左右されないよう、明示的な設定で初期化を強制します。
+ * Firebase SDKを初期化してサービスを返す関数。
+ * 接続先プロジェクト（studio-7293379319-74783）との不一致を防ぐため、
+ * 既存のアプリがある場合は設定を検証し、必要に応じて再初期化します。
  */
 export function initializeFirebase() {
   let firebaseApp: FirebaseApp;
 
-  if (!getApps().length) {
-    try {
-      // 指定された設定（projectId: studio-7293379319-74783）で確実に初期化
-      firebaseApp = initializeApp(firebaseConfig);
-    } catch (e) {
-      console.error('Firebase initialization error:', e);
-      firebaseApp = getApp();
+  const existingApps = getApps();
+  if (existingApps.length > 0) {
+    firebaseApp = getApp();
+    // プロジェクトIDが一致しない場合は初期化し直す（キャッシュ対策）
+    if (firebaseApp.options.projectId !== firebaseConfig.projectId) {
+      console.warn('Firebase project ID mismatch. Re-initializing...');
+      // 同期的に処理するため、既存のアプリがあっても initializeApp を強制実行
+      firebaseApp = initializeApp(firebaseConfig, `app-${Date.now()}`);
     }
   } else {
-    // 既存のアプリがある場合、取得を確実にする
-    firebaseApp = getApp();
+    firebaseApp = initializeApp(firebaseConfig);
   }
 
-  // Firestoreの初期化。databaseIdは(default)が使用されます。
   const firestore = getFirestore(firebaseApp);
   const auth = getAuth(firebaseApp);
 
