@@ -22,7 +22,7 @@ const articleSchema = z.object({
   content: z.string().optional(),
   noteUrl: z.string().url("有効なURLを入力してください").optional().or(z.literal("")),
   categoryId: z.enum(["Campus", "Event", "Interview", "Sports", "Column", "Opinion"]),
-  tagsInput: z.string().optional(), // 入力用
+  tagsInput: z.string().optional(), // カンマ区切りのタグ入力用
   publishDate: z.string(),
   mainImageUrl: z.string().url("有効なURLを入力してください").optional().or(z.literal("")),
   isPublished: z.boolean().default(false),
@@ -53,7 +53,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       content: article?.content || "",
       noteUrl: article?.noteUrl || "",
       categoryId: article?.categoryId || "Campus",
-      tagsInput: article?.tags?.join(", ") || "",
+      tagsInput: article?.tags?.join(", ") || "", // 配列を文字列に変換
       publishDate: article?.publishDate || new Date().toISOString().split("T")[0],
       mainImageUrl: article?.mainImageUrl || "",
       isPublished: article?.isPublished || false,
@@ -65,7 +65,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
   function onSubmit(values: ArticleFormValues) {
     if (!firestore) return;
 
-    // タグを配列に変換
+    // タグを配列に変換（カンマ区切り、空白除去、空文字除外）
     const tags = values.tagsInput 
       ? values.tagsInput.split(",").map(t => t.trim()).filter(t => t !== "") 
       : [];
@@ -113,11 +113,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                     </TabsTrigger>
                   </TabsList>
                 </Tabs>
-                <FormDescription>
-                  {articleType === "Standard" 
-                    ? "このサイトのデータベースに保存される通常の記事です。" 
-                    : "外部のnote記事へ誘導するリンク記事です。"}
-                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -184,13 +179,13 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
               <FormItem className="md:col-span-2">
                 <FormLabel className="flex items-center gap-2">
                   <Tag className="h-4 w-4" />
-                  タグ（カンマ区切り）
+                  タグ（カンマ区切りで複数入力可能）
                 </FormLabel>
                 <FormControl>
                   <Input placeholder="例: 新入生, サークル, 特集" {...field} />
                 </FormControl>
                 <FormDescription>
-                  複数のタグを設定する場合はカンマ（ , ）で区切ってください。
+                  キーワードをカンマ（ , ）で区切って自由に入力してください。
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -206,9 +201,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                 <FormControl>
                   <Input placeholder="https://example.com/image.jpg" {...field} />
                 </FormControl>
-                <FormDescription>
-                  アイキャッチ画像として使用されます。
-                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -224,7 +216,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                   <FormControl>
                     <Textarea 
                       placeholder="原稿をここに貼り付けてください..." 
-                      className="min-h-[400px] text-base leading-relaxed resize-y" 
+                      className="min-h-[400px]" 
                       {...field} 
                     />
                   </FormControl>
@@ -240,11 +232,8 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                 <FormItem className="md:col-span-2">
                   <FormLabel>note記事URL</FormLabel>
                   <FormControl>
-                    <Input placeholder="https://note.com/your_account/n/..." {...field} />
+                    <Input placeholder="https://note.com/..." {...field} />
                   </FormControl>
-                  <FormDescription>
-                    クリックした際に遷移するnote記事のURLを入力してください。
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -255,11 +244,11 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
             control={form.control}
             name="isPublished"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 bg-slate-50">
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                 <div className="space-y-0.5">
-                  <FormLabel className="text-base font-semibold">公開状態</FormLabel>
+                  <FormLabel className="text-base">公開状態</FormLabel>
                   <FormDescription>
-                    オフにすると公式サイトには表示されません。
+                    オンにすると公式サイトに表示されます。
                   </FormDescription>
                 </div>
                 <FormControl>
@@ -275,7 +264,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
 
         <div className="flex justify-end gap-4 pt-4 border-t">
           <Button type="button" variant="outline" onClick={onSuccess}>キャンセル</Button>
-          <Button type="submit" className="px-8">
+          <Button type="submit">
             {article?.id ? "変更を保存" : "記事を登録"}
           </Button>
         </div>
