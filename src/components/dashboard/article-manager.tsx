@@ -38,25 +38,24 @@ const CATEGORY_LABELS: Record<string, string> = {
  */
 const getTagColorClasses = (tag: string, isSelected: boolean) => {
   const colorMap: Record<string, { active: string; inactive: string }> = {
-    "学内ニュース": { active: "bg-blue-600 text-white", inactive: "bg-blue-50 text-blue-600 border-blue-200" },
-    "イベント": { active: "bg-green-600 text-white", inactive: "bg-green-50 text-green-600 border-green-200" },
-    "インタビュー": { active: "bg-purple-600 text-white", inactive: "bg-purple-50 text-purple-600 border-purple-200" },
-    "スポーツ": { active: "bg-orange-600 text-white", inactive: "bg-orange-50 text-orange-600 border-orange-200" },
-    "コラム": { active: "bg-pink-600 text-white", inactive: "bg-pink-50 text-pink-600 border-pink-200" },
-    "オピニオン": { active: "bg-cyan-600 text-white", inactive: "bg-cyan-50 text-cyan-600 border-cyan-200" },
+    "学内ニュース": { active: "bg-blue-600 text-white border-blue-600", inactive: "bg-blue-50 text-blue-600 border-blue-200" },
+    "イベント": { active: "bg-green-600 text-white border-green-600", inactive: "bg-green-50 text-green-600 border-green-200" },
+    "インタビュー": { active: "bg-purple-600 text-white border-purple-600", inactive: "bg-purple-50 text-purple-600 border-purple-200" },
+    "スポーツ": { active: "bg-orange-600 text-white border-orange-600", inactive: "bg-orange-50 text-orange-600 border-orange-200" },
+    "コラム": { active: "bg-pink-600 text-white border-pink-600", inactive: "bg-pink-50 text-pink-600 border-pink-200" },
+    "オピニオン": { active: "bg-cyan-600 text-white border-cyan-600", inactive: "bg-cyan-50 text-cyan-600 border-cyan-200" },
   };
 
-  // 選択中の場合は赤（×ボタン付き）を優先する画像のようなデザインにする場合はここを調整
   if (isSelected) {
+    // 選択時は画像のような赤いバッジを優先
     return "bg-rose-500 text-white border-rose-600";
   }
 
-  // カテゴリー名に一致する場合の初期色
   if (colorMap[tag]) {
     return colorMap[tag].inactive;
   }
 
-  // 自由入力タグの場合はハッシュ値で色を決定
+  // 自由入力タグの場合
   const hash = tag.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const variants = [
     "bg-slate-50 text-slate-600 border-slate-200",

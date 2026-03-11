@@ -2,7 +2,7 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // 全てのコレクションに対して、読み取りは全公開、書き込みは認証済みユーザーのみに制限
+    // 全てのドキュメントに対して、読み取りは一般公開、書き込みは認証済みユーザーのみに制限
     match /{document=**} {
       allow read: if true;
       allow write: if request.auth != null;
