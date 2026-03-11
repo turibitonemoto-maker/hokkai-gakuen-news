@@ -3,7 +3,7 @@
 
 import { useDoc, useFirestore, useMemoFirebase, useCollection } from "@/firebase";
 import { doc, collection, query, where, orderBy } from "firebase/firestore";
-import { Loader2, ShieldAlert, Globe, Newspaper, ExternalLink, Calendar, ChevronRight } from "lucide-react";
+import { Loader2, ShieldAlert, Newspaper, ExternalLink, Calendar, ChevronRight, Globe } from "lucide-react";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,16 +16,22 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 
+/**
+ * 表示用サイト（フロントエンド）
+ * 
+ * 管理画面の「メンテナンス設定」をリアルタイムで監視し、
+ * 有効な場合は即座に休止メッセージ画面に切り替えます。
+ */
 export default function DisplaySite() {
   const firestore = useFirestore();
 
-  // メンテナンス設定を監視
+  // 1. メンテナンス設定を最優先で監視 (伝令の受信)
   const maintenanceDocRef = useMemoFirebase(() => 
     firestore ? doc(firestore, "settings", "maintenance") : null, 
   [firestore]);
   const { data: maintenanceConfig, isLoading: isConfigLoading } = useDoc(maintenanceDocRef);
 
-  // 記事データを取得
+  // 2. 記事データを取得
   const articlesQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(
@@ -36,12 +42,13 @@ export default function DisplaySite() {
   }, [firestore]);
   const { data: articles, isLoading: isArticlesLoading } = useCollection(articlesQuery);
 
-  // ヒーロー画像を取得
+  // 3. ヒーロー画像を取得
   const heroQuery = useMemoFirebase(() => 
     firestore ? collection(firestore, "hero-images") : null, 
   [firestore]);
   const { data: heroImages } = useCollection(heroQuery);
 
+  // 読み込み中
   if (isConfigLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -50,30 +57,44 @@ export default function DisplaySite() {
     );
   }
 
-  // メンテナンスモードの場合の表示
-  if (maintenanceConfig?.isMaintenanceMode) {
+  // 【重要】メンテナンスモード（休止中）の判定
+  // ドキュメントが存在し、かつフラグが真の場合のみ休止画面を表示
+  if (maintenanceConfig && maintenanceConfig.isMaintenanceMode === true) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#1e293b] text-white p-6">
-        <div className="max-w-lg w-full text-center space-y-8 animate-in fade-in zoom-in duration-500">
-          <div className="flex justify-center">
-            <div className="bg-destructive/20 p-6 rounded-full ring-8 ring-destructive/10 animate-pulse">
-              <ShieldAlert className="h-16 w-16 text-destructive" />
+      <div className="min-h-screen flex items-center justify-center bg-[#1e293b] text-white p-6 overflow-hidden">
+        <div className="max-w-lg w-full text-center space-y-10 animate-in fade-in zoom-in duration-500">
+          <div className="relative flex justify-center">
+            <div className="absolute inset-0 bg-destructive/20 rounded-full blur-3xl animate-pulse" />
+            <div className="relative bg-destructive/10 p-8 rounded-full ring-8 ring-destructive/5">
+              <ShieldAlert className="h-20 w-20 text-destructive" />
             </div>
           </div>
-          <div className="space-y-4">
-            <h1 className="text-3xl font-bold tracking-tight">メンテナンス中です</h1>
-            <p className="text-slate-400 text-lg leading-relaxed whitespace-pre-wrap">
-              {maintenanceConfig.maintenanceMessage}
-            </p>
+          
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Badge variant="destructive" className="px-4 py-1 uppercase tracking-widest font-bold">Maintenance Mode</Badge>
+              <h1 className="text-4xl font-black tracking-tight">ただいまメンテナンス中です</h1>
+            </div>
+            <div className="bg-slate-800/50 p-6 rounded-2xl border border-slate-700 shadow-xl">
+              <p className="text-slate-300 text-lg leading-relaxed whitespace-pre-wrap font-medium">
+                {maintenanceConfig.maintenanceMessage || "ご不便をおかけしております。現在メンテナンス作業中です。完了までしばらくお待ちください。"}
+              </p>
+            </div>
           </div>
-          <div className="pt-8 border-t border-slate-700">
-            <p className="text-sm text-slate-500 uppercase tracking-widest">Hokkai Gakuen News 1</p>
+
+          <div className="pt-10 border-t border-slate-700/50 flex flex-col items-center gap-4">
+            <div className="flex items-center gap-2 text-slate-500">
+              <Newspaper className="h-5 w-5" />
+              <span className="text-sm font-bold uppercase tracking-[0.2em]">Hokkai Gakuen News 1</span>
+            </div>
+            <p className="text-[10px] text-slate-600 uppercase">コンテンツ管理システムにより保護されています</p>
           </div>
         </div>
       </div>
     );
   }
 
+  // 通常時の表示
   return (
     <div className="min-h-screen bg-white">
       {/* ナビゲーション */}
