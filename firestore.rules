@@ -2,33 +2,7 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // 公開サイト向けに読み取りを全開放し、書き込みは認証済みユーザーのみに制限
-    match /articles/{articleId} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-    
-    match /hero-images/{heroId} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-    
-    match /ads/{adId} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-
-    match /settings/{settingId} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-
-    match /user_profiles/{userId} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
-    }
-    
-    // フォールバック（念のための全体設定）
+    // 全てのコレクションに対して、読み取りは全公開、書き込みは認証済みユーザーのみに制限
     match /{document=**} {
       allow read: if true;
       allow write: if request.auth != null;
