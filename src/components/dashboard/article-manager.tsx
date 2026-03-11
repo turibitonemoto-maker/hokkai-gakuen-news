@@ -33,7 +33,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 /**
- * 分類に応じた固有のカラークラスを返却
+ * カテゴリーやタグに応じた固有のカラーを返却
  */
 const getTagColor = (tag: string, isActive: boolean) => {
   const colorMap: Record<string, string> = {
@@ -47,7 +47,7 @@ const getTagColor = (tag: string, isActive: boolean) => {
 
   if (!isActive) return "bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200";
 
-  // 選択中は固有のカラー、それ以外（カスタムタグ）はローズレッド
+  // 選択中は固有のカラー、それ以外はローズレッド
   const baseColor = colorMap[tag] || "bg-rose-500";
   return `${baseColor} text-white border-transparent shadow-sm`;
 };
@@ -79,7 +79,7 @@ export function ArticleManager() {
     // カテゴリーを追加
     Object.values(CATEGORY_LABELS).forEach(label => tagsSet.add(label));
     
-    // 記事のカスタムタグを追加
+    // カスタムタグを追加
     articles.forEach(article => {
       article.tags?.forEach((tag: string) => {
         if (tag && tag.trim()) tagsSet.add(tag.trim());
@@ -140,7 +140,7 @@ export function ArticleManager() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">学内記事管理</h2>
-          <p className="text-sm text-slate-500">学内限定公開ニュースおよびコラムの管理を行います。</p>
+          <p className="text-sm text-slate-500">学内ニュースおよびコラムの管理を行います。</p>
         </div>
         <Button onClick={() => { setCurrentArticle(null); setIsEditing(true); }} className="h-11 px-6 shadow-md gap-2">
           <Plus className="h-5 w-5" />
@@ -170,12 +170,12 @@ export function ArticleManager() {
                 >
                   <TagIcon className={cn("h-3 w-3", isActive ? "text-white" : "text-slate-400")} />
                   {tag}
-                  {isActive && <X className="h-3 w-3 ml-1 opacity-80 hover:opacity-100" />}
+                  {isActive && <X className="h-3 w-3 ml-1 opacity-80" />}
                 </button>
               );
             })}
             {selectedTags.length > 0 && (
-              <Button variant="link" size="sm" onClick={() => setSelectedTags([])} className="text-xs text-slate-400 font-bold hover:text-primary">
+              <Button variant="link" size="sm" onClick={() => setSelectedTags([])} className="text-xs text-slate-400 font-bold">
                 すべて解除
               </Button>
             )}
@@ -240,16 +240,6 @@ export function ArticleManager() {
                     </TableCell>
                   </TableRow>
                 ))}
-                {filteredArticles.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-24 text-slate-400">
-                      <div className="flex flex-col items-center gap-3">
-                        <FileText className="h-10 w-10 opacity-20" />
-                        <p className="font-medium">一致する記事が見つかりませんでした。</p>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
               </TableBody>
             </Table>
           )}

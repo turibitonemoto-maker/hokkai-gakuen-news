@@ -63,8 +63,8 @@ export function MaintenanceManager() {
     toast({
       title: "設定を保存しました",
       description: values.isMaintenanceMode 
-        ? "メンテナンスモードを有効にしました。公開サイトが停止します。" 
-        : "メンテナンスモードを解除しました。公開サイトが復旧します。",
+        ? "メンテナンスモードを有効にしました。" 
+        : "メンテナンスモードを解除しました。",
     });
   }
 
@@ -83,7 +83,7 @@ export function MaintenanceManager() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">公開サイト制御設定</h2>
-          <p className="text-sm text-slate-500">ここでの設定変更は、Firestoreを通じて即座に表示サイトへ反映されます。</p>
+          <p className="text-sm text-slate-500">メンテナンス設定をリアルタイムで制御します。</p>
         </div>
         <Button 
           variant="outline" 
@@ -92,27 +92,9 @@ export function MaintenanceManager() {
           onClick={() => window.open('/site', '_blank')}
         >
           <Globe className="h-4 w-4" />
-          表示サイトを確認
+          サイトを確認
         </Button>
       </div>
-
-      {isCurrentModeActive ? (
-        <Alert variant="destructive" className="animate-pulse bg-destructive/5 border-destructive/20 shadow-md">
-          <ShieldAlert className="h-5 w-5" />
-          <AlertTitle className="font-bold">メンテナンスモード実行中</AlertTitle>
-          <AlertDescription className="text-sm">
-            現在、公式サイトはメンテナンス画面になっています。一般公開は停止されています。
-          </AlertDescription>
-        </Alert>
-      ) : (
-        <Alert className="bg-green-50 border-green-200 shadow-sm">
-          <Globe className="h-5 w-5 text-green-600" />
-          <AlertTitle className="text-green-800 font-bold">システム正常稼働中</AlertTitle>
-          <AlertDescription className="text-green-700 text-sm">
-            公式サイトは正常に公開されています。
-          </AlertDescription>
-        </Alert>
-      )}
 
       <Card className="shadow-md border-slate-200">
         <CardHeader className="bg-slate-50/50 border-b">
@@ -121,7 +103,7 @@ export function MaintenanceManager() {
             サイト公開設定
           </CardTitle>
           <CardDescription>
-            メンテナンス中の表示メッセージや、サイト全体の公開・休止を制御します。
+            サイト全体の公開・休止を制御します。
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
@@ -135,17 +117,16 @@ export function MaintenanceManager() {
                     <div className="space-y-1">
                       <FormLabel className="text-base font-bold flex items-center gap-2">
                         メンテナンスモードを有効にする
-                        {field.value && <Badge variant="destructive" className="animate-pulse ml-2">停止中</Badge>}
+                        {field.value && <Badge variant="destructive" className="ml-2">停止中</Badge>}
                       </FormLabel>
-                      <FormDescription className="text-sm text-slate-500">
-                        オンにして保存すると、公開サイトの全ページがメンテナンス画面に切り替わります。
+                      <FormDescription>
+                        オンにすると公式サイトにメンテナンス画面が表示されます。
                       </FormDescription>
                     </div>
                     <FormControl>
                       <Switch
                         checked={field.value}
                         onCheckedChange={field.onChange}
-                        className="data-[state=checked]:bg-destructive"
                       />
                     </FormControl>
                   </FormItem>
@@ -157,24 +138,21 @@ export function MaintenanceManager() {
                 name="maintenanceMessage"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-bold text-slate-700">訪問者向けメッセージ</FormLabel>
+                    <FormLabel className="font-bold text-slate-700">表示メッセージ</FormLabel>
                     <FormControl>
                       <Textarea 
-                        placeholder="メンテナンス理由や終了予定を入力してください。" 
-                        className="min-h-[150px] text-base leading-relaxed" 
+                        placeholder="メンテナンス理由などを入力してください。" 
+                        className="min-h-[150px]" 
                         {...field} 
                       />
                     </FormControl>
-                    <FormDescription>
-                      サイト休止画面の中央に表示されるテキストです。
-                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
               <div className="flex justify-end pt-6 border-t">
-                <Button type="submit" className="flex items-center gap-2 px-8 h-12 text-base font-bold shadow-md">
+                <Button type="submit" className="flex items-center gap-2">
                   <Save className="h-5 w-5" />
                   設定を保存する
                 </Button>

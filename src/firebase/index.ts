@@ -7,13 +7,14 @@ import { getFirestore } from 'firebase/firestore';
 
 /**
  * Initializes Firebase services.
- * Forcefully re-initializes to clear any cached project connections.
+ * キャッシュや以前の状態に左右されないよう、明示的な設定で再初期化を強制します。
  */
 export function initializeFirebase() {
   const existingApps = getApps();
   
   if (existingApps.length > 0) {
     const currentApp = existingApps[0];
+    // プロジェクトIDが一致しない場合は既存のアプリを削除して再作成
     if (currentApp.options.projectId !== firebaseConfig.projectId) {
       for (const app of existingApps) {
         deleteApp(app).catch(err => console.warn('Failed to delete existing app:', err));

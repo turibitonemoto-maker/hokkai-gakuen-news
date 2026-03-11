@@ -1,9 +1,8 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // 読み取りはログインしているユーザー全員OK
-    // 書き込みは、指定された管理者（turibitonemoto@gmail.com）のみOK
+    // 読み取りはログインしていれば可能
+    // 書き込みは turibitonemoto@gmail.com の管理者のみ可能
     match /{document=**} {
       allow read: if request.auth != null;
       allow write: if request.auth != null && request.auth.token.email == "turibitonemoto@gmail.com";

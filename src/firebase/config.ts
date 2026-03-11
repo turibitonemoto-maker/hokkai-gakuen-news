@@ -1,9 +1,10 @@
 /**
  * Firebase configuration object.
- * Values are hardcoded to ensure stability across different environments.
+ * 明示的にプロジェクトID 'studio-7293379319-74783' を指定し、
+ * 環境変数に依存せず確実に動作するようにハードコードしています。
  */
 export const firebaseConfig = {
-  apiKey: "AIzaSyDE-G8X-X-X-X-X-X-X-X-X-X-X", // This will be replaced with actual values by the system
+  apiKey: "AIzaSyDE-G8X-X-X-X-X-X-X-X-X-X-X", // システムによって実際の値に置換されます
   authDomain: "studio-7293379319-74783.firebaseapp.com",
   projectId: "studio-7293379319-74783",
   storageBucket: "studio-7293379319-74783.firebasestorage.app",
