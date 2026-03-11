@@ -1,7 +1,7 @@
 /**
  * Firebase configuration object.
- * 明示的にプロジェクトID 'studio-7293379319-74783' を指定し、
- * 環境変数に依存せず確実に動作するようにハードコードしています。
+ * 環境変数に依存せず、確実に studio-7293379319-74783 プロジェクトに接続するように
+ * 明示的な設定値をハードコードしています。
  */
 export const firebaseConfig = {
   apiKey: "AIzaSyDE-G8X-X-X-X-X-X-X-X-X-X-X", // システムによって実際の値に置換されます

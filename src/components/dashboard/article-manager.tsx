@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, doc, orderBy, query, where } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Loader2, FileText, X, Filter, Tag as TagIcon } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, X, Filter, Tag as TagIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -47,7 +47,7 @@ const getTagColor = (tag: string, isActive: boolean) => {
 
   if (!isActive) return "bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200";
 
-  // 選択中は固有のカラー、それ以外はローズレッド
+  // 選択中は固有のカラー、それ以外はローズレッド（警告色に近い目立つ色）
   const baseColor = colorMap[tag] || "bg-rose-500";
   return `${baseColor} text-white border-transparent shadow-sm`;
 };
@@ -76,10 +76,10 @@ export function ArticleManager() {
     if (!articles) return [];
     const tagsSet = new Set<string>();
     
-    // カテゴリーを追加
+    // 既存のカテゴリーラベルをすべて追加
     Object.values(CATEGORY_LABELS).forEach(label => tagsSet.add(label));
     
-    // カスタムタグを追加
+    // 記事に付与されているカスタムタグを追加
     articles.forEach(article => {
       article.tags?.forEach((tag: string) => {
         if (tag && tag.trim()) tagsSet.add(tag.trim());
@@ -98,6 +98,7 @@ export function ArticleManager() {
         CATEGORY_LABELS[article.categoryId] || article.categoryId,
         ...(article.tags || [])
       ];
+      // 選択されているすべてのタグが含まれているかチェック
       return selectedTags.every(tag => articleTags.includes(tag));
     });
   }, [articles, selectedTags]);

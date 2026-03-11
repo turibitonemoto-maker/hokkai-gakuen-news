@@ -12,9 +12,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, ShieldAlert, Globe, Settings } from "lucide-react";
+import { Loader2, Save, Globe, Settings } from "lucide-react";
 import { useEffect } from "react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 
 const maintenanceSchema = z.object({
@@ -75,8 +74,6 @@ export function MaintenanceManager() {
       </div>
     );
   }
-
-  const isCurrentModeActive = form.watch("isMaintenanceMode");
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-500">

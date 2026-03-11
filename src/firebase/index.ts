@@ -1,7 +1,7 @@
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
-import { initializeApp, getApps, deleteApp, getApp } from 'firebase/app';
+import { initializeApp, getApps, deleteApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
@@ -14,7 +14,7 @@ export function initializeFirebase() {
   
   if (existingApps.length > 0) {
     const currentApp = existingApps[0];
-    // プロジェクトIDが一致しない場合は既存のアプリを削除して再作成
+    // プロジェクトIDが一致しない、または初期化エラーが発生している場合は再作成
     if (currentApp.options.projectId !== firebaseConfig.projectId) {
       for (const app of existingApps) {
         deleteApp(app).catch(err => console.warn('Failed to delete existing app:', err));
