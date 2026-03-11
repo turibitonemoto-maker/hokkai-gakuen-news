@@ -1,33 +1,8 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // すべてのコレクションに対して読み取りを全公開し、書き込みを認証済みユーザーのみに制限
-    match /articles/{articleId} {
-      allow read, list: if true;
-      allow write: if request.auth != null;
-    }
-    
-    match /hero-images/{heroId} {
-      allow read, list: if true;
-      allow write: if request.auth != null;
-    }
-    
-    match /ads/{adId} {
-      allow read, list: if true;
-      allow write: if request.auth != null;
-    }
-    
-    match /settings/{settingId} {
-      allow read, list: if true;
-      allow write: if request.auth != null;
-    }
-
-    match /user_profiles/{userId} {
-      allow read, list: if true;
-      allow write: if request.auth != null;
-    }
-
-    // 全体的なフォールバック（デバッグ用により明示的）
+    // 全てのコレクションに対して読み取り（取得・一覧）を全公開し、
+    // 書き込み（作成・更新・削除）を認証済みユーザーのみに制限します。
     match /{document=**} {
       allow read, list: if true;
       allow write: if request.auth != null;
