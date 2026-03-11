@@ -20,7 +20,7 @@ export function initializeFirebase() {
     // プロジェクトIDが一致しない場合は初期化し直す（キャッシュ対策）
     if (firebaseApp.options.projectId !== firebaseConfig.projectId) {
       console.warn('Firebase project ID mismatch. Re-initializing...');
-      // 同期的に処理するため、既存のアプリがあっても initializeApp を強制実行
+      // 既存のアプリがあっても initializeApp を強制実行（名前付きで衝突回避）
       firebaseApp = initializeApp(firebaseConfig, `app-${Date.now()}`);
     }
   } else {
