@@ -57,8 +57,6 @@ export function MaintenanceManager() {
   function onSubmit(values: MaintenanceValues) {
     if (!firestore || !docRef) return;
 
-    // 「伝令（書き込み）」を実行
-    // { merge: true } を使うことで既存データを保持しつつ更新
     setDocumentNonBlocking(docRef, {
       ...values,
       updatedAt: serverTimestamp(),

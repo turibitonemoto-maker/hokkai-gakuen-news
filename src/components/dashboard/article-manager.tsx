@@ -5,7 +5,7 @@ import { useState, useMemo } from "react";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, doc, orderBy, query } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Loader2, AlertTriangle, FileText, Share2, ExternalLink, Tag, X, Filter, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, AlertTriangle, FileText, Share2, ExternalLink, Tag, X, Filter } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +24,16 @@ import {
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 
+// カテゴリーIDから表示名へのマッピング
+const CATEGORY_LABELS: Record<string, string> = {
+  Campus: "学内ニュース",
+  Event: "イベント",
+  Interview: "インタビュー",
+  Sports: "スポーツ",
+  Column: "コラム",
+  Opinion: "オピニオン",
+};
+
 export function ArticleManager() {
   const [isEditing, setIsEditing] = useState(false);
   const [currentArticle, setCurrentArticle] = useState<any>(null);
@@ -40,11 +50,16 @@ export function ArticleManager() {
 
   const { data: articles, isLoading } = useCollection(articlesQuery);
 
-  // 全記事からユニークなタグを抽出
+  // カテゴリーとカスタムタグをすべて集約
   const allTags = useMemo(() => {
     if (!articles) return [];
     const tags = new Set<string>();
     articles.forEach(article => {
+      // カテゴリーを表示名でタグとして追加
+      if (article.categoryId) {
+        tags.add(CATEGORY_LABELS[article.categoryId] || article.categoryId);
+      }
+      // カスタムタグを追加
       article.tags?.forEach((tag: string) => {
         if (tag && tag.trim()) tags.add(tag.trim());
       });
@@ -52,12 +67,15 @@ export function ArticleManager() {
     return Array.from(tags).sort();
   }, [articles]);
 
-  // タグで記事をフィルタリング（AND条件：すべての選択タグを含む記事）
+  // 選択されたタグ（カテゴリー含む）で記事をフィルタリング
   const filteredArticles = useMemo(() => {
     if (!articles) return [];
     if (selectedTags.length === 0) return articles;
     return articles.filter(article => 
-      selectedTags.every(selectedTag => article.tags?.includes(selectedTag))
+      selectedTags.every(selectedTag => {
+        const categoryLabel = CATEGORY_LABELS[article.categoryId] || article.categoryId;
+        return article.tags?.includes(selectedTag) || categoryLabel === selectedTag;
+      })
     );
   }, [articles, selectedTags]);
 
@@ -130,13 +148,13 @@ export function ArticleManager() {
         <CardHeader className="pb-3 bg-slate-50/30 border-b">
           <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-600">
             <Filter className="h-4 w-4" />
-            記事の絞り込み
+            カテゴリー・タグで絞り込み
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6 space-y-6">
           {/* 選択中のタグ (赤いタグチップ UI) */}
           <div className="space-y-2">
-            <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">選択中のフィルター:</div>
+            <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">選択中:</div>
             <div className="flex flex-wrap gap-3 min-h-[50px] items-center p-4 rounded-2xl border-2 border-dashed border-slate-100 bg-slate-50/50">
               {selectedTags.length > 0 ? (
                 selectedTags.map(tag => (
@@ -154,7 +172,7 @@ export function ArticleManager() {
                   </Badge>
                 ))
               ) : (
-                <span className="text-sm text-slate-400 italic">タグを選択して記事を絞り込んでください</span>
+                <span className="text-sm text-slate-400 italic">下のカテゴリーやタグを選択してください</span>
               )}
               {selectedTags.length > 0 && (
                 <Button 
@@ -169,12 +187,12 @@ export function ArticleManager() {
             </div>
           </div>
 
-          {/* 利用可能な全タグ一覧 */}
+          {/* 利用可能な全タグ一覧（カテゴリー含む） */}
           {!isLoading && allTags.length > 0 && (
             <div className="space-y-2">
               <div className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                 <Tag className="h-3 w-3" />
-                利用可能なタグ:
+                利用可能な分類:
               </div>
               <div className="flex flex-wrap gap-2">
                 {allTags.map(tag => {
@@ -215,7 +233,7 @@ export function ArticleManager() {
                 <TableRow>
                   <TableHead className="w-[100px]">タイプ</TableHead>
                   <TableHead className="w-[120px]">状態</TableHead>
-                  <TableHead>タイトル / 分類</TableHead>
+                  <TableHead>タイトル / カテゴリー</TableHead>
                   <TableHead>タグ</TableHead>
                   <TableHead className="w-[120px]">公開日</TableHead>
                   <TableHead className="text-right">操作</TableHead>
@@ -246,12 +264,17 @@ export function ArticleManager() {
                       <div className="flex flex-col gap-1">
                         <span className="font-bold text-slate-800 line-clamp-1">{article.title}</span>
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-bold">{article.categoryId}</span>
-                          {article.articleType === "Note" && (
-                            <span className="text-[10px] text-slate-400 flex items-center">
-                              <ExternalLink className="h-2.5 w-2.5 mr-1" /> note.com
-                            </span>
-                          )}
+                          <span 
+                            className={cn(
+                              "text-[10px] px-1.5 py-0.5 rounded font-bold cursor-pointer transition-colors",
+                              selectedTags.includes(CATEGORY_LABELS[article.categoryId] || article.categoryId)
+                                ? "bg-[#e5484d] text-white"
+                                : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                            )}
+                            onClick={() => toggleTag(CATEGORY_LABELS[article.categoryId] || article.categoryId)}
+                          >
+                            {CATEGORY_LABELS[article.categoryId] || article.categoryId}
+                          </span>
                         </div>
                       </div>
                     </TableCell>
