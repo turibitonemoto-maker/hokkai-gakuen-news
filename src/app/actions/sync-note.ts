@@ -13,6 +13,9 @@ export async function fetchNoteArticles() {
   await new Promise(resolve => setTimeout(resolve, 1500));
 
   // 本来は fetch("https://note.com/YOUR_ID/rss") などを行う
+  // 日付はISO形式の文字列で統一します
+  const now = new Date().toISOString();
+
   return [
     {
       id: "note-2024-001",
@@ -20,7 +23,7 @@ export async function fetchNoteArticles() {
       noteUrl: "https://note.com/hokkai_shinbun/n/n123456789",
       articleType: "Note",
       categoryId: "Column",
-      publishDate: new Date().toISOString(),
+      publishDate: now,
       mainImageUrl: "https://picsum.photos/seed/note1/600/400",
       isPublished: false,
       tags: ["note", "デジタル"]
@@ -31,7 +34,7 @@ export async function fetchNoteArticles() {
       noteUrl: "https://note.com/hokkai_shinbun/n/n987654321",
       articleType: "Note",
       categoryId: "Interview",
-      publishDate: new Date().toISOString(),
+      publishDate: now,
       mainImageUrl: "https://picsum.photos/seed/note2/600/400",
       isPublished: false,
       tags: ["note", "座談会"]

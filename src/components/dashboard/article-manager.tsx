@@ -5,7 +5,7 @@ import { useState, useMemo } from "react";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, doc, orderBy, query, where } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Loader2, AlertTriangle, FileText, Tag, X, Filter } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, FileText, X, Filter } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +33,9 @@ const CATEGORY_LABELS: Record<string, string> = {
   Opinion: "オピニオン",
 };
 
+/**
+ * 分類（タグ名）に応じたカラークラスを返却
+ */
 const getTagColorClasses = (tag: string, isSelected: boolean) => {
   const colorMap: Record<string, { active: string; inactive: string }> = {
     "学内ニュース": { active: "bg-blue-600 text-white", inactive: "bg-blue-50 text-blue-600 border-blue-200" },
@@ -43,10 +46,12 @@ const getTagColorClasses = (tag: string, isSelected: boolean) => {
     "オピニオン": { active: "bg-cyan-600 text-white", inactive: "bg-cyan-50 text-cyan-600 border-cyan-200" },
   };
 
+  // カテゴリー名に一致する場合
   if (colorMap[tag]) {
     return isSelected ? colorMap[tag].active : colorMap[tag].inactive;
   }
 
+  // 自由入力タグの場合はハッシュ値で色を決定（画像のような赤系をデフォルトに）
   const hash = tag.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const variants = [
     { active: "bg-rose-500 text-white", inactive: "bg-rose-50 text-rose-500 border-rose-100" },
@@ -54,6 +59,7 @@ const getTagColorClasses = (tag: string, isSelected: boolean) => {
     { active: "bg-emerald-500 text-white", inactive: "bg-emerald-50 text-emerald-500 border-emerald-100" },
   ];
   const variant = variants[hash % variants.length];
+  
   return isSelected ? variant.active : variant.inactive;
 };
 
@@ -78,25 +84,35 @@ export function ArticleManager() {
 
   const { data: articles, isLoading } = useCollection(articlesQuery);
 
+  // 利用可能な全分類（カテゴリーラベル + 自由入力タグ）を抽出
   const allTags = useMemo(() => {
     if (!articles) return [];
     const tags = new Set<string>();
+    
+    // カテゴリーを追加
     Object.values(CATEGORY_LABELS).forEach(label => tags.add(label));
+    
+    // 記事に付与されている自由タグを追加
     articles.forEach(article => {
       article.tags?.forEach((tag: string) => {
         if (tag && tag.trim()) tags.add(tag.trim());
       });
     });
+    
     return Array.from(tags).sort();
   }, [articles]);
 
+  // タグ絞り込みロジック (AND検索: 選択された全タグを含む記事)
   const filteredArticles = useMemo(() => {
     if (!articles) return [];
     if (selectedTags.length === 0) return articles;
+
     return articles.filter(article => 
       selectedTags.every(selectedTag => {
         const categoryLabel = CATEGORY_LABELS[article.categoryId] || article.categoryId;
-        return (article.tags && article.tags.includes(selectedTag)) || categoryLabel === selectedTag;
+        const hasTag = article.tags && article.tags.includes(selectedTag);
+        const isInCategory = categoryLabel === selectedTag;
+        return hasTag || isInCategory;
       })
     );
   }, [articles, selectedTags]);
@@ -139,17 +155,25 @@ export function ArticleManager() {
           <h2 className="text-2xl font-bold text-slate-800">学内記事管理</h2>
           <p className="text-sm text-slate-500">学内ニュースとコラムを管理します。</p>
         </div>
-        <Button onClick={() => setIsEditing(true)} className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          新規作成
-        </Button>
+        <div className="flex gap-2">
+          {selectedTags.length > 0 && (
+            <Button variant="ghost" size="sm" onClick={() => setSelectedTags([])} className="text-xs text-slate-400">
+              フィルター解除
+            </Button>
+          )}
+          <Button onClick={() => setIsEditing(true)} className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            新規作成
+          </Button>
+        </div>
       </div>
 
+      {/* カラフルな分類フィルターUI */}
       <Card className="shadow-sm">
         <CardHeader className="pb-3 border-b">
-          <CardTitle className="text-sm font-bold flex items-center gap-2">
+          <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-600">
             <Filter className="h-4 w-4" />
-            分類フィルター
+            利用可能な分類
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
@@ -161,7 +185,7 @@ export function ArticleManager() {
                   key={tag}
                   onClick={() => toggleTag(tag)}
                   className={cn(
-                    "inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border transition-all",
+                    "inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border transition-all hover:scale-105 active:scale-95",
                     getTagColorClasses(tag, isSelected)
                   )}
                 >
@@ -194,7 +218,7 @@ export function ArticleManager() {
                   <TableRow key={article.id} className="group">
                     <TableCell>
                       {article.isPublished ? (
-                        <Badge className="bg-green-100 text-green-700">公開中</Badge>
+                        <Badge className="bg-green-100 text-green-700 hover:bg-green-100">公開中</Badge>
                       ) : (
                         <Badge variant="secondary">下書き</Badge>
                       )}
@@ -202,7 +226,9 @@ export function ArticleManager() {
                     <TableCell>
                       <div className="flex flex-col">
                         <span className="font-bold text-slate-800">{article.title}</span>
-                        <span className="text-[10px] text-slate-400">{CATEGORY_LABELS[article.categoryId] || article.categoryId}</span>
+                        <span className="text-[10px] text-slate-400">
+                          {CATEGORY_LABELS[article.categoryId] || article.categoryId}
+                        </span>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -227,6 +253,13 @@ export function ArticleManager() {
                     </TableCell>
                   </TableRow>
                 ))}
+                {filteredArticles.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-20 text-slate-400">
+                      一致する記事が見つかりませんでした。
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           )}
