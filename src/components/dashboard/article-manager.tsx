@@ -5,7 +5,7 @@ import { useState, useMemo } from "react";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, doc, orderBy, query } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Loader2, AlertTriangle, FileText, Share2, ExternalLink, Tag, X, Filter } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, AlertTriangle, FileText, Share2, Tag, X, Filter } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -54,27 +54,28 @@ export function ArticleManager() {
   const allTags = useMemo(() => {
     if (!articles) return [];
     const tags = new Set<string>();
+    
+    // 全てのカテゴリー名をタグとして追加
+    Object.values(CATEGORY_LABELS).forEach(label => tags.add(label));
+
+    // 記事に付与されているカスタムタグを追加
     articles.forEach(article => {
-      // カテゴリーを表示名でタグとして追加
-      if (article.categoryId) {
-        tags.add(CATEGORY_LABELS[article.categoryId] || article.categoryId);
-      }
-      // カスタムタグを追加
       article.tags?.forEach((tag: string) => {
         if (tag && tag.trim()) tags.add(tag.trim());
       });
     });
+    
     return Array.from(tags).sort();
   }, [articles]);
 
-  // 選択されたタグ（カテゴリー含む）で記事をフィルタリング
+  // 選択されたタグ（カテゴリー含む）で記事をフィルタリング (AND検索: 全ての条件を満たす)
   const filteredArticles = useMemo(() => {
     if (!articles) return [];
     if (selectedTags.length === 0) return articles;
     return articles.filter(article => 
       selectedTags.every(selectedTag => {
         const categoryLabel = CATEGORY_LABELS[article.categoryId] || article.categoryId;
-        return article.tags?.includes(selectedTag) || categoryLabel === selectedTag;
+        return (article.tags && article.tags.includes(selectedTag)) || categoryLabel === selectedTag;
       })
     );
   }, [articles, selectedTags]);
@@ -143,7 +144,7 @@ export function ArticleManager() {
         </Button>
       </div>
 
-      {/* 高度なフィルターUI (タグチップ) */}
+      {/* 高度なフィルターUI */}
       <Card className="border-slate-200 bg-white shadow-sm overflow-hidden">
         <CardHeader className="pb-3 bg-slate-50/30 border-b">
           <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-600">
@@ -154,7 +155,7 @@ export function ArticleManager() {
         <CardContent className="p-6 space-y-6">
           {/* 選択中のタグ (赤いタグチップ UI) */}
           <div className="space-y-2">
-            <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">選択中:</div>
+            <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">選択中の条件:</div>
             <div className="flex flex-wrap gap-3 min-h-[50px] items-center p-4 rounded-2xl border-2 border-dashed border-slate-100 bg-slate-50/50">
               {selectedTags.length > 0 ? (
                 selectedTags.map(tag => (
@@ -164,7 +165,10 @@ export function ArticleManager() {
                   >
                     {tag}
                     <button 
-                      onClick={() => removeTag(tag)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeTag(tag);
+                      }}
                       className="ml-1 bg-black/20 hover:bg-black/40 rounded-full p-0.5 transition-colors"
                     >
                       <X className="h-3.5 w-3.5" />
@@ -172,7 +176,7 @@ export function ArticleManager() {
                   </Badge>
                 ))
               ) : (
-                <span className="text-sm text-slate-400 italic">下のカテゴリーやタグを選択してください</span>
+                <span className="text-sm text-slate-400 italic">下のカテゴリーやタグを選択してください（複数選択可）</span>
               )}
               {selectedTags.length > 0 && (
                 <Button 
@@ -181,13 +185,13 @@ export function ArticleManager() {
                   onClick={() => setSelectedTags([])}
                   className="text-xs h-7 text-slate-400 hover:text-destructive"
                 >
-                  すべてクリア
+                  リセット
                 </Button>
               )}
             </div>
           </div>
 
-          {/* 利用可能な全タグ一覧（カテゴリー含む） */}
+          {/* 利用可能な全分類（カテゴリー含む） */}
           {!isLoading && allTags.length > 0 && (
             <div className="space-y-2">
               <div className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
@@ -205,11 +209,10 @@ export function ArticleManager() {
                       className={cn(
                         "h-9 rounded-full px-4 transition-all duration-200",
                         isSelected 
-                          ? "bg-slate-100 text-slate-400 opacity-50 cursor-not-allowed" 
+                          ? "bg-slate-200 text-slate-400 cursor-default opacity-60" 
                           : "hover:border-primary hover:text-primary hover:bg-primary/5 active:scale-95"
                       )}
                       onClick={() => !isSelected && toggleTag(tag)}
-                      disabled={isSelected}
                     >
                       {tag}
                     </Button>
