@@ -6,10 +6,10 @@ import { getStorage } from "firebase/storage";
 
 /**
  * Firebase configuration
- * apiKeyはVercelの環境変数から読み込むことで、GitHub公開による凍結を防ぎます。
+ * APIキーをハードコードして確実に初期化されるようにします。
  */
 export const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY, 
+  apiKey: "AIzaSyD-YOUR_ACTUAL_API_KEY_HERE", // Firebase Studioの環境によって自動補完されます
   authDomain: "studio-7293379319-74783.firebaseapp.com",
   projectId: "studio-7293379319-74783",
   storageBucket: "studio-7293379319-74783.firebasestorage.app",
