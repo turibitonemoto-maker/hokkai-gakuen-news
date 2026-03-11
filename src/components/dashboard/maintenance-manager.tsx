@@ -44,7 +44,6 @@ export function MaintenanceManager() {
     },
   });
 
-  // Firestoreから設定が読み込まれたらフォームに同期
   useEffect(() => {
     if (config) {
       form.reset({

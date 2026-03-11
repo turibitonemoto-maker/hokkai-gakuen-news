@@ -34,6 +34,53 @@ const CATEGORY_LABELS: Record<string, string> = {
   Opinion: "オピニオン",
 };
 
+/**
+ * 分類（カテゴリー・タグ）に応じたカラークラスを返却するヘルパー
+ */
+const getTagColorClasses = (tag: string, isSelected: boolean) => {
+  const colorMap: Record<string, { active: string; inactive: string }> = {
+    "学内ニュース": { 
+      active: "bg-blue-600 text-white border-transparent", 
+      inactive: "bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100" 
+    },
+    "イベント": { 
+      active: "bg-green-600 text-white border-transparent", 
+      inactive: "bg-green-50 text-green-600 border-green-200 hover:bg-green-100" 
+    },
+    "インタビュー": { 
+      active: "bg-purple-600 text-white border-transparent", 
+      inactive: "bg-purple-50 text-purple-600 border-purple-200 hover:bg-purple-100" 
+    },
+    "スポーツ": { 
+      active: "bg-orange-600 text-white border-transparent", 
+      inactive: "bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100" 
+    },
+    "コラム": { 
+      active: "bg-pink-600 text-white border-transparent", 
+      inactive: "bg-pink-50 text-pink-600 border-pink-200 hover:bg-pink-100" 
+    },
+    "オピニオン": { 
+      active: "bg-cyan-600 text-white border-transparent", 
+      inactive: "bg-cyan-50 text-cyan-600 border-cyan-200 hover:bg-cyan-100" 
+    },
+  };
+
+  // 既知のカテゴリー以外（カスタムタグ）はハッシュで色を分ける
+  if (colorMap[tag]) {
+    return isSelected ? colorMap[tag].active : colorMap[tag].inactive;
+  }
+
+  const hash = tag.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const customVariants = [
+    { active: "bg-rose-500 text-white", inactive: "bg-rose-50 text-rose-500 border-rose-100 hover:bg-rose-100" },
+    { active: "bg-amber-500 text-white", inactive: "bg-amber-50 text-amber-500 border-amber-100 hover:bg-amber-100" },
+    { active: "bg-emerald-500 text-white", inactive: "bg-emerald-50 text-emerald-500 border-emerald-100 hover:bg-emerald-100" },
+    { active: "bg-indigo-500 text-white", inactive: "bg-indigo-50 text-indigo-500 border-indigo-100 hover:bg-indigo-100" },
+  ];
+  const variant = customVariants[hash % customVariants.length];
+  return isSelected ? variant.active : variant.inactive;
+};
+
 export function ArticleManager() {
   const [isEditing, setIsEditing] = useState(false);
   const [currentArticle, setCurrentArticle] = useState<any>(null);
@@ -50,25 +97,20 @@ export function ArticleManager() {
 
   const { data: articles, isLoading } = useCollection(articlesQuery);
 
-  // カテゴリーとカスタムタグをすべて集約
   const allTags = useMemo(() => {
     if (!articles) return [];
     const tags = new Set<string>();
-    
-    // 全てのカテゴリー名をタグとして追加
+    // カテゴリー名を追加
     Object.values(CATEGORY_LABELS).forEach(label => tags.add(label));
-
-    // 記事に付与されているカスタムタグを追加
+    // 各記事のカスタムタグを追加
     articles.forEach(article => {
       article.tags?.forEach((tag: string) => {
         if (tag && tag.trim()) tags.add(tag.trim());
       });
     });
-    
     return Array.from(tags).sort();
   }, [articles]);
 
-  // 選択されたタグ（カテゴリー含む）で記事をフィルタリング (AND検索)
   const filteredArticles = useMemo(() => {
     if (!articles) return [];
     if (selectedTags.length === 0) return articles;
@@ -140,12 +182,11 @@ export function ArticleManager() {
         </Button>
       </div>
 
-      {/* 統合されたフィルターUI */}
       <Card className="border-slate-200 bg-white shadow-sm overflow-hidden">
         <CardHeader className="pb-3 bg-slate-50/30 border-b">
           <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-600">
             <Filter className="h-4 w-4" />
-            分類フィルター
+            分類フィルター（複数選択でAND検索）
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
@@ -153,7 +194,7 @@ export function ArticleManager() {
             <div className="space-y-4">
               <div className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                 <Tag className="h-3 w-3" />
-                利用可能な分類（クリックで絞り込み）:
+                利用可能な分類:
               </div>
               <div className="flex flex-wrap gap-3">
                 {allTags.map(tag => {
@@ -164,9 +205,8 @@ export function ArticleManager() {
                       onClick={() => toggleTag(tag)}
                       className={cn(
                         "inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 border shadow-sm",
-                        isSelected 
-                          ? "bg-[#e5484d] text-white border-transparent scale-105" 
-                          : "bg-white text-slate-600 border-slate-200 hover:border-primary hover:text-primary active:scale-95"
+                        getTagColorClasses(tag, isSelected),
+                        isSelected && "scale-105"
                       )}
                     >
                       {tag}
@@ -237,36 +277,41 @@ export function ArticleManager() {
                       <div className="flex flex-col gap-1">
                         <span className="font-bold text-slate-800 line-clamp-1">{article.title}</span>
                         <div className="flex items-center gap-2">
-                          <span 
-                            className={cn(
-                              "text-[10px] px-1.5 py-0.5 rounded font-bold cursor-pointer transition-colors",
-                              selectedTags.includes(CATEGORY_LABELS[article.categoryId] || article.categoryId)
-                                ? "bg-[#e5484d] text-white"
-                                : "bg-slate-100 text-slate-500 hover:bg-slate-200"
-                            )}
-                            onClick={() => toggleTag(CATEGORY_LABELS[article.categoryId] || article.categoryId)}
-                          >
-                            {CATEGORY_LABELS[article.categoryId] || article.categoryId}
-                          </span>
+                          {(() => {
+                            const label = CATEGORY_LABELS[article.categoryId] || article.categoryId;
+                            const isSelected = selectedTags.includes(label);
+                            return (
+                              <span 
+                                className={cn(
+                                  "text-[10px] px-1.5 py-0.5 rounded font-bold cursor-pointer transition-colors border",
+                                  getTagColorClasses(label, isSelected)
+                                )}
+                                onClick={() => toggleTag(label)}
+                              >
+                                {label}
+                              </span>
+                            );
+                          })()}
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
-                        {article.tags?.map((tag: string, i: number) => (
-                          <span 
-                            key={i} 
-                            className={cn(
-                              "text-[10px] px-1.5 py-0.5 rounded border transition-colors cursor-pointer",
-                              selectedTags.includes(tag)
-                                ? "bg-[#e5484d] text-white border-[#e5484d]" 
-                                : "bg-white text-slate-400 border-slate-100 hover:border-slate-300 hover:text-slate-600"
-                            )}
-                            onClick={() => toggleTag(tag)}
-                          >
-                            #{tag}
-                          </span>
-                        ))}
+                        {article.tags?.map((tag: string, i: number) => {
+                          const isSelected = selectedTags.includes(tag);
+                          return (
+                            <span 
+                              key={i} 
+                              className={cn(
+                                "text-[10px] px-1.5 py-0.5 rounded border transition-colors cursor-pointer",
+                                getTagColorClasses(tag, isSelected)
+                              )}
+                              onClick={() => toggleTag(tag)}
+                            >
+                              #{tag}
+                            </span>
+                          );
+                        })}
                       </div>
                     </TableCell>
                     <TableCell className="text-sm text-slate-500">
@@ -302,7 +347,6 @@ export function ArticleManager() {
         </CardContent>
       </Card>
 
-      {/* 削除確認ダイアログ */}
       <AlertDialog open={!!articleToDelete} onOpenChange={(open) => !open && setArticleToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
