@@ -178,7 +178,7 @@ export function MaintenanceManager() {
                 <AlertTriangle className="h-6 w-6 shrink-0 mt-0.5" />
                 <div className="text-xs leading-relaxed space-y-1">
                   <p className="font-bold text-sm">【重要】反映の仕組みについて</p>
-                  <p>保存ボタンを押すと、Firestore の共通設定ドキュメントが更新されます。表示用サイト（フロントエンド）はこのドキュメントをリアルタイムで監視しており、即座に表示が切り替わります。</p>
+                  <p>保存ボタンを押すと、Firestore の設定ドキュメントが更新されます。表示用サイト（フロントエンド）はこのドキュメントをリアルタイムで監視しており、即座に表示が切り替わります。</p>
                 </div>
               </div>
 

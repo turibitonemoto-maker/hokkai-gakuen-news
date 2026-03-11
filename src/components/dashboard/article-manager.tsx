@@ -46,21 +46,24 @@ const getTagColorClasses = (tag: string, isSelected: boolean) => {
     "オピニオン": { active: "bg-cyan-600 text-white", inactive: "bg-cyan-50 text-cyan-600 border-cyan-200" },
   };
 
-  // カテゴリー名に一致する場合
-  if (colorMap[tag]) {
-    return isSelected ? colorMap[tag].active : colorMap[tag].inactive;
+  // 選択中の場合は赤（×ボタン付き）を優先する画像のようなデザインにする場合はここを調整
+  if (isSelected) {
+    return "bg-rose-500 text-white border-rose-600";
   }
 
-  // 自由入力タグの場合はハッシュ値で色を決定（画像のような赤系をデフォルトに）
+  // カテゴリー名に一致する場合の初期色
+  if (colorMap[tag]) {
+    return colorMap[tag].inactive;
+  }
+
+  // 自由入力タグの場合はハッシュ値で色を決定
   const hash = tag.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const variants = [
-    { active: "bg-rose-500 text-white", inactive: "bg-rose-50 text-rose-500 border-rose-100" },
-    { active: "bg-amber-500 text-white", inactive: "bg-amber-50 text-amber-500 border-amber-100" },
-    { active: "bg-emerald-500 text-white", inactive: "bg-emerald-50 text-emerald-500 border-emerald-100" },
+    "bg-slate-50 text-slate-600 border-slate-200",
+    "bg-indigo-50 text-indigo-600 border-indigo-200",
+    "bg-teal-50 text-teal-600 border-teal-200",
   ];
-  const variant = variants[hash % variants.length];
-  
-  return isSelected ? variant.active : variant.inactive;
+  return variants[hash % variants.length];
 };
 
 export function ArticleManager() {
@@ -74,7 +77,6 @@ export function ArticleManager() {
 
   const articlesQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    // note記事を除外して取得
     return query(
       collection(firestore, "articles"), 
       where("articleType", "==", "Standard"),
@@ -84,25 +86,18 @@ export function ArticleManager() {
 
   const { data: articles, isLoading } = useCollection(articlesQuery);
 
-  // 利用可能な全分類（カテゴリーラベル + 自由入力タグ）を抽出
   const allTags = useMemo(() => {
     if (!articles) return [];
     const tags = new Set<string>();
-    
-    // カテゴリーを追加
     Object.values(CATEGORY_LABELS).forEach(label => tags.add(label));
-    
-    // 記事に付与されている自由タグを追加
     articles.forEach(article => {
       article.tags?.forEach((tag: string) => {
         if (tag && tag.trim()) tags.add(tag.trim());
       });
     });
-    
     return Array.from(tags).sort();
   }, [articles]);
 
-  // タグ絞り込みロジック (AND検索: 選択された全タグを含む記事)
   const filteredArticles = useMemo(() => {
     if (!articles) return [];
     if (selectedTags.length === 0) return articles;
@@ -137,7 +132,7 @@ export function ArticleManager() {
         <CardHeader className="flex flex-row items-center justify-between border-b">
           <div>
             <CardTitle>{currentArticle ? "学内記事を編集" : "新しい学内記事を作成"}</CardTitle>
-            <CardDescription>学内ニュースの内容を編集します。note記事は「note連動」から管理してください。</CardDescription>
+            <CardDescription>学内ニュースの内容を編集します。</CardDescription>
           </div>
           <Button variant="ghost" onClick={() => setIsEditing(false)}>キャンセル</Button>
         </CardHeader>
@@ -168,7 +163,6 @@ export function ArticleManager() {
         </div>
       </div>
 
-      {/* カラフルな分類フィルターUI */}
       <Card className="shadow-sm">
         <CardHeader className="pb-3 border-b">
           <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-600">
@@ -185,7 +179,7 @@ export function ArticleManager() {
                   key={tag}
                   onClick={() => toggleTag(tag)}
                   className={cn(
-                    "inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border transition-all hover:scale-105 active:scale-95",
+                    "inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border transition-all hover:scale-105 active:scale-95 shadow-sm",
                     getTagColorClasses(tag, isSelected)
                   )}
                 >
