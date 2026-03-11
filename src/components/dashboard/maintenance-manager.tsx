@@ -47,7 +47,7 @@ export function MaintenanceManager() {
     if (config) {
       form.reset({
         isMaintenanceMode: config.isMaintenanceMode ?? false,
-        maintenanceMessage: config.maintenanceMessage ?? "現在メンテナンス中です。",
+        maintenanceMessage: config.maintenanceMessage ?? "現在、システムメンテナンスのためサイトを一時停止しております。",
       });
     }
   }, [config, form]);
