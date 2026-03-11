@@ -17,7 +17,8 @@ import {
   Loader2,
   ShieldAlert,
   Settings,
-  Globe
+  Globe,
+  ExternalLink
 } from "lucide-react";
 import { ArticleManager } from "@/components/dashboard/article-manager";
 import { HeroManager } from "@/components/dashboard/hero-manager";
@@ -32,6 +33,7 @@ import { cn } from "@/lib/utils";
 import { useCollection, useDoc, useFirestore, useMemoFirebase, useUser, useAuth } from "@/firebase";
 import { collection, query, orderBy, limit, doc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
+import Link from "next/link";
 
 type ViewMode = "overview" | "articles" | "hero" | "ads" | "president" | "maintenance";
 
@@ -162,28 +164,22 @@ export default function Home() {
             </h2>
           </div>
           <div className="flex items-center gap-3">
+            <Link href="/site" target="_blank">
+              <Button variant="outline" size="sm" className="gap-2">
+                <Globe className="h-4 w-4" />
+                サイトを表示
+                <ExternalLink className="h-3 w-3" />
+              </Button>
+            </Link>
             <Badge variant="outline" className="bg-slate-50 text-slate-500 font-normal">
-              ユーザー: {user.email}
+              {user.email}
             </Badge>
-            <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-white font-bold text-xs">
-              {user.email?.[0].toUpperCase()}
-            </div>
           </div>
         </header>
 
         <main className="flex-1 p-8 max-w-7xl w-full mx-auto">
           {renderContent()}
         </main>
-
-        <footer className="py-6 px-8 text-slate-400 text-xs border-t border-slate-200 bg-white">
-          <div className="max-w-7xl mx-auto flex justify-between items-center">
-            <p>&copy; {new Date().getFullYear()} 北海学園大学一部新聞会. All rights reserved.</p>
-            <div className="flex gap-4">
-              <span className="hover:text-primary cursor-pointer">ドキュメント</span>
-              <span className="hover:text-primary cursor-pointer">サポート</span>
-            </div>
-          </div>
-        </footer>
       </div>
     </div>
   );
@@ -230,23 +226,14 @@ function DashboardOverview({ onNavigate }: { onNavigate: (view: ViewMode) => voi
         <div className="flex flex-col gap-1">
           <h3 className="text-2xl font-bold text-slate-800">こんにちは、管理者様</h3>
           <p className="text-slate-500 text-sm font-medium flex items-center gap-2">
-            <Clock className="h-4 w-4" /> 現在時刻: {currentTime || "読み込み中..."}
+            <Clock className="h-4 w-4" /> {currentTime || "読み込み中..."}
           </p>
         </div>
         <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="flex items-center gap-2 h-8"
-            onClick={() => window.open('https://hokkai-shinbun.jp', '_blank')}
-          >
-            <Globe className="h-4 w-4" />
-            公開サイトを確認
-          </Button>
           {maintenanceConfig?.isMaintenanceMode && (
             <Badge variant="destructive" className="h-8 px-4 flex gap-2 items-center animate-pulse">
               <ShieldAlert className="h-4 w-4" />
-              メンテナンス中（表示サイト停止）
+              サイト停止中（メンテナンス）
             </Badge>
           )}
         </div>
@@ -256,7 +243,7 @@ function DashboardOverview({ onNavigate }: { onNavigate: (view: ViewMode) => voi
         <QuickStatCard 
           title="公開済み記事" 
           value={isArticlesLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : stats.publishedArticles} 
-          delta={`全${stats.articles}件中`} 
+          delta={`全${stats.articles}件`} 
           icon={FileText} 
           color="blue"
           onClick={() => onNavigate("articles")}
@@ -264,23 +251,23 @@ function DashboardOverview({ onNavigate }: { onNavigate: (view: ViewMode) => voi
         <QuickStatCard 
           title="広告総閲覧数" 
           value={isAdsLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : stats.totalAdClicks.toLocaleString()} 
-          delta={`${ads?.length || 0}件の広告合計`} 
+          delta="累計クリック" 
           icon={BarChart3} 
           color="green"
           onClick={() => onNavigate("ads")}
         />
         <QuickStatCard 
-          title="ヒーロー画像数" 
+          title="ヒーロー画像" 
           value={isHeroLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : stats.heroImages} 
-          delta="スライド設定中" 
+          delta="スライド表示中" 
           icon={ImageIcon} 
           color="purple"
           onClick={() => onNavigate("hero")}
         />
         <QuickStatCard 
           title="システム状態" 
-          value={maintenanceConfig?.isMaintenanceMode ? "停止中" : "正常"} 
-          delta={maintenanceConfig?.isMaintenanceMode ? "メンテナンス画面表示中" : "サイト稼働中"} 
+          value={maintenanceConfig?.isMaintenanceMode ? "休止中" : "稼働中"} 
+          delta={maintenanceConfig?.isMaintenanceMode ? "メンテモードON" : "正常"} 
           icon={maintenanceConfig?.isMaintenanceMode ? ShieldAlert : Globe} 
           color={maintenanceConfig?.isMaintenanceMode ? "orange" : "blue"}
           onClick={() => onNavigate("maintenance")}
@@ -288,11 +275,11 @@ function DashboardOverview({ onNavigate }: { onNavigate: (view: ViewMode) => voi
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="lg:col-span-2 shadow-sm border-slate-200 overflow-hidden group">
+        <Card className="lg:col-span-2 shadow-sm border-slate-200">
           <CardHeader className="bg-white border-b border-slate-50">
             <CardTitle className="text-base font-bold flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-primary" />
-              最近の更新記事
+              最近更新された記事
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
@@ -305,14 +292,16 @@ function DashboardOverview({ onNavigate }: { onNavigate: (view: ViewMode) => voi
                     <div className="flex flex-col">
                       <span className="text-sm font-medium text-slate-700">{article.title}</span>
                       <span className="text-[10px] text-slate-400 mt-1">
-                        {article.publishDate} • {article.articleType === "Note" ? "note連携" : "標準記事"}
+                        {article.publishDate} • {article.articleType === "Note" ? "note" : "標準"}
                       </span>
                     </div>
-                    <ArrowUpRight className="h-4 w-4 text-slate-300 opacity-0 group-hover:opacity-100" />
+                    <Badge variant={article.isPublished ? "default" : "secondary"} className="scale-75 origin-right">
+                      {article.isPublished ? "公開" : "下書き"}
+                    </Badge>
                   </div>
                 )
               )) : (
-                <div className="p-8 text-center text-slate-400 text-sm">更新履歴がありません</div>
+                <div className="p-8 text-center text-slate-400 text-sm">データがありません</div>
               )}
             </div>
           </CardContent>
@@ -320,21 +309,22 @@ function DashboardOverview({ onNavigate }: { onNavigate: (view: ViewMode) => voi
 
         <Card className="shadow-sm border-slate-200">
           <CardHeader>
-            <CardTitle className="text-base font-bold">クイックアクション</CardTitle>
-            <CardDescription>頻繁に使用する操作</CardDescription>
+            <CardTitle className="text-base font-bold">ショートカット</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <Button variant="outline" className="w-full justify-start gap-3 h-11 text-slate-600" onClick={() => onNavigate("articles")}>
               <FileText className="h-4 w-4 text-blue-500" />
-              新しい記事を書く
+              新しい記事を投稿
             </Button>
-            <Button variant="outline" className="w-full justify-start gap-3 h-11 text-slate-600" onClick={() => onNavigate("ads")}>
-              <Megaphone className="h-4 w-4 text-green-500" />
-              広告の状況を確認
-            </Button>
+            <Link href="/site" target="_blank" className="block">
+              <Button variant="outline" className="w-full justify-start gap-3 h-11 text-slate-600">
+                <Globe className="h-4 w-4 text-green-500" />
+                公開サイトをプレビュー
+              </Button>
+            </Link>
             <Button variant="outline" className="w-full justify-start gap-3 h-11 text-slate-600" onClick={() => onNavigate("maintenance")}>
               <ShieldAlert className="h-4 w-4 text-orange-500" />
-              メンテナンスの設定
+              メンテモード切替
             </Button>
           </CardContent>
         </Card>
@@ -353,7 +343,7 @@ function QuickStatCard({ title, value, delta, icon: Icon, color, onClick }: any)
 
   return (
     <Card 
-      className="shadow-sm border-slate-200 hover:shadow-md hover:border-primary/20 transition-all cursor-pointer group"
+      className="shadow-sm border-slate-200 hover:shadow-md transition-all cursor-pointer"
       onClick={onClick}
     >
       <CardContent className="p-6">
@@ -361,16 +351,12 @@ function QuickStatCard({ title, value, delta, icon: Icon, color, onClick }: any)
           <div className={cn("p-2 rounded-lg", colorMap[color])}>
             <Icon className="h-5 w-5" />
           </div>
-          <span className="text-[10px] font-bold text-slate-400 group-hover:text-primary transition-colors flex items-center gap-1">
-            詳細 <ChevronRight className="h-3 w-3" />
-          </span>
+          <ChevronRight className="h-4 w-4 text-slate-300" />
         </div>
         <div className="mt-4">
-          <p className="text-sm font-medium text-slate-500">{title}</p>
-          <div className="text-2xl font-bold text-slate-800 mt-1 flex items-center gap-2">
-            {value}
-          </div>
-          <p className="text-[10px] text-slate-400 mt-1 font-medium">{delta}</p>
+          <p className="text-xs font-medium text-slate-500">{title}</p>
+          <div className="text-2xl font-bold text-slate-800 mt-1">{value}</div>
+          <p className="text-[10px] text-slate-400 mt-1">{delta}</p>
         </div>
       </CardContent>
     </Card>
