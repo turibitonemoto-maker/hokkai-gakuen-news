@@ -125,36 +125,36 @@ export function ArticleManager() {
         </Button>
       </div>
 
-      {/* 高度なフィルターUI */}
+      {/* 高度なフィルターUI (タグチップ) */}
       <Card className="border-slate-200 bg-white shadow-sm overflow-hidden">
         <CardHeader className="pb-3 bg-slate-50/30 border-b">
           <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-600">
-            <Search className="h-4 w-4" />
+            <Filter className="h-4 w-4" />
             記事の絞り込み
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6 space-y-6">
-          {/* 選択中のタグ (タグチップ) */}
+          {/* 選択中のタグ (赤いタグチップ UI) */}
           <div className="space-y-2">
             <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">選択中のフィルター:</div>
-            <div className="flex flex-wrap gap-2 min-h-[40px] items-center p-3 rounded-xl border-2 border-dashed border-slate-100 bg-slate-50/50">
+            <div className="flex flex-wrap gap-3 min-h-[50px] items-center p-4 rounded-2xl border-2 border-dashed border-slate-100 bg-slate-50/50">
               {selectedTags.length > 0 ? (
                 selectedTags.map(tag => (
                   <Badge 
                     key={tag} 
-                    className="pl-3 pr-1 py-1 gap-1 bg-primary text-white hover:bg-primary shadow-sm border-none rounded-full"
+                    className="pl-4 pr-2 py-1.5 gap-2 bg-[#e5484d] text-white hover:bg-[#e5484d] shadow-md border-none rounded-full text-sm font-bold animate-in zoom-in duration-200"
                   >
                     {tag}
                     <button 
                       onClick={() => removeTag(tag)}
-                      className="ml-1 hover:bg-white/20 rounded-full p-0.5 transition-colors"
+                      className="ml-1 bg-black/20 hover:bg-black/40 rounded-full p-0.5 transition-colors"
                     >
-                      <X className="h-3 w-3" />
+                      <X className="h-3.5 w-3.5" />
                     </button>
                   </Badge>
                 ))
               ) : (
-                <span className="text-xs text-slate-400 italic">タグを選択して記事を絞り込んでください</span>
+                <span className="text-sm text-slate-400 italic">タグを選択して記事を絞り込んでください</span>
               )}
               {selectedTags.length > 0 && (
                 <Button 
@@ -169,7 +169,7 @@ export function ArticleManager() {
             </div>
           </div>
 
-          {/* 利用可能なタグ一覧 */}
+          {/* 利用可能な全タグ一覧 */}
           {!isLoading && allTags.length > 0 && (
             <div className="space-y-2">
               <div className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
@@ -185,8 +185,10 @@ export function ArticleManager() {
                       variant={isSelected ? "secondary" : "outline"}
                       size="sm"
                       className={cn(
-                        "h-8 rounded-full text-xs transition-all",
-                        isSelected ? "opacity-50 cursor-not-allowed bg-slate-100" : "hover:border-primary hover:text-primary"
+                        "h-9 rounded-full px-4 transition-all duration-200",
+                        isSelected 
+                          ? "bg-slate-100 text-slate-400 opacity-50 cursor-not-allowed" 
+                          : "hover:border-primary hover:text-primary hover:bg-primary/5 active:scale-95"
                       )}
                       onClick={() => !isSelected && toggleTag(tag)}
                       disabled={isSelected}
@@ -261,8 +263,8 @@ export function ArticleManager() {
                             className={cn(
                               "text-[10px] px-1.5 py-0.5 rounded border transition-colors cursor-pointer",
                               selectedTags.includes(tag)
-                                ? "bg-primary text-white border-primary" 
-                                : "bg-white text-slate-400 border-slate-100 hover:border-slate-300"
+                                ? "bg-[#e5484d] text-white border-[#e5484d]" 
+                                : "bg-white text-slate-400 border-slate-100 hover:border-slate-300 hover:text-slate-600"
                             )}
                             onClick={() => toggleTag(tag)}
                           >
@@ -288,7 +290,7 @@ export function ArticleManager() {
                 ))}
                 {filteredArticles.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-20 text-slate-400">
+                    <TableCell colSpan={6} className="text-center py-20 text-slate-400 font-medium">
                       該当する記事が見つかりません。
                       {selectedTags.length > 0 && (
                         <Button variant="link" className="text-primary ml-2" onClick={() => setSelectedTags([])}>
