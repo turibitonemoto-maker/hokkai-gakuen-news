@@ -1,18 +1,8 @@
-const firebaseConfig = {
-  apiKey: "AIzaSyBv_y1-D2-q5-u2-V3-S4-T5-U6-V7-W8",
-  authDomain: "studio-7293379319-74783.firebaseapp.com",
-  projectId: "studio-7293379319-74783",
-  storageBucket: "studio-7293379319-74783.appspot.com",
-  messagingSenderId: "7293379319",
-  appId: "1:7293379319:web:96898d9e288e2c38865f37"
+export const firebaseConfig = {
+  "projectId": "studio-7293379319-74783",
+  "appId": "1:820160445583:web:8c5cdc051dec375b9404fa",
+  "apiKey": "AIzaSyCtRptsIIqQ1FASh5ZWU6ExVlCzj1KNJNo",
+  "authDomain": "studio-7293379319-74783.firebaseapp.com",
+  "measurementId": "G-RSB4HP5WNT",
+  "messagingSenderId": "820160445583"
 };
-
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
-
-const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
-
-export { app, db, auth };

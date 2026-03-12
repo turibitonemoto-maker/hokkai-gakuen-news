@@ -4,7 +4,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "User",
       "type": "object",
-      "description": "Represents an authorized user account within the SecureEntry application, primarily used for authentication and access control based on an approved email address.",
+      "description": "Represents an authorized user account within the SecureEntry application. This entity stores user-specific information required for access control, linked to an external authentication system. Passwords are not stored here.",
       "properties": {
         "id": {
           "type": "string",
@@ -12,36 +12,23 @@
         },
         "email": {
           "type": "string",
-          "description": "The authorized and unique email address of the user.",
+          "description": "The authorized email address of the user. This email is used as the primary identifier for login and access control and must be unique across all users.",
           "format": "email"
-        },
-        "firstName": {
-          "type": "string",
-          "description": "The first name of the user."
-        },
-        "lastName": {
-          "type": "string",
-          "description": "The last name of the user."
-        },
-        "isActive": {
-          "type": "boolean",
-          "description": "A flag indicating whether the user account is active and authorized to log in."
         },
         "createdAt": {
           "type": "string",
-          "description": "The timestamp when the user account was created.",
+          "description": "Timestamp indicating when the user account was initially created.",
           "format": "date-time"
         },
         "updatedAt": {
           "type": "string",
-          "description": "The timestamp when the user account was last updated.",
+          "description": "Timestamp indicating the last time the user account details were updated.",
           "format": "date-time"
         }
       },
       "required": [
         "id",
         "email",
-        "isActive",
         "createdAt",
         "updatedAt"
       ]
@@ -62,16 +49,16 @@
           "schema": {
             "$ref": "#/backend/entities/User"
           },
-          "description": "Collection of authorized user profiles. Each document ID (`{userId}`) corresponds to the Firebase Authentication UID. Includes denormalized 'isActive' field for direct authorization status check.",
+          "description": "Stores individual user profiles. The existence of a document for a given `userId` in this collection signifies that the user is pre-approved and authorized to use the application. Access is restricted to the owning user.",
           "params": [
             {
               "name": "userId",
-              "description": "The unique identifier for the user, matching their Firebase Authentication UID."
+              "description": "The unique ID of the user, corresponding to Firebase Authentication UID."
             }
           ]
         }
       }
     ],
-    "reasoning": "The recommended Firestore structure for the SecureEntry application centers around a single top-level collection: `/users`. Each document within this collection represents a `User` entity, where the document ID (`{userId}`) is directly mapped to the Firebase Authentication User ID (`request.auth.uid`). This design aligns perfectly with all core design principles.\n\n**Authorization Independence:** This structure inherently achieves Authorization Independence. Each `user` document contains all necessary authorization context (e.g., `isActive` field) directly within itself. Security rules for a user's own profile will check `request.auth.uid == userId` and `resource.data.isActive == true`. There are no hierarchical dependencies requiring `get()` calls to parent documents or other collections to determine access, thus avoiding the pitfalls of non-atomic operations and complex debugging.\n\n**QAPs (Rules are not Filters):** This structure facilitates secure `list` operations (QAPs) by design, particularly for user-specific data and potential administrative access:\n1.  **Private User Data:** For a user to access their own profile (`/users/{userId}`), the rule `allow read, update: if request.auth.uid == userId && resource.data.isActive == true;` is a QAP. It directly links the authenticated user's ID to the document being accessed, ensuring only the owner can read or update their own active profile. A `list` operation on `/users` for a regular user would be denied, as they should only access their specific document.\n2.  **Administrative Access (if needed in the future):** Should there be a requirement for administrators to view or manage all user accounts, a separate collection (e.g., `/roles_admin/{adminUid}`) would be introduced. Security rules for the `/users` collection could then allow `list` if `exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid))`. This approach segregates roles and allows QAP-compliant `list` operations for authorized administrators without compromising the general privacy of user profiles.\n\n**Structural Segregation:** The `/users` collection is homogeneous; all documents represent user profiles and share similar access patterns (owner-based access, controlled by `isActive`). There is no mixing of different data types or security postures within this single collection.\n\n**Access Modeling:** This design directly uses Path-Based ownership (`/users/{userId}`) for private data, which is the most secure and straightforward approach for user-specific information.\n\n**Data Clarity and Predictability:** The `isActive` field on the `User` entity explicitly models the authorization state, making the intent clear for security rules and application logic. Wildcards are descriptive (`{userId}`), and the schema is predictable."
+    "reasoning": "The Firestore data structure for the SecureEntry application is designed around a single core collection: `/users/{userId}`. This structure directly addresses the user's primary need for a secure login and 'pre-approved' user authentication, while adhering to all core design principles and mandates.\n\n**Justification of Design Principles:**\n\n1.  **Authorization Independence (CRITICAL):** Access to user profiles in `/users/{userId}` is strictly controlled by matching `request.auth.uid` with the `{userId}` wildcard in the document path. This direct, path-based ownership means that authorization for a user's own profile is determined instantly without requiring any `get()` calls to parent documents or other collections. This eliminates hierarchical authorization dependencies, enabling atomic operations and greatly simplifying security rules, making them robust and easy to debug.\n\n2.  **Clarity of Intent (Debuggability):** The structure clearly indicates that a document at `/users/{userId}` represents the profile of the user identified by `userId`, and also implicitly signifies their 'authorized' status. Security rules become straightforward: 'a user can read/write their own user profile if their UID matches the document ID'.\n\n3.  **DBAC (No Custom Claims):** The 'pre-approved' user status, which acts as a fundamental role, is stored directly in the database. The *existence* of a user's document at `/users/{userId}` serves as the 'authorized' role. If a document for `request.auth.uid` exists in this collection, the user is authorized. This adheres to the 'Existence over Content' principle for roles, avoiding custom claims.\n\n4.  **QAPs (Rules are not Filters):** For the `/users/{userId}` collection, security rules will prevent broad `list` operations by unauthorized users. A rule like `allow read, write: if request.auth.uid == userId;` ensures that a general query to `db.collection('users').get()` would be denied or would only return the current user's document if the query explicitly targets their ID. This ensures that the security rules proactively enforce data access, rather than relying on the client to filter results, thereby enhancing security and predictability.\n\n5.  **Invariants:** The structure naturally supports ownership (path-based), and the `createdAt`/`updatedAt` timestamps within the `User` entity help maintain data integrity.\n\n**Strategy Mandates Application:**\n\n*   **A. Authorization Independence via Denormalization:** For the `User` entity itself, the `userId` in the path directly provides the authorization context, so no further denormalization is needed within the `User` document. If future subcollections were added (e.g., `/users/{userId}/preferences`), the `userId` in the path would inherently denormalize the owner context for those subcollection documents.\n*   **B. Structural Segregation:** All documents in the `/users` collection represent user profiles with the same security posture (owner-based access), ensuring homogeneous security requirements.\n*   **C. Access Modeling:** This design utilizes the 'Private Data' pattern via 'Path-Based ownership' (`/users/{userId}`), which is highly secure and simple to implement. The 'Global Role' (authorized user) is implemented using the 'Existence over Content' principle, where the presence of a user's document signifies their authorized status.\n*   **D. Data Clarity and Predictability:** The schema for `User` is clear and predictable. Wildcards like `{userId}` are semantically descriptive, enhancing readability and maintainability of rules."
   }
 }

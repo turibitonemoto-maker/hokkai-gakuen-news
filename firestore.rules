@@ -1,74 +1,86 @@
 rules_version = '2';
+
+/**
+ * FIRESTORE SECURITY RULES: SECUREENTRY APPLICATION
+ * 
+ * CORE PHILOSOPHY:
+ * This ruleset implements a strict User-Ownership model. The security posture is 
+ * built around "Path-Based Ownership," where the structure of the database 
+ * itself dictates access rights.
+ * 
+ * DATA STRUCTURE:
+ * The primary data is organized in the root collection /users/{userId}. 
+ * The userId in the path corresponds directly to the Firebase Authentication UID.
+ * 
+ * KEY SECURITY DECISIONS:
+ * 1. Existence over Content: The presence of a document in the /users collection 
+ *    serves as the authorization flag. If a document exists for a UID, that 
+ *    user is considered "pre-approved."
+ * 2. Strict Privacy: Users can only read, list, or modify their own specific 
+ *    user profile. There is no public directory or listing of users.
+ * 3. Relational Integrity: On document creation, the rules enforce that the 
+ *    internal 'id' field matches the document ID (the UID) to ensure data 
+ *    consistency between the path and the stored object.
+ * 4. Immutability: Once created, the 'id' field within a user document cannot 
+ *    be changed, preventing ownership hijacking or data corruption.
+ * 
+ * PROTOTYPING MODE:
+ * These rules focus heavily on authorization (WHO can access) rather than 
+ * schema validation (WHAT the data looks like). This allows for rapid 
+ * development of the User entity's properties without requiring rules updates.
+ */
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    /**
-     * DOCUMENTATION
-     * 
-     * Core Philosophy:
-     * This ruleset implements a strict Ownership-based security model for the SecureEntry application. 
-     * Access is primarily governed by the user's authentication status and an explicit 'isActive' 
-     * flag on their profile, which serves as a central kill-switch for account access.
-     * 
-     * Data Structure:
-     * The database is organized into a flat top-level /users collection. Each document 
-     * ID corresponds to the Firebase Authentication UID ({userId}), ensuring a 1:1 
-     * mapping between identity and data.
-     * 
-     * Key Security Decisions:
-     * 1. Path-Based Authorization: We rely on the document path (/users/{userId}) to 
-     *    enforce ownership, which is the most performant and secure method in Firestore.
-     * 2. Status-Based Access: In alignment with the 'SecureEntry' requirement, even the 
-     *    owner is denied read/write access if their 'isActive' field is set to false.
-     * 3. Denormalization for Authorization: The 'isActive' flag and 'id' are stored 
-     *    directly on the User document to allow for atomic, single-document security 
-     *    checks without requiring cross-collection lookups.
-     * 4. Relational Integrity: On creation, we enforce that the internal 'id' field 
-     *    matches the document ID (the Auth UID) to ensure data consistency.
-     */
+    // --- GLOBAL HELPER FUNCTIONS ---
 
     /**
-     * Global Helper Functions
+     * @description Checks if the request is made by an authenticated user.
      */
-
-    // Returns true if the request is made by an authenticated user.
     function isSignedIn() {
       return request.auth != null;
     }
 
-    // Returns true if the authenticated user's UID matches the provided userId.
+    /**
+     * @description Checks if the authenticated user's UID matches the provided userId.
+     */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // Returns true if the document exists and the owner is currently marked as active.
-    // This is used to enforce the status-based access control mentioned in the reasoning.
-    function isActiveOwner(userId) {
-      return isOwner(userId) && resource != null && resource.data.isActive == true;
+    /**
+     * @description Combines ownership check with a check for the document's existence.
+     * Used primarily for update and delete operations.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
     }
+
+    // --- COLLECTION RULES ---
 
     /**
-     * @description Rules for the User collection. Supports self-registration and owner-only access.
+     * @description Rules for the User profile collection. Access is strictly owner-only.
      * @path /users/{userId}
-     * @allow (create) if the user is authenticated and the document ID matches their UID.
-     * @allow (get, update) if the user is the owner and their account is marked 'isActive'.
-     * @deny (list) for any query that doesn't target the user's own document.
-     * @principle Path-based ownership combined with attribute-based access control (isActive).
+     * @allow (get) request.auth.uid == 'user_123' accessing /users/user_123
+     * @deny (list) request.auth.uid == 'user_123' attempting to list all documents in /users
+     * @principle Enforces path-based ownership and relational integrity of the user ID.
      */
     match /users/{userId} {
+      // Users can only retrieve their own profile document.
+      allow get: if isOwner(userId);
       
-      // Get and List: Owner can access their own data provided they are active.
-      allow get, list: if isOwner(userId) && resource.data.isActive == true;
+      // Users can list their own document (required for some SDK query patterns).
+      allow list: if isOwner(userId);
 
-      // Create: Users can create their own profile. We validate that the internal ID matches the path.
+      // A user can create their profile only if the doc ID matches their UID and the internal ID field is consistent.
       allow create: if isOwner(userId) && request.resource.data.id == userId;
 
-      // Update: Owner can update their data only if currently active. Prevents changing the primary ID.
-      allow update: if isActiveOwner(userId) && request.resource.data.id == resource.data.id;
+      // Only the owner can update their profile; the internal ID field must remain immutable.
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
 
-      // Delete: Explicitly denied. Management of user lifecycle should be handled via the 'isActive' flag.
-      allow delete: if false;
+      // Only the owner can delete their own profile document.
+      allow delete: if isExistingOwner(userId);
     }
-
   }
 }
