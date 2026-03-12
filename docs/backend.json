@@ -68,23 +68,23 @@
   },
   "firestore": {
     "/articles/{articleId}": {
-      "schema": "Article",
+      "schema": { "$ref": "#/entities/Article" },
       "description": "記事データの保存場所。"
     },
     "/ads/{adId}": {
-      "schema": "Ad",
+      "schema": { "$ref": "#/entities/Ad" },
       "description": "広告データの保存場所。"
     },
     "/inquiries/{inquiryId}": {
-      "schema": "Inquiry",
+      "schema": { "$ref": "#/entities/Inquiry" },
       "description": "お問い合わせデータの保存場所。"
     },
     "/settings/{settingId}": {
-      "schema": "SystemSettings",
-      "description": "メンテナンスモードや会長挨拶などのシステム設定。"
+      "schema": { "$ref": "#/entities/SystemSettings" },
+      "description": "システム設定の保存場所。"
     },
     "/hero-images/{imageId}": {
-      "schema": "object",
+      "schema": { "type": "object" },
       "description": "ヒーロー背景画像のURLリスト。"
     }
   }
