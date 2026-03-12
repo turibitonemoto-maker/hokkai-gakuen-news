@@ -1,11 +1,78 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // すべてのデータに対して、ログイン（認証）しているユーザーのみが閲覧・書き込みを許可される
-    // ログインしていない一般ユーザー（読者）向けの公開は一切行わない設定
-    match /{document=**} {
-      allow read, write: if request.auth != null;
+
+    /**
+     * SECUREENTRY FIREBASE SECURITY RULES
+     *
+     * Core Philosophy:
+     * This ruleset enforces a strict User-Ownership model. Every user document is 
+     * identified by the Firebase Authentication UID, ensuring that users can only 
+     * access and manage their own profile information.
+     *
+     * Data Structure:
+     * All user profiles are stored in a top-level `/users` collection, where the 
+     * document ID matches the user's `auth.uid`.
+     *
+     * Key Security Decisions:
+     * 1. Ownership Match: Access to any document in `/users/{userId}` requires 
+     *    `request.auth.uid == userId`.
+     * 2. Authorization Gate: The `isAuthorized` field is intended as a master 
+     *    switch for application access. While users own their documents, the rules 
+     *    can be extended to check this flag for broader system access.
+     * 3. Relational Integrity: On creation, the internal `id` field must match 
+     *    the document ID. On update, this `id` field is immutable to prevent 
+     *    ownership hijacking.
+     * 4. No Public Listing: Users cannot list the entire `/users` collection; 
+     *    they can only retrieve their own specific document.
+     *
+     * Denormalization for Authorization:
+     * The user's UID is used as the Document ID to allow for O(1) authorization 
+     * checks without requiring additional `get()` lookups.
+     */
+
+    // --- GLOBAL HELPER FUNCTIONS ---
+
+    /** Checks if the request is made by an authenticated user. */
+    function isSignedIn() {
+      return request.auth != null;
     }
+
+    /** Checks if the authenticated user's UID matches the provided userId. */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /** Checks if the user is the owner and the document exists (for updates/deletes). */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    // --- COLLECTION RULES ---
+
+    /**
+     * @description Rules for individual user profiles. Users can only manage their own data.
+     * @path /users/{userId}
+     * @allow (get) If the authenticated user's UID matches {userId}.
+     * @deny (list) If a user attempts to browse all profiles.
+     * @principle Enforces strict document ownership and validates ID consistency.
+     */
+    match /users/{userId} {
+      
+      // Allow a user to retrieve their own document or list themselves.
+      allow get, list: if isOwner(userId);
+
+      // Allow a user to create their own profile document.
+      // Validates that the internal 'id' matches the document path for relational integrity.
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+
+      // Allow a user to update their own profile document.
+      // Ensures the document exists and the internal 'id' remains immutable.
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+
+      // Allow a user to delete their own profile document.
+      allow delete: if isExistingOwner(userId);
+    }
+
   }
 }

@@ -1,20 +1,29 @@
-
 'use client';
 import {
-  Auth,
+  Auth, // Import Auth type for type hinting
+  signInAnonymously,
+  createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  // Assume getAuth and app are initialized elsewhere
 } from 'firebase/auth';
-import { errorEmitter } from '@/firebase/error-emitter';
 
-/** 
- * メールアドレスとパスワードによるログイン。
- * 永続性設定などの複雑な処理を排除し、標準的な方法でログインを試みます。
- */
+/** Initiate anonymous sign-in (non-blocking). */
+export function initiateAnonymousSignIn(authInstance: Auth): void {
+  // CRITICAL: Call signInAnonymously directly. Do NOT use 'await signInAnonymously(...)'.
+  signInAnonymously(authInstance);
+  // Code continues immediately. Auth state change is handled by onAuthStateChanged listener.
+}
+
+/** Initiate email/password sign-up (non-blocking). */
+export function initiateEmailSignUp(authInstance: Auth, email: string, password: string): void {
+  // CRITICAL: Call createUserWithEmailAndPassword directly. Do NOT use 'await createUserWithEmailAndPassword(...)'.
+  createUserWithEmailAndPassword(authInstance, email, password);
+  // Code continues immediately. Auth state change is handled by onAuthStateChanged listener.
+}
+
+/** Initiate email/password sign-in (non-blocking). */
 export function initiateEmailSignIn(authInstance: Auth, email: string, password: string): void {
-  signInWithEmailAndPassword(authInstance, email, password)
-    .catch(error => {
-      console.error("Firebase Auth Error:", error.code, error.message);
-      // エラーをエミッターを通じてUIに伝える
-      errorEmitter.emit('auth-error', error);
-    });
+  // CRITICAL: Call signInWithEmailAndPassword directly. Do NOT use 'await signInWithEmailAndPassword(...)'.
+  signInWithEmailAndPassword(authInstance, email, password);
+  // Code continues immediately. Auth state change is handled by onAuthStateChanged listener.
 }

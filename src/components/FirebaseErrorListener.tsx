@@ -5,36 +5,35 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
 /**
- * Firestoreの権限エラーを監視し、開発時に分かりやすいエラー画面を表示するコンポーネント。
- * 認証エラー（ログイン失敗など）はアプリをクラッシュさせないよう、ここでは無視します。
+ * An invisible component that listens for globally emitted 'permission-error' events.
+ * It throws any received error to be caught by Next.js's global-error.tsx.
  */
 export function FirebaseErrorListener() {
-  const [error, setError] = useState<Error | null>(null);
+  // Use the specific error type for the state for type safety.
+  const [error, setError] = useState<FirestorePermissionError | null>(null);
 
   useEffect(() => {
-    const handlePermissionError = (error: FirestorePermissionError) => {
-      // セキュリティルール違反は開発者に知らせるためスローする
+    // The callback now expects a strongly-typed error, matching the event payload.
+    const handleError = (error: FirestorePermissionError) => {
+      // Set error in state to trigger a re-render.
       setError(error);
     };
 
-    const handleAuthError = (error: Error) => {
-      // ログイン失敗などの認証エラーは、各コンポーネント（LoginFormなど）で処理するため
-      // ここではスロー（クラッシュ）させません。
-      console.warn("Auth Error handled contextually:", error.message);
-    };
+    // The typed emitter will enforce that the callback for 'permission-error'
+    // matches the expected payload type (FirestorePermissionError).
+    errorEmitter.on('permission-error', handleError);
 
-    errorEmitter.on('permission-error', handlePermissionError);
-    errorEmitter.on('auth-error', handleAuthError);
-
+    // Unsubscribe on unmount to prevent memory leaks.
     return () => {
-      errorEmitter.off('permission-error', handlePermissionError);
-      errorEmitter.off('auth-error', handleAuthError);
+      errorEmitter.off('permission-error', handleError);
     };
   }, []);
 
+  // On re-render, if an error exists in state, throw it.
   if (error) {
     throw error;
   }
 
+  // This component renders nothing.
   return null;
 }

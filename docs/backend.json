@@ -1,121 +1,71 @@
-
 {
   "entities": {
-    "Article": {
-      "title": "Article",
-      "description": "新聞の記事データ",
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
       "type": "object",
+      "description": "Represents an authorized user account within the SecureEntry application. It stores identity information for access control based on pre-approved email addresses, relying on an external system for password authentication.",
       "properties": {
-        "id": { "type": "string" },
-        "title": { "type": "string", "description": "記事のタイトル" },
-        "content": { "type": "string", "description": "記事の本文 (標準記事の場合)" },
-        "noteUrl": { "type": "string", "description": "note記事のURL (note連携の場合)" },
-        "articleType": { 
-          "type": "string", 
-          "enum": ["Standard", "Note"],
-          "description": "記事のタイプ（標準またはnote連携）"
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
         },
-        "categoryId": { 
-          "type": "string", 
-          "enum": ["Campus", "Event", "Interview", "Sports", "Column", "Opinion"],
-          "description": "記事のカテゴリー"
+        "email": {
+          "type": "string",
+          "description": "The authorized email address of the user. It serves as a unique identifier for login and access control and is verified against pre-approved accounts. (Relationship: User 1:1 ExternalAuthSystem)",
+          "format": "email"
         },
-        "tags": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "検索や分類用のタグ"
+        "fullName": {
+          "type": "string",
+          "description": "The full name of the user, primarily for display purposes within the application interface."
         },
-        "publishDate": { "type": "string", "format": "date-time", "description": "公開日" },
-        "mainImageUrl": { "type": "string", "description": "メイン画像のURL" },
-        "isPublished": { "type": "boolean", "description": "公開フラグ" }
+        "isAuthorized": {
+          "type": "boolean",
+          "description": "A flag indicating whether this user's account is currently active and authorized to access the SecureEntry application, reflecting its 'pre-approved' status."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when this user account was initially created in the system.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "The timestamp when this user account's information was last updated.",
+          "format": "date-time"
+        }
       },
-      "required": ["title", "articleType", "categoryId", "publishDate", "isPublished"]
-    },
-    "HeroImage": {
-      "title": "HeroImage",
-      "description": "トップページのヒーロー画像",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "imageUrl": { "type": "string" },
-        "title": { "type": "string" },
-        "order": { "type": "number" }
-      }
-    },
-    "Ad": {
-      "title": "Ad",
-      "description": "広告バナー",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "imageUrl": { "type": "string" },
-        "linkUrl": { "type": "string" },
-        "title": { "type": "string" },
-        "clickCount": { "type": "number", "description": "閲覧数（クリック数）" },
-        "startDate": { "type": "string", "format": "date-time", "description": "表示開始日時" },
-        "endDate": { "type": "string", "format": "date-time", "description": "表示終了日時" }
-      }
-    },
-    "PresidentMessage": {
-      "title": "PresidentMessage",
-      "description": "会長の挨拶メッセージ",
-      "type": "object",
-      "properties": {
-        "content": { "type": "string", "description": "挨拶の本文" },
-        "authorName": { "type": "string", "description": "会長の氏名" },
-        "authorImageUrl": { "type": "string", "description": "会長の顔写真URL" },
-        "updatedAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["content", "authorName"]
-    },
-    "MaintenanceConfig": {
-      "title": "MaintenanceConfig",
-      "description": "メンテナンスモードの設定",
-      "type": "object",
-      "properties": {
-        "isMaintenanceMode": { "type": "boolean", "description": "メンテナンスモードの有効/無効" },
-        "maintenanceMessage": { "type": "string", "description": "メンテナンス中に表示するメッセージ" },
-        "updatedAt": { "type": "string", "format": "date-time" }
-      }
-    },
-    "UserProfile": {
-      "title": "UserProfile",
-      "type": "object",
-      "description": "管理者のプロファイル",
-      "properties": {
-        "id": { "type": "string" },
-        "email": { "type": "string", "format": "email" },
-        "displayName": { "type": "string" }
-      }
+      "required": [
+        "id",
+        "email",
+        "isAuthorized"
+      ]
     }
   },
   "auth": {
-    "providers": ["password"]
+    "providers": [
+      "password",
+      "anonymous"
+    ]
   },
   "firestore": {
-    "/articles/{articleId}": {
-      "schema": { "$ref": "#/backend/entities/Article" },
-      "description": "記事一覧"
-    },
-    "/hero-images/{heroId}": {
-      "schema": { "$ref": "#/backend/entities/HeroImage" },
-      "description": "トップ背景用画像"
-    },
-    "/ads/{adId}": {
-      "schema": { "$ref": "#/backend/entities/Ad" },
-      "description": "広告バナー"
-    },
-    "/settings/president-message": {
-      "schema": { "$ref": "#/backend/entities/PresidentMessage" },
-      "description": "会長挨拶の設定（ドキュメント）"
-    },
-    "/settings/maintenance": {
-      "schema": { "$ref": "#/backend/entities/MaintenanceConfig" },
-      "description": "メンテナンスモードの設定（ドキュメント）"
-    },
-    "/user_profiles/{userId}": {
-      "schema": { "$ref": "#/backend/entities/UserProfile" },
-      "description": "管理者プロファイル"
-    }
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores individual user profiles. The document ID (`userId`) MUST match the Firebase Authentication UID. This document includes the `isAuthorized` flag, which is crucial for determining a user's access to the SecureEntry application, directly supporting authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user, corresponding to their Firebase Authentication UID."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The recommended Firestore structure for the SecureEntry application centers around a single top-level collection: `/users`. Each document within this collection will represent a user's profile, with the document ID corresponding directly to the Firebase Authentication UID (`request.auth.uid`).\n\n**Authorization Independence:** This design achieves Authorization Independence by having each user's authorization status (`isAuthorized` field) directly embedded within their own user document. This eliminates any need for security rules to perform `get()` operations on parent documents or other collections to determine access rights. A user's access to their own profile, and by extension, the application, can be determined solely by checking `request.auth.uid == userId` and `resource.data.isAuthorized == true` within the rules applied to the `/users/{userId}` path. This enables atomic write operations without complex dependencies.\n\n**QAPs (Rules are not Filters):** This structure inherently supports Query-Ability and Predictability (QAPs) by design:\n1.  **Individual Access:** For read/write operations on a single user document (`/users/{userId}`), rules can simply enforce `request.auth.uid == userId` to ensure users can only access their own profile. The `isAuthorized` field acts as an additional direct check, preventing unauthorized but authenticated users from accessing the application's features.\n2.  **List Operations:** For `list` operations, the current requirements do not necessitate regular users listing other user profiles. If an administrative feature were to be introduced later requiring a list of all authorized users, an administrator could perform a query on the `/users` collection filtered by `isAuthorized == true`. Security rules for such an operation would check for an explicit admin role (e.g., `exists(/roles_admin/$(request.auth.uid))`), ensuring the rule itself doesn't act as a filter but rather validates the caller's permission before the query executes. The structural segregation means all documents in `/users` share the same security posture (personal profiles), simplifying rules significantly.\n\nThis straightforward design aligns perfectly with the core principles, ensuring clarity, debuggability, and scalability for SecureEntry's authentication-focused features."
   }
 }

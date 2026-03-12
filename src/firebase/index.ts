@@ -1,52 +1,43 @@
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
-import { initializeApp, getApps, deleteApp, getApp } from 'firebase/app';
+import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore'
 
-/**
- * Initializes Firebase services.
- * キャッシュや以前の状態に左右されないよう、明示的な設定で再初期化を強制します。
- */
+// IMPORTANT: DO NOT MODIFY THIS FUNCTION
 export function initializeFirebase() {
-  const existingApps = getApps();
-  
-  if (existingApps.length > 0) {
-    const currentApp = existingApps[0];
-    // プロジェクトIDが一致しない、または初期化エラーが発生している場合は再作成
-    if (currentApp.options.projectId !== firebaseConfig.projectId) {
-      for (const app of existingApps) {
-        deleteApp(app).catch(err => console.warn('Failed to delete existing app:', err));
+  if (!getApps().length) {
+    // Important! initializeApp() is called without any arguments because Firebase App Hosting
+    // integrates with the initializeApp() function to provide the environment variables needed to
+    // populate the FirebaseOptions in production. It is critical that we attempt to call initializeApp()
+    // without arguments.
+    let firebaseApp;
+    try {
+      // Attempt to initialize via Firebase App Hosting environment variables
+      firebaseApp = initializeApp();
+    } catch (e) {
+      // Only warn in production because it's normal to use the firebaseConfig to initialize
+      // during development
+      if (process.env.NODE_ENV === "production") {
+        console.warn('Automatic initialization failed. Falling back to firebase config object.', e);
       }
-    } else {
-      return {
-        firebaseApp: currentApp,
-        auth: getAuth(currentApp),
-        firestore: getFirestore(currentApp)
-      };
+      firebaseApp = initializeApp(firebaseConfig);
     }
+
+    return getSdks(firebaseApp);
   }
 
-  try {
-    const firebaseApp = initializeApp(firebaseConfig);
-    const firestore = getFirestore(firebaseApp);
-    const auth = getAuth(firebaseApp);
+  // If already initialized, return the SDKs with the already initialized App
+  return getSdks(getApp());
+}
 
-    return {
-      firebaseApp,
-      auth,
-      firestore
-    };
-  } catch (e) {
-    // 万が一の初期化エラー時は既存のアプリを強制取得
-    const firebaseApp = getApp();
-    return {
-      firebaseApp,
-      auth: getAuth(firebaseApp),
-      firestore: getFirestore(firebaseApp)
-    };
-  }
+export function getSdks(firebaseApp: FirebaseApp) {
+  return {
+    firebaseApp,
+    auth: getAuth(firebaseApp),
+    firestore: getFirestore(firebaseApp)
+  };
 }
 
 export * from './provider';
