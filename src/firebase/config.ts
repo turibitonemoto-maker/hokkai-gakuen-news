@@ -8,15 +8,19 @@ import { getAnalytics } from "firebase/analytics";
  * Firebase configuration
  * プロジェクト: studio-7293379319-74783
  */
-export const firebaseConfig = {
-  apiKey: "AIzaSyD-7293379319-74783-KEY", // Firebase Studio側で自動的に有効なキーに置換されます
-  authDomain: "studio-7293379319-74783.firebaseapp.com",
-  projectId: "studio-7293379319-74783",
-  storageBucket: "studio-7293379319-74783.firebasestorage.app",
-  messagingSenderId: "820160445583",
-  appId: "1:820160445583:web:b9289238a9c9df7a9404fa",
-  measurementId: "G-G6FVKPHH6Q"
+export // src/lib/firebase/config.ts
+
+const firebaseConfig = {
+  // ここを「直接の鍵」から「呼び出し用の名前」に変えるのがプロの技！
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: "your-project-id.firebaseapp.com", // プロジェクトIDに合わせて変更
+  projectId: "your-project-id",
+  storageBucket: "your-project-id.appspot.com",
+  messagingSenderId: "...",
+  appId: "..."
 };
+
+// ...以下、初期化コードなど
 
 // 重複初期化を防ぎつつアプリを取得
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
