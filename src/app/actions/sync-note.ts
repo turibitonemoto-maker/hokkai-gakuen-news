@@ -4,7 +4,7 @@ import Parser from 'rss-parser';
 
 /**
  * @fileOverview note記事同期のためのサーバーアクション
- * 本物のアカウント: https://note.com/lucky_minnow287
+ * 実運用アカウント: https://note.com/lucky_minnow287
  */
 
 const parser = new Parser();

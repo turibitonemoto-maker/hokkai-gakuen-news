@@ -4,7 +4,7 @@ service cloud.firestore {
     
     // 記事データの設定
     match /articles/{articleId} {
-      // 閲覧（一覧・詳細）は世界中の誰でもOK
+      // 閲覧（一覧・詳細）は世界中の誰でもOK（公開サイトのエラーを解消）
       allow read: if true;
       // 投稿・編集・削除は、Firebase Authでログインしている人だけOK
       allow write: if request.auth != null;
