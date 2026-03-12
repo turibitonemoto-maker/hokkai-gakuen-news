@@ -15,7 +15,7 @@ service cloud.firestore {
       );
     }
 
-    // 記事：誰でも閲覧可能、管理者は編集可能
+    // 記事：誰でも閲覧可能（list/get）、管理者は編集可能
     match /articles/{articleId} {
       allow read: if true;
       allow write: if isAdmin();
@@ -33,7 +33,7 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // 設定（メンテナンス、会長挨拶）：誰でも閲覧可能、管理者は編集可能
+    // 設定：誰でも閲覧可能、管理者は編集可能
     match /settings/{settingId} {
       allow read: if true;
       allow write: if isAdmin();

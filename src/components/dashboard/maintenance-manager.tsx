@@ -12,7 +12,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, Globe, Settings, ShieldAlert } from "lucide-react";
+import { Loader2, Save, Globe, Settings } from "lucide-react";
 import { useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 

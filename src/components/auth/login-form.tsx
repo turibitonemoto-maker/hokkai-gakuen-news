@@ -67,8 +67,6 @@ export function LoginForm() {
     setIsLoading(true);
     setServerError(null);
     initiateEmailSignIn(auth, values.email, values.password);
-    // タイムアウト保護
-    setTimeout(() => setIsLoading(false), 5000);
   }
 
   return (
