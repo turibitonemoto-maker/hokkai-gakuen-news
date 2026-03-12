@@ -37,40 +37,13 @@
     },
     "HeroImage": {
       "title": "HeroImage",
-      "description": "ヒーローエリアの背景画像。",
+      "description": "公式サイトのトップ背景画像。",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
         "imageUrl": { "type": "string", "format": "uri" },
         "title": { "type": "string" },
         "order": { "type": "number" }
-      }
-    },
-    "Inquiry": {
-      "title": "Inquiry",
-      "description": "読者からのお問い合わせメッセージ。",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string" },
-        "email": { "type": "string", "format": "email" },
-        "subject": { "type": "string" },
-        "message": { "type": "string" },
-        "isRead": { "type": "boolean" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      }
-    },
-    "SystemSettings": {
-      "title": "SystemSettings",
-      "description": "メンテナンスモードや会長挨拶などのシステム設定。",
-      "type": "object",
-      "properties": {
-        "isMaintenanceMode": { "type": "boolean" },
-        "maintenanceMessage": { "type": "string" },
-        "authorName": { "type": "string" },
-        "authorImageUrl": { "type": "string" },
-        "content": { "type": "string" },
-        "updatedAt": { "type": "string", "format": "date-time" }
       }
     }
   },
@@ -80,23 +53,23 @@
   "firestore": {
     "/articles/{articleId}": {
       "schema": { "$ref": "#/entities/Article" },
-      "description": "記事データの保存場所。"
+      "description": "記事データ。新聞会員のみ編集可能。公開設定されたものは誰でも閲覧可。"
     },
     "/ads/{adId}": {
       "schema": { "$ref": "#/entities/Ad" },
-      "description": "広告データの保存場所。"
+      "description": "広告データ。新聞会員のみ編集可能。誰でも閲覧可。"
     },
     "/hero-images/{imageId}": {
       "schema": { "$ref": "#/entities/HeroImage" },
-      "description": "ヒーロー画像の保存場所。"
-    },
-    "/inquiries/{inquiryId}": {
-      "schema": { "$ref": "#/entities/Inquiry" },
-      "description": "お問い合わせデータの保存場所。"
+      "description": "ヒーロー画像。新聞会員のみ編集可能。"
     },
     "/settings/{settingId}": {
-      "schema": { "$ref": "#/entities/SystemSettings" },
-      "description": "システム設定の保存場所。"
+      "schema": { "type": "object" },
+      "description": "システム設定（メンテナンスなど）。新聞会員のみ編集可能。"
+    },
+    "/inquiries/{inquiryId}": {
+      "schema": { "type": "object" },
+      "description": "お問い合わせ。新聞会員のみ閲覧・削除可能。"
     }
   }
 }
