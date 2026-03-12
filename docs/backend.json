@@ -35,6 +35,17 @@
         "createdAt": { "type": "string", "format": "date-time" }
       }
     },
+    "HeroImage": {
+      "title": "HeroImage",
+      "description": "ヒーローエリアの背景画像。",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "imageUrl": { "type": "string", "format": "uri" },
+        "title": { "type": "string" },
+        "order": { "type": "number" }
+      }
+    },
     "Inquiry": {
       "title": "Inquiry",
       "description": "読者からのお問い合わせメッセージ。",
@@ -74,6 +85,10 @@
     "/ads/{adId}": {
       "schema": { "$ref": "#/entities/Ad" },
       "description": "広告データの保存場所。"
+    },
+    "/hero-images/{imageId}": {
+      "schema": { "$ref": "#/entities/HeroImage" },
+      "description": "ヒーロー画像の保存場所。"
     },
     "/inquiries/{inquiryId}": {
       "schema": { "$ref": "#/entities/Inquiry" },
