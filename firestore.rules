@@ -1,28 +1,19 @@
 rules_version = '2';
 
-/**
- * FIRESTORE SECURITY RULES: HOKKAI GAKUEN NEWS 1
- * 
- * 運用方針:
- * 新聞会員専用の管理ツールとして、ログインユーザーに全権限を与えます。
- * 記事データについては、表示の安定性のために読み取りを一般公開します。
- */
-
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // 記事（articles）へのアクセス設定
-    match /articles/{articleId} {
-      // 読み取りは全公開（管理画面での一覧表示を確実にするため）
-      allow read: if true;
-      // 書き込み・削除はログインしている新聞会員のみ
-      allow write: if request.auth != null;
+    
+    // すべてのデータに対して、ログイン済みなら読み書きOK
+    match /{document=**} {
+      allow read, write: if request.auth != null;
     }
 
-    // 広告（ads）、設定（settings）、ヒーロー画像、お問い合わせなどすべてのデータ
-    match /{document=**} {
-      // ログインしている新聞会員であればすべての読み書きを許可
-      allow read, write: if request.auth != null;
+    // 表示用サイトのために、記事と広告だけはログインなしでも読めるようにする
+    match /articles/{articleId} {
+      allow read: if true;
+    }
+    match /ads/{adId} {
+      allow read: if true;
     }
   }
 }
