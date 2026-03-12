@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc, orderBy, query, where } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil, Trash2, Loader2, X, Filter, Tag as TagIcon } from "lucide-react";
@@ -58,16 +58,18 @@ export function ArticleManager() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   
   const firestore = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
 
   const articlesQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    // ログイン済みの場合のみクエリを実行
+    if (!firestore || !user) return null;
     return query(
       collection(firestore, "articles"), 
       where("articleType", "==", "Standard"),
       orderBy("publishDate", "desc")
     );
-  }, [firestore]);
+  }, [firestore, user]);
 
   const { data: articles, isLoading } = useCollection(articlesQuery);
 

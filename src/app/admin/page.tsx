@@ -15,7 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useCollection, useDoc, useFirestore, useMemoFirebase } from "@/firebase";
+import { useCollection, useDoc, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query, orderBy, limit, doc } from "firebase/firestore";
 import Link from "next/link";
 
@@ -25,6 +25,7 @@ import Link from "next/link";
 export default function AdminDashboard() {
   const [currentTime, setCurrentTime] = useState<string | null>(null);
   const firestore = useFirestore();
+  const { user } = useUser();
 
   useEffect(() => {
     setCurrentTime(new Date().toLocaleString('ja-JP'));
@@ -34,15 +35,31 @@ export default function AdminDashboard() {
     return () => clearInterval(timer);
   }, []);
 
-  const articlesQuery = useMemoFirebase(() => firestore ? collection(firestore, "articles") : null, [firestore]);
-  const adsQuery = useMemoFirebase(() => firestore ? collection(firestore, "ads") : null, [firestore]);
-  const heroQuery = useMemoFirebase(() => firestore ? collection(firestore, "hero-images") : null, [firestore]);
+  // ユーザーがログインしている時だけクエリを作成する
+  const articlesQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return collection(firestore, "articles");
+  }, [firestore, user]);
+
+  const adsQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return collection(firestore, "ads");
+  }, [firestore, user]);
+
+  const heroQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return collection(firestore, "hero-images");
+  }, [firestore, user]);
+
   const recentActivityQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || !user) return null;
     return query(collection(firestore, "articles"), orderBy("updatedAt", "desc"), limit(4));
-  }, [firestore]);
+  }, [firestore, user]);
   
-  const maintenanceDocRef = useMemoFirebase(() => firestore ? doc(firestore, "settings", "maintenance") : null, [firestore]);
+  const maintenanceDocRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, "settings", "maintenance");
+  }, [firestore, user]);
 
   const { data: articles, isLoading: isArticlesLoading } = useCollection(articlesQuery);
   const { data: ads, isLoading: isAdsLoading } = useCollection(adsQuery);

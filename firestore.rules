@@ -3,22 +3,16 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // 全データ共通：ログインしていれば読み書き（作成・更新・削除・リスト取得）をすべて許可
+    // すべてのデータに対して、ログイン済みなら読み書きOK
     match /{document=**} {
       allow read, write: if request.auth != null;
     }
 
-    // 公開用アクセス：記事と広告はログインなしでも閲覧（個別の取得および一覧取得）が可能
-    // 管理画面でのフィルタリングや並び替えクエリを許可するため、read権限を明示的に設定
+    // 表示用サイト（将来用）のために、記事と広告だけはログインなしでも読めるようにする
     match /articles/{articleId} {
       allow read: if true;
     }
     match /ads/{adId} {
-      allow read: if true;
-    }
-
-    // メンテナンス設定：未ログインでも状態を確認できるように許可（必要に応じて）
-    match /settings/maintenance {
       allow read: if true;
     }
   }
