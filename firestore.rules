@@ -12,9 +12,31 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description 全てのドキュメントに対するルール。
-     * Firebase Authentication で認証されたユーザーであれば、
-     * 記事、広告、画像、設定、お問い合わせなど、すべてのデータの読み取りと書き込みを許可します。
+     * @description 各コレクションに対する明示的なルール。
+     * ログイン済みであれば読み取り（list/get）と書き込みを許可します。
+     */
+    match /articles/{articleId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    match /ads/{adId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    match /inquiries/{inquiryId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    match /settings/{settingId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    match /hero-images/{imageId} {
+      allow read, write: if request.auth != null;
+    }
+
+    /**
+     * @description フォールバック用の全域ルール。
      */
     match /{document=**} {
       allow read, write: if request.auth != null;
