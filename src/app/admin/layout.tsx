@@ -1,0 +1,165 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { 
+  LayoutDashboard, 
+  FileText, 
+  ImageIcon, 
+  Megaphone, 
+  UserRound, 
+  ChevronRight,
+  Menu,
+  LogOut,
+  ShieldAlert,
+  Globe,
+  ExternalLink,
+  Share2,
+  Loader2
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { useUser, useAuth } from "@/firebase";
+import { signOut } from "firebase/auth";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { LoginForm } from "@/components/auth/login-form";
+
+/**
+ * 管理画面の共通レイアウト
+ * 認証チェックとサイドバーの表示を行います。
+ */
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
+  const pathname = usePathname();
+  const router = useRouter();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const menuItems = [
+    { id: "/admin", label: "ダッシュボード", icon: LayoutDashboard },
+    { id: "/admin/articles", label: "記事管理", icon: FileText },
+    { id: "/admin/note", label: "note連動", icon: Share2 },
+    { id: "/admin/hero", label: "ヒーロー画像", icon: ImageIcon },
+    { id: "/admin/ads", label: "広告管理", icon: Megaphone },
+    { id: "/admin/president", label: "会長挨拶設定", icon: UserRound },
+    { id: "/admin/maintenance", label: "メンテナンス管理", icon: ShieldAlert },
+  ];
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/');
+  };
+
+  if (!mounted || isUserLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#1e293b] p-4">
+        <div className="w-full max-w-md">
+          <LoginForm />
+        </div>
+      </div>
+    );
+  }
+
+  const activeLabel = menuItems.find(i => i.id === pathname)?.label || "管理";
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex">
+      <aside 
+        className={cn(
+          "bg-[#1e293b] text-slate-300 transition-all duration-300 flex flex-col fixed inset-y-0 z-50",
+          isSidebarOpen ? "w-64" : "w-20"
+        )}
+      >
+        <div className="p-6 flex items-center gap-3 border-b border-slate-700/50">
+          <div className="bg-primary text-white p-2 rounded-lg shrink-0">
+            <LayoutDashboard className="h-5 w-5" />
+          </div>
+          {isSidebarOpen && (
+            <div className="overflow-hidden whitespace-nowrap">
+              <h1 className="text-sm font-bold text-white leading-tight">北海学園一部新聞会</h1>
+              <p className="text-[10px] text-slate-400">CMS 管理パネル</p>
+            </div>
+          )}
+        </div>
+
+        <nav className="flex-1 p-4 space-y-2 mt-4">
+          {menuItems.map((item) => (
+            <Link key={item.id} href={item.id}>
+              <button
+                className={cn(
+                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group mb-1",
+                  pathname === item.id 
+                    ? "bg-primary text-white shadow-lg shadow-primary/20" 
+                    : "hover:bg-slate-800 hover:text-white"
+                )}
+              >
+                <item.icon className={cn("h-5 w-5 shrink-0", pathname === item.id ? "text-white" : "text-slate-400 group-hover:text-white")} />
+                {isSidebarOpen && <span className="text-sm font-medium">{item.label}</span>}
+                {pathname === item.id && isSidebarOpen && <ChevronRight className="h-4 w-4 ml-auto opacity-50" />}
+              </button>
+            </Link>
+          ))}
+        </nav>
+
+        <div className="p-4 border-t border-slate-700/50">
+          <Button 
+            variant="ghost" 
+            className="w-full text-slate-400 hover:text-white hover:bg-slate-800 justify-start gap-3 px-3"
+            onClick={handleLogout}
+          >
+            <LogOut className="h-5 w-5 shrink-0" />
+            {isSidebarOpen && <span className="text-sm font-medium">ログアウト</span>}
+          </Button>
+        </div>
+      </aside>
+
+      <div 
+        className={cn(
+          "flex-1 flex flex-col transition-all duration-300",
+          isSidebarOpen ? "ml-64" : "ml-20"
+        )}
+      >
+        <header className="h-16 bg-white border-b border-slate-200 px-8 flex items-center justify-between sticky top-0 z-40 shadow-sm">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="text-slate-500">
+              <Menu className="h-5 w-5" />
+            </Button>
+            <h2 className="text-lg font-bold text-slate-800">
+              {activeLabel}
+            </h2>
+          </div>
+          <div className="flex items-center gap-3">
+            <Link href="/" target="_blank">
+              <Button variant="outline" size="sm" className="gap-2">
+                <Globe className="h-4 w-4" />
+                サイトを表示
+                <ExternalLink className="h-3 w-3" />
+              </Button>
+            </Link>
+            <Badge variant="outline" className="bg-slate-50 text-slate-500 font-normal">
+              {user.email}
+            </Badge>
+          </div>
+        </header>
+
+        <main className="flex-1 p-8 max-w-7xl w-full mx-auto">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+}
