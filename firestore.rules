@@ -2,16 +2,10 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // 基本方針：ログインしている人（新聞会員）のみがすべての閲覧・書き込みを許可される
-    // このサイトは管理専用ツールなので、未ログイン者には何も見せない
+    // すべてのデータに対して、ログイン（認証）しているユーザーのみが閲覧・書き込みを許可される
+    // ログインしていない一般ユーザー（読者）向けの公開は一切行わない設定
     match /{document=**} {
       allow read, write: if request.auth != null;
-    }
-    
-    // ユーザープロファイルのみ、自分のデータだけを操作できるように制限
-    match /user_profiles/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
   }
 }
