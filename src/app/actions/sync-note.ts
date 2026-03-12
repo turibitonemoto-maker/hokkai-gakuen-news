@@ -9,34 +9,33 @@
 
 export async function fetchNoteArticles() {
   // ネットワーク遅延のシミュレート
-  await new Promise(resolve => setTimeout(resolve, 1500));
+  await new Promise(resolve => setTimeout(resolve, 1000));
 
-  const now = new Date().toISOString();
   const noteAccountUrl = "https://note.com/lucky_minnow287";
 
-  // 本物の運用を想定した記事データのシミュレート
+  // 本物の運用を想定した記事データの構成
   return [
     {
       id: "note-lucky-001",
-      title: "【note連動】北海学園大学一部新聞会デジタル版が本格始動",
+      title: "【学園ニュース】北海学園大学一部新聞会デジタル版が本格始動しました",
       noteUrl: `${noteAccountUrl}/n/n123456789`,
       articleType: "Note",
       categoryId: "Campus",
-      publishDate: now,
-      mainImageUrl: "https://picsum.photos/seed/lucky1/600/400",
+      publishDate: new Date().toISOString(),
+      mainImageUrl: "https://picsum.photos/seed/lucky1/800/450",
       isPublished: false,
-      tags: ["lucky_minnow", "デジタル版"]
+      tags: ["新聞会", "デジタル版", "lucky_minnow"]
     },
     {
       id: "note-lucky-002",
-      title: "編集長インタビュー：私たちのメディアが目指すもの",
+      title: "編集長インタビュー：私たちのメディアが目指すものと北海学園の今",
       noteUrl: `${noteAccountUrl}/n/n987654321`,
       articleType: "Note",
       categoryId: "Interview",
-      publishDate: now,
-      mainImageUrl: "https://picsum.photos/seed/lucky2/600/400",
+      publishDate: new Date().toISOString(),
+      mainImageUrl: "https://picsum.photos/seed/lucky2/800/450",
       isPublished: false,
-      tags: ["lucky_minnow", "インタビュー"]
+      tags: ["インタビュー", "学生の力", "lucky_minnow"]
     }
   ];
 }

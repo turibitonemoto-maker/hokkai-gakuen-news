@@ -29,7 +29,7 @@ import { useAuth, initiateEmailSignIn, errorEmitter } from "@/firebase";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "有効なメールアドレスを入力してください。" }),
-  password: z.string().min(6, { message: "パスワードは6文字以上である必要があります。" }),
+  password: z.string().min(1, { message: "パスワードを入力してください。" }),
 });
 
 export function LoginForm() {
@@ -54,7 +54,7 @@ export function LoginForm() {
       if (error.message.includes("auth/invalid-credential") || error.message.includes("auth/user-not-found") || error.message.includes("auth/wrong-password")) {
         errorMessage = "認証に失敗しました。メールアドレスまたはパスワードが正しくありません。";
       } else if (error.message.includes("auth/too-many-requests")) {
-        errorMessage = "短時間に何度も失敗したため、一時的にロックされています。少し時間を置いてから再試行してください。";
+        errorMessage = "短時間に何度も失敗したため、一時的にロックされています。";
       } else {
         errorMessage = `エラーが発生しました: ${error.message}`;
       }
@@ -72,12 +72,12 @@ export function LoginForm() {
 
     initiateEmailSignIn(auth, values.email, values.password);
     
-    // タイムアウト設定（念のため）
+    // タイムアウト設定
     setTimeout(() => setIsLoading(false), 5000);
   }
 
   return (
-    <Card className="w-full max-w-md shadow-2xl border-none bg-white/90 backdrop-blur-sm animate-in fade-in zoom-in duration-300">
+    <Card className="w-full max-w-md shadow-2xl border-none bg-white/95 backdrop-blur-sm animate-in fade-in zoom-in duration-300">
       <CardHeader className="space-y-1 pb-6 text-center">
         <div className="flex justify-center mb-4">
           <div className="bg-primary p-3 rounded-2xl text-white shadow-lg">
@@ -87,7 +87,7 @@ export function LoginForm() {
         <CardTitle className="text-2xl font-bold text-primary tracking-tight">
           Hokkai Gakuen News 1
         </CardTitle>
-        <CardDescription className="text-muted-foreground">
+        <CardDescription className="text-muted-foreground font-medium">
           コンテンツ管理システム
         </CardDescription>
       </CardHeader>
@@ -95,8 +95,7 @@ export function LoginForm() {
         {serverError && (
           <Alert variant="destructive" className="mb-4 bg-destructive/5 border-destructive/20 text-destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle className="text-xs font-bold">ログインできません</AlertTitle>
-            <AlertDescription className="text-[11px] whitespace-pre-wrap leading-relaxed">
+            <AlertDescription className="text-xs font-bold leading-relaxed">
               {serverError}
             </AlertDescription>
           </Alert>
@@ -135,7 +134,7 @@ export function LoginForm() {
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
                       <Input
                         type="password"
-                        placeholder="パスワード"
+                        placeholder="••••••••"
                         className="pl-10 h-11 border-slate-200 focus:border-primary focus:ring-primary transition-all duration-200"
                         {...field}
                       />

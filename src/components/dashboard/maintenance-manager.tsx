@@ -149,7 +149,7 @@ export function MaintenanceManager() {
               />
 
               <div className="flex justify-end pt-6 border-t">
-                <Button type="submit" className="flex items-center gap-2">
+                <Button type="submit" className="flex items-center gap-2 font-bold px-8 shadow-sm">
                   <Save className="h-5 w-5" />
                   設定を保存する
                 </Button>

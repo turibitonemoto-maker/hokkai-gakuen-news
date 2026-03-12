@@ -37,18 +37,18 @@ const CATEGORY_LABELS: Record<string, string> = {
  */
 const getTagColor = (tag: string, isActive: boolean) => {
   const colorMap: Record<string, string> = {
-    "学内ニュース": "bg-blue-600",
-    "イベント": "bg-green-600",
-    "インタビュー": "bg-purple-600",
-    "スポーツ": "bg-orange-600",
-    "コラム": "bg-pink-600",
-    "オピニオン": "bg-cyan-600",
+    "学内ニュース": "bg-blue-500",
+    "イベント": "bg-green-500",
+    "インタビュー": "bg-purple-500",
+    "スポーツ": "bg-orange-500",
+    "コラム": "bg-pink-500",
+    "オピニオン": "bg-cyan-500",
   };
 
   if (!isActive) return "bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200";
 
-  // 選択中は固有のカラー、それ以外はローズレッド（鮮やかな警告色に近い目立つ色）
-  const baseColor = colorMap[tag] || "bg-rose-500";
+  // 選択中は固有のカラー、それ以外はデフォルトのプライマリ
+  const baseColor = colorMap[tag] || "bg-primary";
   return `${baseColor} text-white border-transparent shadow-sm`;
 };
 
@@ -76,7 +76,7 @@ export function ArticleManager() {
     if (!articles) return [];
     const tagsSet = new Set<string>();
     
-    // 既存のカテゴリーラベルをすべて追加
+    // 既存のカテゴリーラベルを追加
     Object.values(CATEGORY_LABELS).forEach(label => tagsSet.add(label));
     
     // 記事に付与されているカスタムタグを追加
@@ -149,8 +149,8 @@ export function ArticleManager() {
         </Button>
       </div>
 
-      <Card className="shadow-sm">
-        <CardHeader className="pb-3 border-b">
+      <Card className="shadow-sm border-slate-200">
+        <CardHeader className="pb-3 border-b bg-slate-50/30">
           <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-500 uppercase tracking-wider">
             <Filter className="h-4 w-4" />
             利用可能な分類
@@ -176,7 +176,7 @@ export function ArticleManager() {
               );
             })}
             {selectedTags.length > 0 && (
-              <Button variant="link" size="sm" onClick={() => setSelectedTags([])} className="text-xs text-slate-400 font-bold">
+              <Button variant="link" size="sm" onClick={() => setSelectedTags([])} className="text-xs text-slate-400 font-bold h-auto p-0 ml-2">
                 すべて解除
               </Button>
             )}
@@ -184,7 +184,7 @@ export function ArticleManager() {
         </CardContent>
       </Card>
 
-      <Card className="shadow-sm overflow-hidden">
+      <Card className="shadow-sm overflow-hidden border-slate-200">
         <CardContent className="p-0">
           {isLoading ? (
             <div className="p-20 flex justify-center"><Loader2 className="h-10 w-10 animate-spin text-primary/50" /></div>
@@ -204,7 +204,7 @@ export function ArticleManager() {
                   <TableRow key={article.id} className="group hover:bg-slate-50/80 transition-colors">
                     <TableCell>
                       {article.isPublished ? (
-                        <Badge className="bg-green-100 text-green-700 hover:bg-green-200 border-green-200">公開中</Badge>
+                        <Badge className="bg-green-100 text-green-700 hover:bg-green-200 border-green-200 shadow-none">公開中</Badge>
                       ) : (
                         <Badge variant="outline" className="text-slate-400 border-slate-200 bg-slate-50">下書き</Badge>
                       )}
@@ -241,6 +241,13 @@ export function ArticleManager() {
                     </TableCell>
                   </TableRow>
                 ))}
+                {filteredArticles.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-20 text-slate-400 font-medium">
+                      条件に一致する記事が見つかりませんでした。
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           )}
@@ -254,7 +261,7 @@ export function ArticleManager() {
               <Trash2 className="h-5 w-5" />
               記事を完全に削除しますか？
             </AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogDescription className="font-medium">
               「{articleToDelete?.title}」を削除します。この操作は取り消せません。
             </AlertDialogDescription>
           </AlertDialogHeader>
