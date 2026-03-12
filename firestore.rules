@@ -5,43 +5,18 @@ rules_version = '2';
  * 
  * 運用方針:
  * このシステムは新聞会員専用の管理ツールです。
- * Firebase Authentication で登録された「新聞会員（ログイン済みユーザー）」のみが
- * すべてのコンテンツを読み書きできるように設定します。
+ * ログインしている会員（新聞会員）であれば、すべてのデータの読み書きを許可します。
  */
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description すべてのドキュメントに対するルール。
-     * ログインしている会員であれば、記事、広告、画像、設定、お問い合わせなど
-     * すべてのデータの読み取り(get/list)と書き込み(create/update/delete)を許可します。
+     * @description 全てのドキュメントに対するルール。
+     * Firebase Authentication で認証されたユーザーであれば、
+     * 記事、広告、画像、設定、お問い合わせなど、すべてのデータの読み取りと書き込みを許可します。
      */
     match /{document=**} {
-      allow read, write: if request.auth != null;
-    }
-    
-    /**
-     * @description 個別のコレクションに対する定義。
-     * 上記のグローバルルールでカバーされていますが、構造を明確にするために記述します。
-     */
-    match /articles/{articleId} {
-      allow read, write: if request.auth != null;
-    }
-
-    match /ads/{adId} {
-      allow read, write: if request.auth != null;
-    }
-
-    match /inquiries/{inquiryId} {
-      allow read, write: if request.auth != null;
-    }
-
-    match /settings/{settingId} {
-      allow read, write: if request.auth != null;
-    }
-
-    match /hero-images/{imageId} {
       allow read, write: if request.auth != null;
     }
   }
