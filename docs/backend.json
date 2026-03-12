@@ -48,6 +48,19 @@
         "isRead": { "type": "boolean" },
         "createdAt": { "type": "string", "format": "date-time" }
       }
+    },
+    "SystemSettings": {
+      "title": "SystemSettings",
+      "description": "メンテナンスモードや会長挨拶などのシステム設定。",
+      "type": "object",
+      "properties": {
+        "isMaintenanceMode": { "type": "boolean" },
+        "maintenanceMessage": { "type": "string" },
+        "authorName": { "type": "string" },
+        "authorImageUrl": { "type": "string" },
+        "content": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
     }
   },
   "auth": {
@@ -67,7 +80,7 @@
       "description": "お問い合わせデータの保存場所。"
     },
     "/settings/{settingId}": {
-      "schema": "object",
+      "schema": "SystemSettings",
       "description": "メンテナンスモードや会長挨拶などのシステム設定。"
     },
     "/hero-images/{imageId}": {
