@@ -41,7 +41,7 @@ export interface InternalQuery extends Query<DocumentData> {
 
 /**
  * React hook to subscribe to a Firestore collection or query in real-time.
- * Handles nullable references/queries and auth synchronization to prevent early permission errors.
+ * Handles auth synchronization to prevent early permission errors (flying).
  */
 export function useCollection<T = any>(
     memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean})  | null | undefined,
@@ -57,7 +57,7 @@ export function useCollection<T = any>(
   const { user, isUserLoading } = useUser();
 
   useEffect(() => {
-    // 1. 認証チェック中、またはクエリがない場合は待機
+    // 1. 認証チェック中、またはクエリがない場合は待機（フライング防止）
     if (isUserLoading || !memoizedTargetRefOrQuery) {
       setData(null);
       setIsLoading(false);
@@ -65,14 +65,15 @@ export function useCollection<T = any>(
       return;
     }
 
-    // 2. 認証が必要なクエリの場合、ユーザー情報が確定するまで待機
-    // ユーザーが明示的にログインしていない場合は一旦クリア
+    // 2. 認証が必要な可能性があるクエリ（nullでないuserが必要な場合）の追加ガード
     if (!user && memoizedTargetRefOrQuery.type !== 'collection') {
        // ログインが必要な可能性が高いクエリ（管理画面など）
-       return;
+       // ただし、完全にブロックせず、後続のonSnapshotに任せるが、isLoadingは維持
+       setIsLoading(true);
+    } else {
+       setIsLoading(true);
     }
-
-    setIsLoading(true);
+    
     setError(null);
 
     const unsubscribe = onSnapshot(
@@ -87,11 +88,11 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       async (serverError: FirestoreError) => {
-        // ログイン直後のトークン同期ラグ（フライング）による権限エラーを検知
+        // 【最重要】ログイン直後のトークン同期ラグ（フライング）による権限エラーを検知
+        // ユーザーが存在するのに「権限なし」と言われた場合は、致命的なエラーとせず静かに待機する
         if (serverError.code === 'permission-denied' && user) {
-          console.warn("Firestore: Permission denied for authenticated user. Waiting for SDK sync...");
-          // このエラーは無視し、SDKの自動再試行または次の認証サイクルに期待する
-          // ただしローディング状態は解除しない
+          console.warn("Firestore (useCollection): Permission denied for authenticated user. Waiting for auth sync...");
+          // isLoadingを解除せず、エラーもセットせずにリターン
           return;
         }
 
@@ -109,7 +110,7 @@ export function useCollection<T = any>(
         setData(null)
         setIsLoading(false)
 
-        // グローバルエラー通知（認証済みの場合はラグの可能性があるため、少し慎重に扱う）
+        // グローバルエラー通知
         errorEmitter.emit('permission-error', contextualError);
       }
     );

@@ -43,7 +43,7 @@ export function useDoc<T = any>(
   const { user, isUserLoading } = useUser();
 
   useEffect(() => {
-    // 1. 認証チェック中、または参照がない場合は待機
+    // 1. 認証チェック中、または参照がない場合は待機（フライング防止）
     if (isUserLoading || !memoizedDocRef) {
       setData(null);
       setIsLoading(false);
@@ -66,9 +66,10 @@ export function useDoc<T = any>(
         setIsLoading(false);
       },
       async (serverError: FirestoreError) => {
-        // ログイン直後のトークン同期ラグによる一時的な権限エラーを検知
+        // 【最重要】ログイン直後のトークン同期ラグによる一時的な権限エラーを検知
+        // ユーザーが存在するのに「権限なし」と言われた場合は、致命的なエラーとせず静かに待機する
         if (serverError.code === 'permission-denied' && user) {
-          console.warn("Firestore: Permission denied on doc for authenticated user. Waiting...");
+          console.warn("Firestore (useDoc): Permission denied on doc for authenticated user. Waiting for auth sync...");
           return;
         }
 
