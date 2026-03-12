@@ -23,7 +23,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
+} from "@/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth, initiateEmailSignIn, errorEmitter } from "@/firebase";
 
@@ -53,8 +53,6 @@ export function LoginForm() {
         errorMessage = "メールアドレスまたはパスワードが正しくありません。";
       } else if (error.message.includes("auth/too-many-requests")) {
         errorMessage = "短時間に何度も失敗したため、一時的にロックされています。";
-      } else if (error.message.includes("auth/invalid-api-key")) {
-        errorMessage = "認証設定エラーが発生しています。システム管理者にお問い合わせください。";
       }
       setServerError(errorMessage);
     };
