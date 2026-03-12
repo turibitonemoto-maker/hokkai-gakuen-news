@@ -53,23 +53,23 @@
   "firestore": {
     "/articles/{articleId}": {
       "schema": { "$ref": "#/entities/Article" },
-      "description": "記事データ。新聞会員のみ編集可能。公開設定されたものは誰でも閲覧可。"
+      "description": "記事データ。ログインユーザーなら編集可能。公開設定されたものは誰でも閲覧可。"
     },
     "/ads/{adId}": {
       "schema": { "$ref": "#/entities/Ad" },
-      "description": "広告データ。新聞会員のみ編集可能。誰でも閲覧可。"
+      "description": "広告データ。ログインユーザーなら編集可能。誰でも閲覧可。"
     },
     "/hero-images/{imageId}": {
       "schema": { "$ref": "#/entities/HeroImage" },
-      "description": "ヒーロー画像。新聞会員のみ編集可能。"
+      "description": "ヒーロー画像。ログインユーザーのみ編集可能。"
     },
     "/settings/{settingId}": {
       "schema": { "type": "object" },
-      "description": "システム設定（メンテナンスなど）。新聞会員のみ編集可能。"
+      "description": "システム設定（メンテナンス、会長挨拶など）。ログインユーザーのみ編集可能。"
     },
     "/inquiries/{inquiryId}": {
       "schema": { "type": "object" },
-      "description": "お問い合わせ。新聞会員のみ閲覧・削除可能。"
+      "description": "お問い合わせ。ログインユーザーのみ閲覧・削除可能。"
     }
   }
 }

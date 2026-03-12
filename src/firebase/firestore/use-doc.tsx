@@ -10,7 +10,7 @@ import {
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { useUser } from '@/firebase/provider';
+import { useUser } from '@/firebase';
 
 /** Utility type to add an 'id' field to a given type T. */
 type WithId<T> = T & { id: string };
@@ -27,6 +27,7 @@ export interface UseDocResult<T> {
 
 /**
  * React hook to subscribe to a single Firestore document in real-time.
+ * Handles auth synchronization to prevent early permission errors.
  */
 export function useDoc<T = any>(
   memoizedDocRef: DocumentReference<DocumentData> | null | undefined,
@@ -37,7 +38,7 @@ export function useDoc<T = any>(
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
-  // 認証状態を取得
+  // 認証状態を取得（フライング防止用）
   const { user, isUserLoading } = useUser();
 
   useEffect(() => {
@@ -64,9 +65,9 @@ export function useDoc<T = any>(
         setIsLoading(false);
       },
       (serverError: FirestoreError) => {
-        // ログイン待機中や認証情報の伝播中にエラーが出た場合は無視する
+        // 重要: 認証情報の同期中にエラーが出た場合は無視して待機
         if (serverError.code === 'permission-denied' && !user) {
-          console.warn("Firestore: 認証確定待ちのため権限エラーをスキップします...");
+          console.warn("Firestore: Auth state synchronization in progress, skipping early permission error...");
           return;
         }
 

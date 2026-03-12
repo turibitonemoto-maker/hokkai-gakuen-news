@@ -11,7 +11,7 @@ import {
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { useUser } from '@/firebase/provider';
+import { useUser } from '@/firebase';
 
 /** Utility type to add an 'id' field to a given type T. */
 export type WithId<T> = T & { id: string };
@@ -40,7 +40,7 @@ export interface InternalQuery extends Query<DocumentData> {
 
 /**
  * React hook to subscribe to a Firestore collection or query in real-time.
- * Handles nullable references/queries.
+ * Handles nullable references/queries and auth synchronization.
  */
 export function useCollection<T = any>(
     memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean})  | null | undefined,
@@ -52,7 +52,7 @@ export function useCollection<T = any>(
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
   
-  // 認証状態を取得
+  // 認証状態を取得（フライング防止用）
   const { user, isUserLoading } = useUser();
 
   useEffect(() => {
@@ -79,9 +79,10 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       (serverError: FirestoreError) => {
-        // ログイン待機中や認証情報の伝播中にエラーが出た場合は無視する
+        // 重要: ログイン直後の認証情報の伝播中にエラーが出た場合は、
+        // ユーザーが確定するまでエラーを無視して待機する（フライング防止ロジック）
         if (serverError.code === 'permission-denied' && !user) {
-          console.warn("Firestore: 認証確定待ちのため権限エラーをスキップします...");
+          console.warn("Firestore: Auth state synchronization in progress, skipping early permission error...");
           return;
         }
 

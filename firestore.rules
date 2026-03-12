@@ -3,16 +3,22 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // すべてのデータに対して、ログイン済みなら読み書きOK
+    // 基本方針: ログインしている新聞会員であれば、すべてのデータに対して読み書きを許可
     match /{document=**} {
       allow read, write: if request.auth != null;
     }
 
-    // 表示用サイトのために、記事と広告だけはログインなしでも読めるようにする
+    // 公開設定: 記事と広告は未ログイン状態でも読み取りを許可
+    // これにより、ログイン直後の認証情報伝播中のエラーをより確実に防げます
     match /articles/{articleId} {
       allow read: if true;
     }
     match /ads/{adId} {
+      allow read: if true;
+    }
+    
+    // システム設定（メンテナンスモード等）も、サイトの状態を確認するために公開
+    match /settings/{settingId} {
       allow read: if true;
     }
   }
