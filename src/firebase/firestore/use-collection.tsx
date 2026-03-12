@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -40,7 +41,7 @@ export interface InternalQuery extends Query<DocumentData> {
 
 /**
  * React hook to subscribe to a Firestore collection or query in real-time.
- * Handles nullable references/queries and auth synchronization.
+ * Handles nullable references/queries and auth synchronization to prevent early permission errors.
  */
 export function useCollection<T = any>(
     memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean})  | null | undefined,
@@ -64,9 +65,10 @@ export function useCollection<T = any>(
       return;
     }
 
-    // 2. ユーザーが確定していない場合（未ログイン状態）は一旦クリア
+    // 2. 認証が必要なクエリの場合、ユーザー情報が確定するまで待機
+    // ユーザーが明示的にログインしていない場合は一旦クリア
     if (!user && memoizedTargetRefOrQuery.type !== 'collection') {
-       // 認証が必要なクエリ（記事管理など）でユーザーがいない場合はエラーを出さずに待機
+       // ログインが必要な可能性が高いクエリ（管理画面など）
        return;
     }
 
@@ -84,11 +86,12 @@ export function useCollection<T = any>(
         setError(null);
         setIsLoading(false);
       },
-      (serverError: FirestoreError) => {
-        // 重要: ログイン直後、認証トークンがSDK内で完全に同期されるまでの「わずかなラグ」で
-        // 権限エラーが出ることがあります。その場合はエラーを表示せず、再試行を待機します。
-        if (serverError.code === 'permission-denied') {
-          console.warn("Firestore: Permission denied. Waiting for auth sync...");
+      async (serverError: FirestoreError) => {
+        // ログイン直後のトークン同期ラグ（フライング）による権限エラーを検知
+        if (serverError.code === 'permission-denied' && user) {
+          console.warn("Firestore: Permission denied for authenticated user. Waiting for SDK sync...");
+          // このエラーは無視し、SDKの自動再試行または次の認証サイクルに期待する
+          // ただしローディング状態は解除しない
           return;
         }
 
@@ -106,7 +109,7 @@ export function useCollection<T = any>(
         setData(null)
         setIsLoading(false)
 
-        // グローバルエラー通知
+        // グローバルエラー通知（認証済みの場合はラグの可能性があるため、少し慎重に扱う）
         errorEmitter.emit('permission-error', contextualError);
       }
     );

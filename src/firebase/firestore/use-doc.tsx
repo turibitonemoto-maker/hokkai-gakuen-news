@@ -1,3 +1,4 @@
+
 'use client';
     
 import { useState, useEffect } from 'react';
@@ -27,7 +28,7 @@ export interface UseDocResult<T> {
 
 /**
  * React hook to subscribe to a single Firestore document in real-time.
- * Handles auth synchronization to prevent early permission errors.
+ * Handles auth synchronization to prevent early permission errors (flying).
  */
 export function useDoc<T = any>(
   memoizedDocRef: DocumentReference<DocumentData> | null | undefined,
@@ -64,10 +65,10 @@ export function useDoc<T = any>(
         setError(null);
         setIsLoading(false);
       },
-      (serverError: FirestoreError) => {
-        // 重要: 認証情報の同期中に一時的なエラーが出た場合は無視して待機
-        if (serverError.code === 'permission-denied') {
-          console.warn("Firestore: Permission denied on doc. Waiting for auth sync...");
+      async (serverError: FirestoreError) => {
+        // ログイン直後のトークン同期ラグによる一時的な権限エラーを検知
+        if (serverError.code === 'permission-denied' && user) {
+          console.warn("Firestore: Permission denied on doc for authenticated user. Waiting...");
           return;
         }
 

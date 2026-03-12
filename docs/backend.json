@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "Article": {
@@ -41,19 +42,19 @@
   "firestore": {
     "/articles/{articleId}": {
       "schema": { "$ref": "#/entities/Article" },
-      "description": "記事データ。ログイン者は全権限、未ログイン者は閲覧のみ。"
+      "description": "記事データ。公開読み取り許可、ログイン者は全権限。"
     },
     "/ads/{adId}": {
       "schema": { "$ref": "#/entities/Ad" },
-      "description": "広告データ。ログイン者は全権限、未ログイン者は閲覧のみ。"
+      "description": "広告データ。公開読み取り許可、ログイン者は全権限。"
     },
     "/hero-images/{imageId}": {
       "schema": { "type": "object" },
-      "description": "ヒーロー画像。ログイン者のみ管理可能。"
+      "description": "ヒーロー画像。ログイン者のみ全権限。"
     },
     "/settings/{settingId}": {
       "schema": { "type": "object" },
-      "description": "システム設定（メンテナンス、会長挨拶）。"
+      "description": "システム設定。公開読み取り許可。"
     },
     "/inquiries/{inquiryId}": {
       "schema": { "type": "object" },
