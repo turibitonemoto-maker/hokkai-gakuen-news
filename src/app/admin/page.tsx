@@ -35,7 +35,7 @@ export default function AdminDashboard() {
     return () => clearInterval(timer);
   }, []);
 
-  // ユーザーがログインしている時だけクエリを作成する
+  // ユーザーが完全にログイン（userが確定）してからクエリを生成する
   const articlesQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return collection(firestore, "articles");

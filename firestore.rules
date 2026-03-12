@@ -3,24 +3,32 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // 基本ルール：ログイン済みの新聞会員ならすべてのデータの読み書きが可能
+    /**
+     * 北海学園一部新聞会 CMS セキュリティルール
+     * 
+     * 1. ログイン済みの新聞会員（あなた）であれば、すべてのデータの読み書きが可能です。
+     * 2. 表示用サイトの安定性のために、記事と広告だけは未ログインでも閲覧のみ許可します。
+     */
+
+    // 基本ルール：ログイン済みならすべてのパスで読み書きOK
     match /{document=**} {
       allow read, write: if request.auth != null;
     }
 
-    // 公開設定：記事と広告のみ、未ログインでも一覧・詳細の読み取りを許可（表示用サイト向け）
+    // 公開設定：記事と広告は誰でも閲覧可能
     match /articles/{articleId} {
       allow read: if true;
     }
-    match /articles {
-      allow list: if true;
-    }
-    
     match /ads/{adId} {
       allow read: if true;
     }
-    match /ads {
-      allow list: if true;
+
+    // システム設定やお問い合わせなどはログイン必須
+    match /settings/{settingId} {
+      allow read, write: if request.auth != null;
+    }
+    match /inquiries/{inquiryId} {
+      allow read, write: if request.auth != null;
     }
   }
 }
