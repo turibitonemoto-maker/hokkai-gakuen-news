@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -98,7 +99,6 @@ export function ArticleManager() {
         CATEGORY_LABELS[article.categoryId] || article.categoryId,
         ...(article.tags || [])
       ];
-      // 選択されているすべてのタグが含まれているかチェック
       return selectedTags.every(tag => articleTags.includes(tag));
     });
   }, [articles, selectedTags]);
@@ -153,7 +153,7 @@ export function ArticleManager() {
         <CardHeader className="pb-3 border-b bg-slate-50/30">
           <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-500 uppercase tracking-wider">
             <Filter className="h-4 w-4" />
-            利用可能な分類
+            分類フィルター
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4">
@@ -177,7 +177,7 @@ export function ArticleManager() {
             })}
             {selectedTags.length > 0 && (
               <Button variant="link" size="sm" onClick={() => setSelectedTags([])} className="text-xs text-slate-400 font-bold h-auto p-0 ml-2">
-                すべて解除
+                リセット
               </Button>
             )}
           </div>
@@ -244,7 +244,7 @@ export function ArticleManager() {
                 {filteredArticles.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-20 text-slate-400 font-medium">
-                      条件に一致する記事が見つかりませんでした。
+                      記事が見つかりませんでした。
                     </TableCell>
                   </TableRow>
                 )}
@@ -259,10 +259,10 @@ export function ArticleManager() {
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-destructive">
               <Trash2 className="h-5 w-5" />
-              記事を完全に削除しますか？
+              記事を削除しますか？
             </AlertDialogTitle>
-            <AlertDialogDescription className="font-medium">
-              「{articleToDelete?.title}」を削除します。この操作は取り消せません。
+            <AlertDialogDescription>
+              「{articleToDelete?.title}」を完全に削除します。この操作は取り消せません。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useDoc, useFirestore, useMemoFirebase } from "@/firebase";
@@ -38,7 +39,7 @@ export function MaintenanceManager() {
     resolver: zodResolver(maintenanceSchema),
     defaultValues: {
       isMaintenanceMode: false,
-      maintenanceMessage: "現在、システムメンテナンスのためサイトを一時停止しております。ご不便をおかけしますが、再開まで今しばらくお待ちください。",
+      maintenanceMessage: "現在、システムメンテナンスのためサイトを一時停止しております。",
     },
   });
 
@@ -80,7 +81,7 @@ export function MaintenanceManager() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">公開サイト制御設定</h2>
-          <p className="text-sm text-slate-500">メンテナンス設定をリアルタイムで制御します。</p>
+          <p className="text-sm text-slate-500">メンテナンス設定を制御します。</p>
         </div>
         <Button 
           variant="outline" 

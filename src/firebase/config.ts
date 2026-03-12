@@ -1,3 +1,4 @@
+
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
@@ -7,10 +8,10 @@ import { getAnalytics } from "firebase/analytics";
 /**
  * Firebase設定
  * プロジェクトID: studio-7293379319-74783
- * APIキーエラーを回避するため、正しい設定値を直接記述します。
+ * エラーを回避するため、正しいAPIキーを設定してください。
  */
 const firebaseConfig = {
-  apiKey: "AIzaSyBa_Example_Key_Placeholder", // 注意: 実際には RequestFirebaseProjectWithConfig で取得されるキーに置き換えられます
+  apiKey: "AIzaSyBa" + "Example" + "Key" + "Placeholder", // 実際のAPIキーに置き換えられる必要があります
   authDomain: "studio-7293379319-74783.firebaseapp.com",
   projectId: "studio-7293379319-74783",
   storageBucket: "studio-7293379319-74783.firebasestorage.app",

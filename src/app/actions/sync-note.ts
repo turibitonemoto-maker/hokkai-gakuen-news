@@ -1,10 +1,10 @@
+
 'use server';
 
 /**
  * @fileOverview note記事同期のためのサーバーアクション
  * 
  * 本物のnoteアカウント: https://note.com/lucky_minnow287
- * RSSフィードやAPIからデータを取得し、Firestoreに保存するロジックの基点です。
  */
 
 export async function fetchNoteArticles() {

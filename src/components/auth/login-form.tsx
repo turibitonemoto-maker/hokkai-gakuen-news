@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -24,7 +25,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth, initiateEmailSignIn, errorEmitter } from "@/firebase";
 
 const loginSchema = z.object({
@@ -48,17 +49,12 @@ export function LoginForm() {
   useEffect(() => {
     const handleAuthError = (error: Error) => {
       setIsLoading(false);
-      
       let errorMessage = "ログインに失敗しました。";
-      
-      if (error.message.includes("auth/invalid-credential") || error.message.includes("auth/user-not-found") || error.message.includes("auth/wrong-password")) {
+      if (error.message.includes("auth/invalid-credential")) {
         errorMessage = "認証に失敗しました。メールアドレスまたはパスワードが正しくありません。";
       } else if (error.message.includes("auth/too-many-requests")) {
         errorMessage = "短時間に何度も失敗したため、一時的にロックされています。";
-      } else {
-        errorMessage = `エラーが発生しました: ${error.message}`;
       }
-
       setServerError(errorMessage);
     };
 
@@ -69,10 +65,7 @@ export function LoginForm() {
   async function onSubmit(values: z.infer<typeof loginSchema>) {
     setIsLoading(true);
     setServerError(null);
-
     initiateEmailSignIn(auth, values.email, values.password);
-    
-    // タイムアウト設定
     setTimeout(() => setIsLoading(false), 5000);
   }
 
@@ -95,7 +88,7 @@ export function LoginForm() {
         {serverError && (
           <Alert variant="destructive" className="mb-4 bg-destructive/5 border-destructive/20 text-destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertDescription className="text-xs font-bold leading-relaxed">
+            <AlertDescription className="text-xs font-bold">
               {serverError}
             </AlertDescription>
           </Alert>
