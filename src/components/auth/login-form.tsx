@@ -54,7 +54,7 @@ export function LoginForm() {
       } else if (error.message.includes("auth/too-many-requests")) {
         errorMessage = "短時間に何度も失敗したため、一時的にロックされています。";
       } else if (error.message.includes("auth/invalid-api-key")) {
-        errorMessage = "システム設定エラー（APIキー無効）が発生しています。";
+        errorMessage = "システム設定エラー（APIキー無効）が発生しています。管理者に連絡してください。";
       }
       setServerError(errorMessage);
     };

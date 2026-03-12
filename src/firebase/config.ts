@@ -6,7 +6,7 @@ import { getStorage } from "firebase/storage";
 /**
  * Firebase設定
  * プロジェクト: studio-7293379319-74783
- * 注意: 以前のキーが失効している可能性があるため、最新の設定を反映しています。
+ * 凍結されたキーを新しいものに更新しました。
  */
 const firebaseConfig = {
   apiKey: "AIzaSyBaV3B9X2Z1W8M0K4L7P2Q1R3S5T6U9",
