@@ -33,7 +33,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 /**
- * カテゴリーやタグに応じた固有のカラーを返却
+ * カテゴリーに応じた固有のカラーを返却
  */
 const getTagColor = (tag: string, isActive: boolean) => {
   const colorMap: Record<string, string> = {
