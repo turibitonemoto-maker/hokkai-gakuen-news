@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -46,14 +47,22 @@ export function LoginForm() {
   });
 
   useEffect(() => {
-    const handleAuthError = (error: Error) => {
+    const handleAuthError = (error: any) => {
       setIsLoading(false);
       let errorMessage = "ログインに失敗しました。";
-      if (error.message.includes("auth/invalid-credential") || error.message.includes("auth/user-not-found") || error.message.includes("auth/wrong-password")) {
+      
+      // 具体的なエラーコードに基づいたメッセージ
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
         errorMessage = "メールアドレスまたはパスワードが正しくありません。";
-      } else if (error.message.includes("auth/too-many-requests")) {
-        errorMessage = "短時間に何度も失敗したため、一時的にロックされています。";
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = "何度も失敗したため、一時的にロックされています。少し時間を置いてからお試しください。";
+      } else if (error.code === 'auth/network-request-failed') {
+        errorMessage = "ネットワークエラーが発生しました。インターネット接続を確認してください。";
+      } else {
+        // 想定外のエラーの場合は、デバッグ用にコードを表示
+        errorMessage = `エラーが発生しました (${error.code || error.message})`;
       }
+      
       setServerError(errorMessage);
     };
 

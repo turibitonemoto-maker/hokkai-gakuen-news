@@ -1,3 +1,8 @@
+
+/**
+ * 許可された管理者のメールアドレスリスト。
+ * ここに含まれるメールアドレスでログインした場合に管理機能が利用可能です。
+ */
 export const AUTHORIZED_EMAILS = [
   "turibitonemoto@gmail.com",
   "admin@hokkai-shinbun.jp",
