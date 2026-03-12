@@ -14,7 +14,7 @@ import { FirestorePermissionError } from '@/firebase/errors';
 import { useUser } from '@/firebase';
 
 /** Utility type to add an 'id' field to a given type T. */
-type WithId<T> = T & { id: string };
+export type WithId<T> = T & { id: string };
 
 /**
  * Interface for the return value of the useDoc hook.
@@ -39,11 +39,11 @@ export function useDoc<T = any>(
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
-  // 認証状態を取得（フライング防止用）
+  // 認証状態を取得
   const { user, isUserLoading } = useUser();
 
   useEffect(() => {
-    // 1. 認証チェック中、または参照がない場合は待機（フライング防止）
+    // 1. 認証チェック中、または参照がない場合は待機
     if (isUserLoading || !memoizedDocRef) {
       setData(null);
       setIsLoading(false);

@@ -53,11 +53,11 @@ export function useCollection<T = any>(
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
   
-  // 認証状態を取得（フライング防止用）
+  // 認証状態を取得
   const { user, isUserLoading } = useUser();
 
   useEffect(() => {
-    // 1. 認証チェック中、またはクエリがない場合は待機（フライング防止）
+    // 1. 認証チェック中、またはターゲットがない場合は待機
     if (isUserLoading || !memoizedTargetRefOrQuery) {
       setData(null);
       setIsLoading(false);
@@ -65,15 +65,7 @@ export function useCollection<T = any>(
       return;
     }
 
-    // 2. 認証が必要な可能性があるクエリ（nullでないuserが必要な場合）の追加ガード
-    if (!user && memoizedTargetRefOrQuery.type !== 'collection') {
-       // ログインが必要な可能性が高いクエリ（管理画面など）
-       // ただし、完全にブロックせず、後続のonSnapshotに任せるが、isLoadingは維持
-       setIsLoading(true);
-    } else {
-       setIsLoading(true);
-    }
-    
+    setIsLoading(true);
     setError(null);
 
     const unsubscribe = onSnapshot(
@@ -88,11 +80,11 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       async (serverError: FirestoreError) => {
-        // 【最重要】ログイン直後のトークン同期ラグ（フライング）による権限エラーを検知
+        // 【最重要】ログイン直後のトークン同期ラグ（フライング）による一時的な権限エラーを検知
         // ユーザーが存在するのに「権限なし」と言われた場合は、致命的なエラーとせず静かに待機する
         if (serverError.code === 'permission-denied' && user) {
           console.warn("Firestore (useCollection): Permission denied for authenticated user. Waiting for auth sync...");
-          // isLoadingを解除せず、エラーもセットせずにリターン
+          // isLoadingを維持し、エラーもセットせずにリターン。次のスナップショットまたはリトライを待つ。
           return;
         }
 

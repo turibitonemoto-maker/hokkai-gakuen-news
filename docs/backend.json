@@ -59,6 +59,27 @@
         "isRead": { "type": "boolean" },
         "createdAt": { "type": "string", "format": "date-time" }
       }
+    },
+    "MaintenanceSettings": {
+      "title": "MaintenanceSettings",
+      "description": "メンテナンスモード設定。",
+      "type": "object",
+      "properties": {
+        "isMaintenanceMode": { "type": "boolean" },
+        "maintenanceMessage": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "PresidentMessage": {
+      "title": "PresidentMessage",
+      "description": "会長挨拶設定。",
+      "type": "object",
+      "properties": {
+        "authorName": { "type": "string" },
+        "authorImageUrl": { "type": "string", "format": "uri" },
+        "content": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
     }
   },
   "auth": {
@@ -79,15 +100,15 @@
     },
     "/inquiries/{inquiryId}": {
       "schema": { "$ref": "#/entities/Inquiry" },
-      "description": "お問い合わせ。ログイン者のみ閲覧可能。"
+      "description": "お問い合わせ。ログイン者は全権限。"
     },
     "/settings/maintenance": {
-      "schema": { "type": "object" },
-      "description": "メンテナンス設定。公開読み取り。"
+      "schema": { "$ref": "#/entities/MaintenanceSettings" },
+      "description": "メンテナンス設定。公開読み取り。ログイン者は全権限。"
     },
     "/settings/president-message": {
-      "schema": { "type": "object" },
-      "description": "会長挨拶設定。公開読み取り。"
+      "schema": { "$ref": "#/entities/PresidentMessage" },
+      "description": "会長挨拶設定。公開読み取り。ログイン者は全権限。"
     }
   }
 }

@@ -4,13 +4,13 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // 【基本ルール】ログインさえしていれば、メール認証がまだでも全員に全権限を許可（新聞会員専用ツールのため）
+    // 【基本ルール】ログインさえしていれば、メール認証の状態を問わず全員に全権限を許可
+    // これにより、ログイン直後の権限エラーやメール認証によるブロックを回避します
     match /{document=**} {
       allow read, write: if request.auth != null;
     }
 
-    // 表示用サイト（またはログイン直後）の安定性のために、記事、広告、設定は未ログインでも読めるようにする
-    // {document=**} を使用して、一覧取得（list）も確実に許可します
+    // 表示サイト（またはログイン直後）の安定性のために、記事、広告、設定は未ログインでも読めるようにしておく
     match /articles/{document=**} {
       allow read: if true;
     }
@@ -20,7 +20,5 @@ service cloud.firestore {
     match /settings/{document=**} {
       allow read: if true;
     }
-    
-    // お問い合わせやヒーロー画像などは、基本ルール（request.auth != null）に従う
   }
 }
