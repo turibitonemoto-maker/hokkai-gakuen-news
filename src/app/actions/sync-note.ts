@@ -33,7 +33,7 @@ export async function fetchNoteArticles() {
       };
     });
   } catch (error) {
-    console.error("Failed to fetch real note articles:", error);
+    console.error("Failed to fetch note articles:", error);
     return [];
   }
 }

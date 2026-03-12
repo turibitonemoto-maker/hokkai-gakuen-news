@@ -1,50 +1,43 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // 共通の管理者チェック関数
+    // 管理者かどうかをチェックする関数
     function isAdmin() {
       return request.auth != null && (
         request.auth.token.email == "turibitonemoto@gmail.com" ||
         request.auth.token.email == "admin@hokkai-shinbun.jp" ||
         request.auth.token.email == "editor@hokkai-shinbun.jp" ||
-        request.auth.token.email == "hokkaigakuen-news-1@example.com" ||
-        request.auth.token.email == "admin@example.com" ||
-        request.auth.token.email == "test@test.com" ||
-        request.auth.token.email == "user@example.com" ||
-        request.auth.token.email == "test@example.com"
+        request.auth.token.email == "admin@example.com"
       );
     }
 
-    // 記事：誰でも閲覧可能（list/get）、管理者は編集可能
+    // 記事：閲覧は誰でもOK、書き込みは管理者のみ
     match /articles/{articleId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    // ヒーロー画像：誰でも閲覧可能、管理者は編集可能
+    // ヒーロー画像、広告、設定：閲覧は誰でもOK、書き込みは管理者のみ
     match /hero-images/{heroId} {
       allow read: if true;
       allow write: if isAdmin();
     }
-
-    // 広告：誰でも閲覧可能、管理者は編集可能
     match /ads/{adId} {
       allow read: if true;
       allow write: if isAdmin();
     }
-
-    // 設定：誰でも閲覧可能、管理者は編集可能
     match /settings/{settingId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    // ユーザープロファイル：ログインユーザー本人のみ
+    // ユーザープロファイル：本人または管理者が読み書き可能
     match /user_profiles/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
     
-    // お問い合わせ：誰でも作成可能、管理者は閲覧・削除可能
+    // お問い合わせ：作成は誰でもOK、閲覧・削除は管理者のみ
     match /inquiries/{inquiryId} {
       allow create: if true;
       allow read, delete: if isAdmin();
