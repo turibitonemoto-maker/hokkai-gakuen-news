@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc, query, where, orderBy } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Share2, RefreshCw, Loader2, ExternalLink, Globe, Eye, EyeOff, ShieldAlert } from "lucide-react";
@@ -17,16 +17,18 @@ import Image from "next/image";
 export function NoteManager() {
   const [isSyncing, setIsSyncing] = useState(false);
   const firestore = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
 
   const noteArticlesQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    // ユーザーが存在する時だけ読み込みを実行する
+    if (!firestore || !user) return null;
     return query(
       collection(firestore, "articles"), 
       where("articleType", "==", "Note"),
       orderBy("publishDate", "desc")
     );
-  }, [firestore]);
+  }, [firestore, user]);
 
   const { data: noteArticles, isLoading } = useCollection(noteArticlesQuery);
 
@@ -140,7 +142,7 @@ export function NoteManager() {
                       </TableCell>
                     </TableRow>
                   ))}
-                  {(!noteArticles || noteArticles.length === 0) && (
+                  {(!noteArticles || noteArticles.length === 0) && !isLoading && (
                     <TableRow>
                       <TableCell colSpan={4} className="text-center py-20 text-slate-400">
                         note記事はまだ同期されていません。右上の「同期する」ボタンを押してください。

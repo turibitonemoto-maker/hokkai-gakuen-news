@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useDoc, useFirestore, useMemoFirebase } from "@/firebase";
+import { useDoc, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { doc, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +12,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, User } from "lucide-react";
+import { Loader2, Save, User as UserIcon } from "lucide-react";
 import { useEffect } from "react";
 
 const presidentMessageSchema = z.object({
@@ -26,12 +25,14 @@ type PresidentMessageValues = z.infer<typeof presidentMessageSchema>;
 
 export function PresidentMessageManager() {
   const firestore = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
 
   const docRef = useMemoFirebase(() => {
-    if (!firestore) return null;
+    // ユーザーが存在する時だけ読み込みを実行する
+    if (!firestore || !user) return null;
     return doc(firestore, "settings", "president-message");
-  }, [firestore]);
+  }, [firestore, user]);
 
   const { data: messageData, isLoading } = useDoc(docRef);
 
@@ -86,7 +87,7 @@ export function PresidentMessageManager() {
       <Card className="shadow-sm border-slate-200">
         <CardHeader>
           <CardTitle className="text-xl flex items-center gap-2">
-            <User className="h-5 w-5 text-primary" />
+            <UserIcon className="h-5 w-5 text-primary" />
             メッセージの編集
           </CardTitle>
           <CardDescription>

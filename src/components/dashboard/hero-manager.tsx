@@ -1,8 +1,7 @@
-
 "use client";
 
 import { useState } from "react";
-import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2, Loader2, AlertTriangle } from "lucide-react";
@@ -24,12 +23,14 @@ import {
 export function HeroManager() {
   const [imageToDelete, setImageToDelete] = useState<any>(null);
   const firestore = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
 
   const heroQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    // ユーザーが存在する時だけ読み込みを実行する
+    if (!firestore || !user) return null;
     return collection(firestore, "hero-images");
-  }, [firestore]);
+  }, [firestore, user]);
 
   const { data: heroImages, isLoading } = useCollection(heroQuery);
 
@@ -99,7 +100,7 @@ export function HeroManager() {
               </CardContent>
             </Card>
           ))}
-          {heroImages?.length === 0 && (
+          {heroImages?.length === 0 && !isLoading && (
             <div className="col-span-full py-12 text-center border-2 border-dashed rounded-xl text-slate-400">
               登録されている画像はありません。
             </div>

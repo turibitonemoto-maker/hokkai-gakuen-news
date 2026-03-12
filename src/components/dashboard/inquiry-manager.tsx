@@ -1,8 +1,7 @@
-
 "use client";
 
 import { useState } from "react";
-import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc, orderBy, query, Timestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Trash2, Loader2, Mail, User, Clock, MessageSquare, AlertTriangle, Eye } from "lucide-react";
@@ -34,12 +33,14 @@ export function InquiryManager() {
   const [inquiryToDelete, setInquiryToDelete] = useState<any>(null);
   
   const firestore = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
 
   const inquiriesQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    // ユーザーが存在する時だけ読み込みを実行する
+    if (!firestore || !user) return null;
     return query(collection(firestore, "inquiries"), orderBy("createdAt", "desc"));
-  }, [firestore]);
+  }, [firestore, user]);
 
   const { data: inquiries, isLoading } = useCollection(inquiriesQuery);
 
@@ -141,7 +142,7 @@ export function InquiryManager() {
                     </TableCell>
                   </TableRow>
                 ))}
-                {inquiries?.length === 0 && (
+                {inquiries?.length === 0 && !isLoading && (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-12 text-slate-400">
                       メッセージはまだ届いていません。
