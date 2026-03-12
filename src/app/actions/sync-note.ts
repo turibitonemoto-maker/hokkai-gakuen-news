@@ -10,14 +10,13 @@ import Parser from 'rss-parser';
 const parser = new Parser();
 
 export async function fetchNoteArticles() {
-  // 本物のアカウントのRSS URL
   const NOTE_RSS_URL = "https://note.com/lucky_minnow287/rss";
 
   try {
     const feed = await parser.parseURL(NOTE_RSS_URL);
 
     return feed.items.map((item, index) => {
-      // RSSから画像URLを抽出する試み（noteのRSSはcontentに含まれることが多い）
+      // noteのRSSから画像URLを抽出
       const firstImage = item.content?.match(/<img[^>]+src="([^">]+)"/)?.[1] || 
                          `https://picsum.photos/seed/note-${index}/800/450`;
 

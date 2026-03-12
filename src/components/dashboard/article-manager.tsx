@@ -48,7 +48,7 @@ const getTagColor = (tag: string, isActive: boolean) => {
   if (!isActive) return "bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200 hover:text-slate-600";
 
   const baseColor = colorMap[tag] || "bg-primary";
-  return `${baseColor} text-white border-transparent shadow-md ring-2 ring-offset-1 ring-${baseColor.split('-')[1]}-200`;
+  return `${baseColor} text-white border-transparent shadow-md ring-2 ring-offset-1 ring-primary/20`;
 };
 
 export function ArticleManager() {

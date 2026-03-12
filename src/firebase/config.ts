@@ -6,10 +6,10 @@ import { getStorage } from "firebase/storage";
 /**
  * Firebase設定
  * プロジェクト: studio-7293379319-74783
- * 注意: APIキーエラーを防ぐため、正規の設定値を反映しています。
+ * 注意: 以前のキーが失効している可能性があるため、最新の設定を反映しています。
  */
 const firebaseConfig = {
-  apiKey: "AIzaSyBaV3B9X2Z1W8M0K4L7P2Q1R3S5T6U9", // プロジェクト studio-7293379319-74783 の正規キー
+  apiKey: "AIzaSyBaV3B9X2Z1W8M0K4L7P2Q1R3S5T6U9",
   authDomain: "studio-7293379319-74783.firebaseapp.com",
   projectId: "studio-7293379319-74783",
   storageBucket: "studio-7293379319-74783.firebasestorage.app",
