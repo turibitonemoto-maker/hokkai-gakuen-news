@@ -1,86 +1,65 @@
 rules_version = '2';
 
 /**
- * FIRESTORE SECURITY RULES: SECUREENTRY APPLICATION
+ * FIRESTORE SECURITY RULES: SECUREENTRY / HOKKAI GAKUEN NEWS 1
  * 
- * CORE PHILOSOPHY:
- * This ruleset implements a strict User-Ownership model. The security posture is 
- * built around "Path-Based Ownership," where the structure of the database 
- * itself dictates access rights.
- * 
- * DATA STRUCTURE:
- * The primary data is organized in the root collection /users/{userId}. 
- * The userId in the path corresponds directly to the Firebase Authentication UID.
- * 
- * KEY SECURITY DECISIONS:
- * 1. Existence over Content: The presence of a document in the /users collection 
- *    serves as the authorization flag. If a document exists for a UID, that 
- *    user is considered "pre-approved."
- * 2. Strict Privacy: Users can only read, list, or modify their own specific 
- *    user profile. There is no public directory or listing of users.
- * 3. Relational Integrity: On document creation, the rules enforce that the 
- *    internal 'id' field matches the document ID (the UID) to ensure data 
- *    consistency between the path and the stored object.
- * 4. Immutability: Once created, the 'id' field within a user document cannot 
- *    be changed, preventing ownership hijacking or data corruption.
- * 
- * PROTOTYPING MODE:
- * These rules focus heavily on authorization (WHO can access) rather than 
- * schema validation (WHAT the data looks like). This allows for rapid 
- * development of the User entity's properties without requiring rules updates.
+ * 運用方針:
+ * このシステムは新聞会員専用の管理ツールです。
+ * Firebase Authentication であなたが登録した会員（ログイン済みユーザー）のみが
+ * すべてのコンテンツ（記事、広告、画像、設定、お問い合わせ）を管理できます。
  */
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- GLOBAL HELPER FUNCTIONS ---
+    // --- HELPER FUNCTIONS ---
 
     /**
-     * @description Checks if the request is made by an authenticated user.
+     * @description ユーザーが認証（ログイン）されているかチェックします。
      */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /**
-     * @description Checks if the authenticated user's UID matches the provided userId.
-     */
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-    /**
-     * @description Combines ownership check with a check for the document's existence.
-     * Used primarily for update and delete operations.
-     */
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
-    }
-
     // --- COLLECTION RULES ---
 
     /**
-     * @description Rules for the User profile collection. Access is strictly owner-only.
-     * @path /users/{userId}
-     * @allow (get) request.auth.uid == 'user_123' accessing /users/user_123
-     * @deny (list) request.auth.uid == 'user_123' attempting to list all documents in /users
-     * @principle Enforces path-based ownership and relational integrity of the user ID.
+     * @description すべてのコレクションに対するルール。
+     * 管理専用ツールであるため、ログインしている会員であればすべてのデータの読み書きを許可します。
+     * これにより、記事(articles)、広告(ads)、ヒーロー画像(hero-images)、
+     * 設定(settings)、お問い合わせ(inquiries) へのアクセスが可能になります。
+     */
+    match /{document=**} {
+      allow read, write: if isSignedIn();
+    }
+    
+    /**
+     * @description 特定のパスに対する個別設定（将来的な拡張用）。
+     * 現在は上記のグルールルールで一括制御していますが、
+     * 構造を明確にするために match を記述します。
      */
     match /users/{userId} {
-      // Users can only retrieve their own profile document.
-      allow get: if isOwner(userId);
-      
-      // Users can list their own document (required for some SDK query patterns).
-      allow list: if isOwner(userId);
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
 
-      // A user can create their profile only if the doc ID matches their UID and the internal ID field is consistent.
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
+    match /articles/{articleId} {
+      allow read, write: if isSignedIn();
+    }
 
-      // Only the owner can update their profile; the internal ID field must remain immutable.
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+    match /ads/{adId} {
+      allow read, write: if isSignedIn();
+    }
 
-      // Only the owner can delete their own profile document.
-      allow delete: if isExistingOwner(userId);
+    match /hero-images/{imageId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /settings/{settingId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /inquiries/{inquiryId} {
+      allow read, write: if isSignedIn();
     }
   }
 }

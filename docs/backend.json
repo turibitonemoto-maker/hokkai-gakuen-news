@@ -1,64 +1,78 @@
 {
   "entities": {
-    "User": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "User",
+    "Article": {
+      "title": "Article",
+      "description": "学内ニュースやnote連動記事を表すエンティティ。",
       "type": "object",
-      "description": "Represents an authorized user account within the SecureEntry application. This entity stores user-specific information required for access control, linked to an external authentication system. Passwords are not stored here.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the User entity."
-        },
-        "email": {
-          "type": "string",
-          "description": "The authorized email address of the user. This email is used as the primary identifier for login and access control and must be unique across all users.",
-          "format": "email"
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the user account was initially created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp indicating the last time the user account details were updated.",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "articleType": { "type": "string", "enum": ["Standard", "Note"] },
+        "content": { "type": "string" },
+        "noteUrl": { "type": "string", "format": "uri" },
+        "categoryId": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "publishDate": { "type": "string", "format": "date" },
+        "mainImageUrl": { "type": "string", "format": "uri" },
+        "isPublished": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": [
-        "id",
-        "email",
-        "createdAt",
-        "updatedAt"
-      ]
+      "required": ["id", "title", "articleType", "categoryId", "publishDate", "isPublished"]
+    },
+    "Ad": {
+      "title": "Ad",
+      "description": "サイト内に表示するバナー広告。",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "imageUrl": { "type": "string", "format": "uri" },
+        "linkUrl": { "type": "string", "format": "uri" },
+        "clickCount": { "type": "number" },
+        "startDate": { "type": "string" },
+        "endDate": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Inquiry": {
+      "title": "Inquiry",
+      "description": "読者からのお問い合わせメッセージ。",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "subject": { "type": "string" },
+        "message": { "type": "string" },
+        "isRead": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "anonymous"
-    ]
+    "providers": ["password"]
   },
   "firestore": {
-    "structure": [
-      {
-        "path": "/users/{userId}",
-        "definition": {
-          "entityName": "User",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Stores individual user profiles. The existence of a document for a given `userId` in this collection signifies that the user is pre-approved and authorized to use the application. Access is restricted to the owning user.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique ID of the user, corresponding to Firebase Authentication UID."
-            }
-          ]
-        }
-      }
-    ],
-    "reasoning": "The Firestore data structure for the SecureEntry application is designed around a single core collection: `/users/{userId}`. This structure directly addresses the user's primary need for a secure login and 'pre-approved' user authentication, while adhering to all core design principles and mandates.\n\n**Justification of Design Principles:**\n\n1.  **Authorization Independence (CRITICAL):** Access to user profiles in `/users/{userId}` is strictly controlled by matching `request.auth.uid` with the `{userId}` wildcard in the document path. This direct, path-based ownership means that authorization for a user's own profile is determined instantly without requiring any `get()` calls to parent documents or other collections. This eliminates hierarchical authorization dependencies, enabling atomic operations and greatly simplifying security rules, making them robust and easy to debug.\n\n2.  **Clarity of Intent (Debuggability):** The structure clearly indicates that a document at `/users/{userId}` represents the profile of the user identified by `userId`, and also implicitly signifies their 'authorized' status. Security rules become straightforward: 'a user can read/write their own user profile if their UID matches the document ID'.\n\n3.  **DBAC (No Custom Claims):** The 'pre-approved' user status, which acts as a fundamental role, is stored directly in the database. The *existence* of a user's document at `/users/{userId}` serves as the 'authorized' role. If a document for `request.auth.uid` exists in this collection, the user is authorized. This adheres to the 'Existence over Content' principle for roles, avoiding custom claims.\n\n4.  **QAPs (Rules are not Filters):** For the `/users/{userId}` collection, security rules will prevent broad `list` operations by unauthorized users. A rule like `allow read, write: if request.auth.uid == userId;` ensures that a general query to `db.collection('users').get()` would be denied or would only return the current user's document if the query explicitly targets their ID. This ensures that the security rules proactively enforce data access, rather than relying on the client to filter results, thereby enhancing security and predictability.\n\n5.  **Invariants:** The structure naturally supports ownership (path-based), and the `createdAt`/`updatedAt` timestamps within the `User` entity help maintain data integrity.\n\n**Strategy Mandates Application:**\n\n*   **A. Authorization Independence via Denormalization:** For the `User` entity itself, the `userId` in the path directly provides the authorization context, so no further denormalization is needed within the `User` document. If future subcollections were added (e.g., `/users/{userId}/preferences`), the `userId` in the path would inherently denormalize the owner context for those subcollection documents.\n*   **B. Structural Segregation:** All documents in the `/users` collection represent user profiles with the same security posture (owner-based access), ensuring homogeneous security requirements.\n*   **C. Access Modeling:** This design utilizes the 'Private Data' pattern via 'Path-Based ownership' (`/users/{userId}`), which is highly secure and simple to implement. The 'Global Role' (authorized user) is implemented using the 'Existence over Content' principle, where the presence of a user's document signifies their authorized status.\n*   **D. Data Clarity and Predictability:** The schema for `User` is clear and predictable. Wildcards like `{userId}` are semantically descriptive, enhancing readability and maintainability of rules."
+    "/articles/{articleId}": {
+      "schema": "Article",
+      "description": "記事データの保存場所。"
+    },
+    "/ads/{adId}": {
+      "schema": "Ad",
+      "description": "広告データの保存場所。"
+    },
+    "/inquiries/{inquiryId}": {
+      "schema": "Inquiry",
+      "description": "お問い合わせデータの保存場所。"
+    },
+    "/settings/{settingId}": {
+      "schema": "object",
+      "description": "メンテナンスモードや会長挨拶などのシステム設定。"
+    },
+    "/hero-images/{imageId}": {
+      "schema": "object",
+      "description": "ヒーロー背景画像のURLリスト。"
+    }
   }
 }
