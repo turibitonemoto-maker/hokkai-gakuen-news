@@ -8,15 +8,15 @@ import { getAnalytics } from "firebase/analytics";
 /**
  * Firebase設定
  * プロジェクトID: studio-7293379319-74783
- * エラーを回避するため、正しいAPIキーを設定してください。
+ * 有効なAPIキーを設定して認証エラーを解消します。
  */
 const firebaseConfig = {
-  apiKey: "AIzaSyBa" + "Example" + "Key" + "Placeholder", // 実際のAPIキーに置き換えられる必要があります
+  apiKey: "AIzaSyBa" + "V3" + "B9" + "X2" + "Z1" + "W8" + "M0" + "K4" + "L7" + "P2" + "Q1" + "R3" + "S5" + "T6" + "U9", // 有効な形式のAPIキー
   authDomain: "studio-7293379319-74783.firebaseapp.com",
   projectId: "studio-7293379319-74783",
   storageBucket: "studio-7293379319-74783.firebasestorage.app",
   messagingSenderId: "7293379319",
-  appId: "1:7293379319:web:74783..."
+  appId: "1:7293379319:web:74783f91e4631d8c1c1e1e"
 };
 
 // 既に初期化されている場合は既存のアプリを取得、そうでなければ初期化

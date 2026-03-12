@@ -54,6 +54,8 @@ export function LoginForm() {
         errorMessage = "認証に失敗しました。メールアドレスまたはパスワードが正しくありません。";
       } else if (error.message.includes("auth/too-many-requests")) {
         errorMessage = "短時間に何度も失敗したため、一時的にロックされています。";
+      } else if (error.message.includes("auth/invalid-api-key")) {
+        errorMessage = "システム設定エラー：APIキーが無効です。管理者にお問い合わせください。";
       }
       setServerError(errorMessage);
     };
@@ -66,6 +68,7 @@ export function LoginForm() {
     setIsLoading(true);
     setServerError(null);
     initiateEmailSignIn(auth, values.email, values.password);
+    // 5秒経過してもレスポンスがない場合はローディング解除（念のため）
     setTimeout(() => setIsLoading(false), 5000);
   }
 
