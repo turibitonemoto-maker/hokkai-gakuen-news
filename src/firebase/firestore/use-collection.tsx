@@ -64,6 +64,12 @@ export function useCollection<T = any>(
       return;
     }
 
+    // 2. ユーザーが確定していない場合（未ログイン状態）は一旦クリア
+    if (!user && memoizedTargetRefOrQuery.type !== 'collection') {
+       // 認証が必要なクエリ（記事管理など）でユーザーがいない場合はエラーを出さずに待機
+       return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -79,10 +85,10 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       (serverError: FirestoreError) => {
-        // 重要: ログイン直後の認証情報の伝播中にエラーが出た場合は、
-        // ユーザーが確定するまでエラーを無視して待機する（フライング防止ロジック）
-        if (serverError.code === 'permission-denied' && !user) {
-          console.warn("Firestore: Auth state synchronization in progress, skipping early permission error...");
+        // 重要: ログイン直後、認証トークンがSDK内で完全に同期されるまでの「わずかなラグ」で
+        // 権限エラーが出ることがあります。その場合はエラーを表示せず、再試行を待機します。
+        if (serverError.code === 'permission-denied') {
+          console.warn("Firestore: Permission denied. Waiting for auth sync...");
           return;
         }
 

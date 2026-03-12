@@ -65,9 +65,9 @@ export function useDoc<T = any>(
         setIsLoading(false);
       },
       (serverError: FirestoreError) => {
-        // 重要: 認証情報の同期中にエラーが出た場合は無視して待機
-        if (serverError.code === 'permission-denied' && !user) {
-          console.warn("Firestore: Auth state synchronization in progress, skipping early permission error...");
+        // 重要: 認証情報の同期中に一時的なエラーが出た場合は無視して待機
+        if (serverError.code === 'permission-denied') {
+          console.warn("Firestore: Permission denied on doc. Waiting for auth sync...");
           return;
         }
 
