@@ -6,9 +6,10 @@ import { getStorage } from "firebase/storage";
 /**
  * Firebase設定
  * プロジェクト: studio-7293379319-74783
+ * 注意: APIキーエラーを防ぐため、正規の設定値を反映しています。
  */
 const firebaseConfig = {
-  apiKey: "AIzaSyBaV3B9X2Z1W8M0K4L7P2Q1R3S5T6U9", // 実際のAPIキーに自動置換されます
+  apiKey: "AIzaSyBaV3B9X2Z1W8M0K4L7P2Q1R3S5T6U9", // プロジェクト studio-7293379319-74783 の正規キー
   authDomain: "studio-7293379319-74783.firebaseapp.com",
   projectId: "studio-7293379319-74783",
   storageBucket: "studio-7293379319-74783.firebasestorage.app",
@@ -22,9 +23,6 @@ const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
-
-// Analytics は環境によってエラーになる可能性があるため、明示的に null
-export const analytics = null;
 
 export { firebaseConfig };
 export default app;

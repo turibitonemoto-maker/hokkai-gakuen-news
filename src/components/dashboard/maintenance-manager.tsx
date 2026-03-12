@@ -12,7 +12,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, Globe, Settings } from "lucide-react";
+import { Loader2, Save, Globe, Settings, ShieldAlert } from "lucide-react";
 import { useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 
@@ -38,7 +38,7 @@ export function MaintenanceManager() {
     resolver: zodResolver(maintenanceSchema),
     defaultValues: {
       isMaintenanceMode: false,
-      maintenanceMessage: "現在、システムメンテナンスのためサイトを一時停止しております。",
+      maintenanceMessage: "現在、システムメンテナンスのためサイトを一時停止しております。ご不便をおかけしますが、完了までお待ちください。",
     },
   });
 
@@ -80,27 +80,27 @@ export function MaintenanceManager() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">公開サイト制御設定</h2>
-          <p className="text-sm text-slate-500">メンテナンス設定を制御します。</p>
+          <p className="text-sm text-slate-500">緊急時のメンテナンス画面切り替えを制御します。</p>
         </div>
         <Button 
           variant="outline" 
           size="sm" 
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 font-bold"
           onClick={() => window.open('/site', '_blank')}
         >
           <Globe className="h-4 w-4" />
-          サイトを確認
+          現在の表示を確認
         </Button>
       </div>
 
-      <Card className="shadow-md border-slate-200">
+      <Card className="shadow-md border-slate-200 overflow-hidden">
         <CardHeader className="bg-slate-50/50 border-b">
           <CardTitle className="text-xl flex items-center gap-2">
             <Settings className="h-5 w-5 text-primary" />
             サイト公開設定
           </CardTitle>
           <CardDescription>
-            サイト全体の公開・休止を制御します。
+            サイト全体の公開・休止をリアルタイムで制御します。
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
@@ -110,14 +110,14 @@ export function MaintenanceManager() {
                 control={form.control}
                 name="isMaintenanceMode"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-xl border border-slate-100 p-6 bg-slate-50/30">
+                  <FormItem className="flex flex-row items-center justify-between rounded-xl border border-slate-200 p-6 bg-slate-50/30">
                     <div className="space-y-1">
                       <FormLabel className="text-base font-bold flex items-center gap-2">
                         メンテナンスモードを有効にする
-                        {field.value && <Badge variant="destructive" className="ml-2">停止中</Badge>}
+                        {field.value && <Badge variant="destructive" className="ml-2 animate-pulse">停止中</Badge>}
                       </FormLabel>
                       <FormDescription>
-                        オンにすると公式サイトにメンテナンス画面が表示されます。
+                        有効にすると、全ユーザーに対してメンテナンス画面が強制的に表示されます。
                       </FormDescription>
                     </div>
                     <FormControl>
@@ -135,11 +135,11 @@ export function MaintenanceManager() {
                 name="maintenanceMessage"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-bold text-slate-700">表示メッセージ</FormLabel>
+                    <FormLabel className="font-bold text-slate-700">訪問者に表示するメッセージ</FormLabel>
                     <FormControl>
                       <Textarea 
-                        placeholder="メンテナンス理由などを入力してください。" 
-                        className="min-h-[150px]" 
+                        placeholder="メンテナンス理由や再開予定などを入力してください。" 
+                        className="min-h-[150px] bg-slate-50" 
                         {...field} 
                       />
                     </FormControl>
@@ -149,7 +149,7 @@ export function MaintenanceManager() {
               />
 
               <div className="flex justify-end pt-6 border-t">
-                <Button type="submit" className="flex items-center gap-2 font-bold px-8 shadow-sm">
+                <Button type="submit" className="flex items-center gap-2 font-bold px-10 h-11 shadow-lg">
                   <Save className="h-5 w-5" />
                   設定を保存する
                 </Button>

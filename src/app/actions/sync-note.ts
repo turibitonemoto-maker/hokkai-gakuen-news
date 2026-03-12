@@ -17,8 +17,9 @@ export async function fetchNoteArticles() {
     const feed = await parser.parseURL(NOTE_RSS_URL);
 
     return feed.items.map((item, index) => {
-      // 本物の画像URLを取得するロジック（RSSに画像が含まれない場合はPicsumを使用）
-      const firstImage = item.content?.match(/<img[^>]+src="([^">]+)"/)?.[1] || `https://picsum.photos/seed/note-${index}/800/450`;
+      // RSSから画像URLを抽出する試み（noteのRSSはcontentに含まれることが多い）
+      const firstImage = item.content?.match(/<img[^>]+src="([^">]+)"/)?.[1] || 
+                         `https://picsum.photos/seed/note-${index}/800/450`;
 
       return {
         id: item.guid || `note-${index}`,

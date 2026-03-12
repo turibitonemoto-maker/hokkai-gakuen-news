@@ -49,10 +49,12 @@ export function LoginForm() {
     const handleAuthError = (error: Error) => {
       setIsLoading(false);
       let errorMessage = "ログインに失敗しました。";
-      if (error.message.includes("auth/invalid-credential")) {
-        errorMessage = "認証に失敗しました。メールアドレスまたはパスワードが正しくありません。";
+      if (error.message.includes("auth/invalid-credential") || error.message.includes("auth/user-not-found") || error.message.includes("auth/wrong-password")) {
+        errorMessage = "メールアドレスまたはパスワードが正しくありません。";
       } else if (error.message.includes("auth/too-many-requests")) {
         errorMessage = "短時間に何度も失敗したため、一時的にロックされています。";
+      } else if (error.message.includes("auth/invalid-api-key")) {
+        errorMessage = "システム設定エラー（APIキー無効）が発生しています。管理者に連絡してください。";
       }
       setServerError(errorMessage);
     };
@@ -65,7 +67,7 @@ export function LoginForm() {
     setIsLoading(true);
     setServerError(null);
     initiateEmailSignIn(auth, values.email, values.password);
-    // 5秒経過してもレスポンスがない場合はローディング解除
+    // タイムアウト設定
     setTimeout(() => setIsLoading(false), 5000);
   }
 
@@ -146,7 +148,7 @@ export function LoginForm() {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  認証処理中...
+                  認証中...
                 </>
               ) : (
                 "ログイン"

@@ -38,17 +38,17 @@ const CATEGORY_LABELS: Record<string, string> = {
 const getTagColor = (tag: string, isActive: boolean) => {
   const colorMap: Record<string, string> = {
     "学内ニュース": "bg-blue-500",
-    "イベント": "bg-green-500",
-    "インタビュー": "bg-purple-500",
-    "スポーツ": "bg-orange-500",
-    "コラム": "bg-pink-500",
-    "オピニオン": "bg-cyan-500",
+    "イベント": "bg-emerald-500",
+    "インタビュー": "bg-violet-500",
+    "スポーツ": "bg-amber-500",
+    "コラム": "bg-rose-500",
+    "オピニオン": "bg-indigo-500",
   };
 
-  if (!isActive) return "bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200";
+  if (!isActive) return "bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200 hover:text-slate-600";
 
   const baseColor = colorMap[tag] || "bg-primary";
-  return `${baseColor} text-white border-transparent shadow-sm`;
+  return `${baseColor} text-white border-transparent shadow-md ring-2 ring-offset-1 ring-${baseColor.split('-')[1]}-200`;
 };
 
 export function ArticleManager() {
@@ -134,9 +134,9 @@ export function ArticleManager() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">学内記事管理</h2>
-          <p className="text-sm text-slate-500">学内ニュースおよびコラムの管理を行います。</p>
+          <p className="text-sm text-slate-500">記事の作成、編集、および公式サイトへの公開管理を行います。</p>
         </div>
-        <Button onClick={() => { setCurrentArticle(null); setIsEditing(true); }} className="h-11 px-6 shadow-md gap-2">
+        <Button onClick={() => { setCurrentArticle(null); setIsEditing(true); }} className="h-11 px-6 shadow-md gap-2 font-bold">
           <Plus className="h-5 w-5" />
           新規記事作成
         </Button>
@@ -144,9 +144,9 @@ export function ArticleManager() {
 
       <Card className="shadow-sm border-slate-200">
         <CardHeader className="pb-3 border-b bg-slate-50/30">
-          <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-500 uppercase tracking-wider">
+          <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-500 uppercase tracking-widest">
             <Filter className="h-4 w-4" />
-            分類フィルター
+            カテゴリー・タグ フィルター
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4">
@@ -158,7 +158,7 @@ export function ArticleManager() {
                   key={tag}
                   onClick={() => toggleTag(tag)}
                   className={cn(
-                    "inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold border transition-all hover:scale-105 active:scale-95",
+                    "inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold border transition-all duration-200 transform hover:translate-y-[-1px]",
                     getTagColor(tag, isActive)
                   )}
                 >
@@ -169,8 +169,13 @@ export function ArticleManager() {
               );
             })}
             {selectedTags.length > 0 && (
-              <Button variant="link" size="sm" onClick={() => setSelectedTags([])} className="text-xs text-slate-400 font-bold h-auto p-0 ml-2">
-                リセット
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setSelectedTags([])} 
+                className="text-xs text-slate-400 font-bold hover:text-slate-600 h-auto p-2 ml-2"
+              >
+                フィルター解除
               </Button>
             )}
           </div>
@@ -186,9 +191,9 @@ export function ArticleManager() {
               <TableHeader className="bg-slate-50/50">
                 <TableRow>
                   <TableHead className="w-[120px]">ステータス</TableHead>
-                  <TableHead>記事情報 / カテゴリー</TableHead>
-                  <TableHead>タグ</TableHead>
-                  <TableHead>公開日</TableHead>
+                  <TableHead>記事タイトル / カテゴリー</TableHead>
+                  <TableHead>追加タグ</TableHead>
+                  <TableHead>公開予定日</TableHead>
                   <TableHead className="text-right">操作</TableHead>
                 </TableRow>
               </TableHeader>
@@ -197,15 +202,15 @@ export function ArticleManager() {
                   <TableRow key={article.id} className="group hover:bg-slate-50/80 transition-colors">
                     <TableCell>
                       {article.isPublished ? (
-                        <Badge className="bg-green-100 text-green-700 hover:bg-green-200 border-green-200 shadow-none">公開中</Badge>
+                        <Badge className="bg-green-100 text-green-700 hover:bg-green-200 border-green-200 shadow-none font-bold">公開中</Badge>
                       ) : (
-                        <Badge variant="outline" className="text-slate-400 border-slate-200 bg-slate-50">下書き</Badge>
+                        <Badge variant="outline" className="text-slate-400 border-slate-200 bg-slate-50 font-bold">下書き</Badge>
                       )}
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col">
-                        <span className="font-bold text-slate-800 leading-tight">{article.title}</span>
-                        <span className="text-[10px] font-bold text-primary mt-1 uppercase tracking-wider">
+                        <span className="font-bold text-slate-800 leading-tight group-hover:text-primary transition-colors">{article.title}</span>
+                        <span className="text-[10px] font-bold text-primary mt-1 uppercase tracking-widest">
                           {CATEGORY_LABELS[article.categoryId] || article.categoryId}
                         </span>
                       </div>
@@ -236,8 +241,8 @@ export function ArticleManager() {
                 ))}
                 {filteredArticles.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-20 text-slate-400 font-medium">
-                      記事が見つかりませんでした。
+                    <TableCell colSpan={5} className="text-center py-20 text-slate-400 font-medium italic">
+                      条件に一致する記事は見つかりませんでした。
                     </TableCell>
                   </TableRow>
                 )}
