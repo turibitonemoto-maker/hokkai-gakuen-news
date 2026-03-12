@@ -4,42 +4,36 @@ import Parser from 'rss-parser';
 
 /**
  * @fileOverview note記事同期のためのサーバーアクション
- * * Vercelの環境変数 NEXT_PUBLIC_NOTE_RSS_URL を使用します
+ * 本物のアカウント: https://note.com/lucky_minnow287
  */
 
 const parser = new Parser();
 
 export async function fetchNoteArticles() {
-  // Vercelから設定したRSS URLを取得
-  const NOTE_RSS_URL = process.env.NEXT_PUBLIC_NOTE_RSS_URL;
-
-  if (!NOTE_RSS_URL) {
-    console.error("Error: NEXT_PUBLIC_NOTE_RSS_URL is not defined in environment variables.");
-    return [];
-  }
+  // 本物のアカウントのRSS URL
+  const NOTE_RSS_URL = "https://note.com/lucky_minnow287/rss";
 
   try {
-    // noteのRSSを解析して記事を取得
     const feed = await parser.parseURL(NOTE_RSS_URL);
 
     return feed.items.map((item, index) => {
+      // 本物の画像URLを取得するロジック（RSSに画像が含まれない場合はPicsumを使用）
+      const firstImage = item.content?.match(/<img[^>]+src="([^">]+)"/)?.[1] || `https://picsum.photos/seed/note-${index}/800/450`;
+
       return {
-        // IDは重複しないようにguidかlinkを使用
         id: item.guid || `note-${index}`,
         title: item.title || "無題の記事",
         noteUrl: item.link,
         articleType: "Note",
-        // カテゴリや画像はRSSからは取れないためデフォルト値を設定
         categoryId: "Campus",
         publishDate: item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString(),
-        mainImageUrl: "https://picsum.photos/seed/note/800/450", // 仮の画像
+        mainImageUrl: firstImage,
         isPublished: false,
         tags: ["note"]
       };
     });
   } catch (error) {
     console.error("Failed to fetch real note articles:", error);
-    // 失敗した場合は空の配列を返す
     return [];
   }
 }

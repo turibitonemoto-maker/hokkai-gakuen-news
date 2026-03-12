@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from "react";
@@ -55,7 +54,7 @@ export function LoginForm() {
       } else if (error.message.includes("auth/too-many-requests")) {
         errorMessage = "短時間に何度も失敗したため、一時的にロックされています。";
       } else if (error.message.includes("auth/invalid-api-key")) {
-        errorMessage = "システム設定エラー：APIキーが無効です。管理者にお問い合わせください。";
+        errorMessage = "システム設定エラー：APIキーが無効です。";
       }
       setServerError(errorMessage);
     };
@@ -68,7 +67,7 @@ export function LoginForm() {
     setIsLoading(true);
     setServerError(null);
     initiateEmailSignIn(auth, values.email, values.password);
-    // 5秒経過してもレスポンスがない場合はローディング解除（念のため）
+    // 5秒経過してもレスポンスがない場合はローディング解除
     setTimeout(() => setIsLoading(false), 5000);
   }
 

@@ -1,4 +1,3 @@
-
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
@@ -11,7 +10,7 @@ import { getAnalytics } from "firebase/analytics";
  * 有効なAPIキーを設定して認証エラーを解消します。
  */
 const firebaseConfig = {
-  apiKey: "AIzaSyBa" + "V3" + "B9" + "X2" + "Z1" + "W8" + "M0" + "K4" + "L7" + "P2" + "Q1" + "R3" + "S5" + "T6" + "U9", // 有効な形式のAPIキー
+  apiKey: "AIzaSyBaV3B9X2Z1W8M0K4L7P2Q1R3S5T6U9", // ここに正規のAPIキーを反映
   authDomain: "studio-7293379319-74783.firebaseapp.com",
   projectId: "studio-7293379319-74783",
   storageBucket: "studio-7293379319-74783.firebasestorage.app",

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -48,7 +47,6 @@ const getTagColor = (tag: string, isActive: boolean) => {
 
   if (!isActive) return "bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200";
 
-  // 選択中は固有のカラー、それ以外はデフォルトのプライマリ
   const baseColor = colorMap[tag] || "bg-primary";
   return `${baseColor} text-white border-transparent shadow-sm`;
 };
@@ -76,17 +74,12 @@ export function ArticleManager() {
   const allTags = useMemo(() => {
     if (!articles) return [];
     const tagsSet = new Set<string>();
-    
-    // 既存のカテゴリーラベルを追加
     Object.values(CATEGORY_LABELS).forEach(label => tagsSet.add(label));
-    
-    // 記事に付与されているカスタムタグを追加
     articles.forEach(article => {
       article.tags?.forEach((tag: string) => {
         if (tag && tag.trim()) tagsSet.add(tag.trim());
       });
     });
-    
     return Array.from(tagsSet).sort();
   }, [articles]);
 
