@@ -1,41 +1,45 @@
-
 'use server';
+
+import Parser from 'rss-parser';
 
 /**
  * @fileOverview note記事同期のためのサーバーアクション
- * 
- * 本物のnoteアカウント: https://note.com/lucky_minnow287
+ * * Vercelの環境変数 NEXT_PUBLIC_NOTE_RSS_URL を使用します
  */
 
+const parser = new Parser();
+
 export async function fetchNoteArticles() {
-  // ネットワーク遅延のシミュレート
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  // Vercelから設定したRSS URLを取得
+  const NOTE_RSS_URL = process.env.NEXT_PUBLIC_NOTE_RSS_URL;
 
-  const noteAccountUrl = "https://note.com/lucky_minnow287";
+  if (!NOTE_RSS_URL) {
+    console.error("Error: NEXT_PUBLIC_NOTE_RSS_URL is not defined in environment variables.");
+    return [];
+  }
 
-  // 本物の運用を想定した記事データの構成
-  return [
-    {
-      id: "note-lucky-001",
-      title: "【学園ニュース】北海学園大学一部新聞会デジタル版が本格始動しました",
-      noteUrl: `${noteAccountUrl}/n/n123456789`,
-      articleType: "Note",
-      categoryId: "Campus",
-      publishDate: new Date().toISOString(),
-      mainImageUrl: "https://picsum.photos/seed/lucky1/800/450",
-      isPublished: false,
-      tags: ["新聞会", "デジタル版", "lucky_minnow"]
-    },
-    {
-      id: "note-lucky-002",
-      title: "編集長インタビュー：私たちのメディアが目指すものと北海学園の今",
-      noteUrl: `${noteAccountUrl}/n/n987654321`,
-      articleType: "Note",
-      categoryId: "Interview",
-      publishDate: new Date().toISOString(),
-      mainImageUrl: "https://picsum.photos/seed/lucky2/800/450",
-      isPublished: false,
-      tags: ["インタビュー", "学生の力", "lucky_minnow"]
-    }
-  ];
+  try {
+    // noteのRSSを解析して記事を取得
+    const feed = await parser.parseURL(NOTE_RSS_URL);
+
+    return feed.items.map((item, index) => {
+      return {
+        // IDは重複しないようにguidかlinkを使用
+        id: item.guid || `note-${index}`,
+        title: item.title || "無題の記事",
+        noteUrl: item.link,
+        articleType: "Note",
+        // カテゴリや画像はRSSからは取れないためデフォルト値を設定
+        categoryId: "Campus",
+        publishDate: item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString(),
+        mainImageUrl: "https://picsum.photos/seed/note/800/450", // 仮の画像
+        isPublished: false,
+        tags: ["note"]
+      };
+    });
+  } catch (error) {
+    console.error("Failed to fetch real note articles:", error);
+    // 失敗した場合は空の配列を返す
+    return [];
+  }
 }
