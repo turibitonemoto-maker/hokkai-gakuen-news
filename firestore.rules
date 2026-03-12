@@ -2,37 +2,15 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // 記事データ、画像、広告、設定の閲覧は一般公開（ログイン不要）
-    // これによりトップページの「権限エラー」が解消されます
-    match /articles/{articleId} {
-      allow read: if true;
-      allow write: if request.auth != null;
+    // すべてのドキュメント（記事、画像、広告、設定、プロファイル）について
+    // ログインしている人（新聞会員）のみが閲覧・書き込みを許可される
+    match /{document=**} {
+      allow read, write: if request.auth != null;
     }
     
-    match /hero-images/{heroId} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-    
-    match /ads/{adId} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-    
-    match /settings/{settingId} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-    
-    // ユーザープロファイルのみログイン必須
+    // ユーザープロファイルのみ、自分のデータだけを操作できるようにさらに制限
     match /user_profiles/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-    
-    // その他すべてのドキュメントへのデフォルトルール
-    match /{document=**} {
-      allow read: if true;
-      allow write: if request.auth != null;
     }
   }
 }

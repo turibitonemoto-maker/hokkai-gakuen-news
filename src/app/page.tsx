@@ -1,9 +1,9 @@
-import DisplaySite from "./site/page";
+import { redirect } from "next/navigation";
 
 /**
- * ルートページを表示用サイト（フロントエンド）に変更しました。
- * 管理画面は /admin に集約されています。
+ * ルートページ（/）にアクセスした場合、即座に管理画面（/admin）へリダイレクトします。
+ * 公開用の表示サイトは廃止されました。
  */
 export default function Home() {
-  return <DisplaySite />;
+  redirect("/admin");
 }
