@@ -3,7 +3,7 @@ import './globals.css';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Toaster } from "@/components/ui/toaster";
 
-// ここで「検索エンジンお断り」の設定をしています
+// 管理サイトのため、検索エンジンにインデックスされないようメタタグを設定
 export const metadata: Metadata = {
   title: 'Hokkai Gakuen News 1 | コンテンツ管理システム',
   description: '北海学園大学一部新聞会の公式コンテンツ管理システム (Hokkai Gakuen News 1) です。',
