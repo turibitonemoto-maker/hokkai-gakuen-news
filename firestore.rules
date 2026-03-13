@@ -3,22 +3,33 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // 【最強設定】ログインさえしていれば、全ドキュメントへの全権限を許可
-    // 認証同期ラグによる403エラーをバックエンド側で最小化します
-    // ルールの再適用を確実にするためのタイムスタンプ: 2024-05-24T14:30:00Z
+    // 全ドキュメントへの基本権限（ログイン必須）
+    // 再適用タイムスタンプ: 2024-05-24T15:00:00Z
     match /{document=**} {
       allow read, write: if request.auth != null;
     }
 
-    // 未ログインユーザー向けの閲覧許可（公式サイト用）
-    match /articles/{document=**} {
+    // 公開データの閲覧許可（未ログインでもOK）
+    // コレクションのリスト（一覧）と各ドキュメントの取得の両方を明示的に許可
+    match /articles {
       allow read: if true;
+      match /{allPaths=**} {
+        allow read: if true;
+      }
     }
-    match /ads/{document=**} {
+    
+    match /ads {
       allow read: if true;
+      match /{allPaths=**} {
+        allow read: if true;
+      }
     }
-    match /settings/{document=**} {
+    
+    match /settings {
       allow read: if true;
+      match /{allPaths=**} {
+        allow read: if true;
+      }
     }
   }
 }

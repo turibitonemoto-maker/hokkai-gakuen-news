@@ -36,6 +36,7 @@ export function useDoc<T = any>(
   const [data, setData] = useState<StateDataType>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   const { user, isUserLoading } = useUser();
 
@@ -60,9 +61,9 @@ export function useDoc<T = any>(
         }
         setError(null);
         setIsLoading(false);
+        setRetryCount(0);
       },
       async (serverError: FirestoreError) => {
-        // 【最重要】認証同期ラグ（フライング）対策
         const errorCode = serverError.code?.toLowerCase();
         const errorMessage = serverError.message?.toLowerCase() || '';
         
@@ -73,10 +74,10 @@ export function useDoc<T = any>(
           errorMessage.includes('insufficient') ||
           errorMessage.includes('denied');
 
-        if (isPermissionError || user) {
-          console.warn(`Firestore (useDoc) [WAITING]: 権限同期を待機中... Path: ${memoizedDocRef.path}`, serverError);
-          setError(serverError);
-          setIsLoading(false);
+        // 認証同期ラグ（フライング）対策
+        if (isPermissionError && user && retryCount < 3) {
+          console.warn(`Firestore (useDoc) [RETRYING]: 権限同期待ち (${retryCount + 1}/3). Path: ${memoizedDocRef.path}`);
+          setTimeout(() => setRetryCount(prev => prev + 1), 1000);
           return;
         }
 
@@ -89,12 +90,14 @@ export function useDoc<T = any>(
         setData(null);
         setIsLoading(false);
 
-        errorEmitter.emit('permission-error', contextualError);
+        if (!user || retryCount >= 3) {
+          errorEmitter.emit('permission-error', contextualError);
+        }
       }
     );
 
     return () => unsubscribe();
-  }, [memoizedDocRef, user, isUserLoading]);
+  }, [memoizedDocRef, user, isUserLoading, retryCount]);
 
   return { data, isLoading, error };
 }

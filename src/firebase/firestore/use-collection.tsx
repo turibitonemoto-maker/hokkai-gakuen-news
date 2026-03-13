@@ -50,6 +50,7 @@ export function useCollection<T = any>(
   const [data, setData] = useState<StateDataType>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
+  const [retryCount, setRetryCount] = useState(0); // 認証ラグ対策の再試行カウンター
   
   const { user, isUserLoading } = useUser();
 
@@ -74,6 +75,7 @@ export function useCollection<T = any>(
         setData(results);
         setError(null);
         setIsLoading(false);
+        setRetryCount(0); // 成功したらリセット
       },
       async (serverError: FirestoreError) => {
         const path: string =
@@ -81,8 +83,6 @@ export function useCollection<T = any>(
             ? (memoizedTargetRefOrQuery as CollectionReference).path
             : (memoizedTargetRefOrQuery as unknown as InternalQuery)._query.path.canonicalString()
 
-        // 【最重要】認証同期ラグ（フライング）対策
-        // ログイン状態であれば、一時的な権限エラーは致命的なエラーとして扱わず待機する
         const errorCode = serverError.code?.toLowerCase();
         const errorMessage = serverError.message?.toLowerCase() || '';
         
@@ -93,14 +93,15 @@ export function useCollection<T = any>(
           errorMessage.includes('insufficient') ||
           errorMessage.includes('denied');
 
-        // ログイン済み、または一時的な権限不足の場合は、エラーを投げずに静かに待つ
-        if (isPermissionError || user) {
-          console.warn(`Firestore (useCollection) [WAITING]: 権限同期を待機中... Path: ${path}`, serverError);
-          setError(serverError);
-          setIsLoading(false);
+        // 【最重要】認証同期ラグ（フライング）対策
+        // ログイン状態であれば、一時的な権限エラーは致命的なエラーとして扱わず1秒後に再試行する
+        if (isPermissionError && user && retryCount < 3) {
+          console.warn(`Firestore (useCollection) [RETRYING]: 権限同期待ち (${retryCount + 1}/3). Path: ${path}`);
+          setTimeout(() => setRetryCount(prev => prev + 1), 1000);
           return;
         }
 
+        // 解決不能なエラー、または未ログイン時のエラーのみ通知
         const contextualError = new FirestorePermissionError({
           operation: 'list',
           path,
@@ -110,13 +111,14 @@ export function useCollection<T = any>(
         setData(null);
         setIsLoading(false);
         
-        // 未ログイン状態かつ解決不能なエラーのみ通知
-        errorEmitter.emit('permission-error', contextualError);
+        if (!user || retryCount >= 3) {
+          errorEmitter.emit('permission-error', contextualError);
+        }
       }
     );
 
     return () => unsubscribe();
-  }, [memoizedTargetRefOrQuery, user, isUserLoading]);
+  }, [memoizedTargetRefOrQuery, user, isUserLoading, retryCount]);
 
   if(memoizedTargetRefOrQuery && !memoizedTargetRefOrQuery.__memo) {
     throw new Error(memoizedTargetRefOrQuery + ' は useMemoFirebase でメモ化されていません');
