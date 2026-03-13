@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Loader2, ExternalLink, AlertTriangle, Pencil, Users, ArrowLeft, Calendar, Clock, Lock, Megaphone, ShieldAlert } from "lucide-react";
+import { Plus, Trash2, Loader2, ExternalLink, AlertTriangle, Pencil, Users, ArrowLeft, Calendar, Clock, Lock, Megaphone } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import Image from "next/image";
@@ -63,7 +63,7 @@ export function AdManager() {
     if (password === correctPassword) {
       setIsUnlocked(true);
       setFailCount(0);
-      toast({ title: "アクセス承認", description: "広告管理へのアクセスを許可しました。" });
+      toast({ title: "アクセス承認", description: "編集権限を確認しました。" });
     } else {
       const newCount = failCount + 1;
       setFailCount(newCount);
@@ -73,30 +73,30 @@ export function AdManager() {
         localStorage.setItem("lockout_until", until.toString());
         toast({ variant: "destructive", title: "アクセス拒否", description: "頭を冷やしてください。" });
       } else {
-        toast({ variant: "destructive", title: "パスワードが正しくありません", description: `あと ${3 - newCount} 回でロックされます。` });
+        toast({ variant: "destructive", title: "パスワード不一致", description: `あと ${3 - newCount} 回でロックされます。` });
       }
     }
   };
 
   if (lockoutTime && lockoutTime > Date.now()) {
     return (
-      <div className="max-w-xl mx-auto mt-20 animate-in fade-in zoom-in duration-500">
-        <Card className="shadow-2xl border-none bg-slate-900 text-white rounded-[3rem] overflow-hidden text-center p-12">
-          <div className="relative h-64 w-full rounded-2xl overflow-hidden mb-8">
-            <Image 
-              src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJwamN4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKMGpxx66d7Y18Y/giphy.gif"
-              alt="頭を冷やして"
-              fill
-              className="object-cover"
-              unoptimized
-              sizes="(max-width: 768px) 100vw, 600px"
-            />
+      <div className="max-w-4xl mx-auto mt-10 animate-in fade-in zoom-in duration-500">
+        <Card className="shadow-2xl border-none bg-black text-white rounded-[3rem] overflow-hidden text-center p-0">
+          <div className="relative aspect-video w-full bg-slate-900">
+            <iframe 
+              src="https://drive.google.com/file/d/1Exd3NJVJ4KeS5PNI9IgZJEDsWgvjshBJ/preview" 
+              className="absolute inset-0 w-full h-full border-none"
+              allow="autoplay"
+              title="Trap Video"
+            ></iframe>
           </div>
-          <h2 className="text-2xl font-black mb-4">アクセス禁止</h2>
-          <p className="text-slate-400 font-bold mb-8">頭を冷やして出直してください。<br />再試行まであと約 {Math.ceil((lockoutTime - Date.now()) / 60000)} 分です。</p>
-          <Button variant="outline" className="border-slate-700 text-slate-400" onClick={() => window.location.reload()}>
-            システム再起動
-          </Button>
+          <div className="p-12 space-y-6">
+            <h2 className="text-3xl font-black mb-4 text-red-500">アクセス禁止 🔒</h2>
+            <p className="text-slate-400 font-bold text-lg">頭を冷やして出直してください。<br />再試行まであと約 {Math.ceil((lockoutTime - Date.now()) / 60000)} 分です。</p>
+            <Button variant="outline" className="border-slate-700 text-slate-400 h-12 px-8 rounded-2xl" onClick={() => window.location.reload()}>
+              システム再起動
+            </Button>
+          </div>
         </Card>
       </div>
     );
@@ -108,11 +108,11 @@ export function AdManager() {
         <Card className="shadow-2xl border-none bg-white rounded-3xl overflow-hidden">
           <CardHeader className="text-center pt-10 pb-6 bg-slate-50/50">
             <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
-              <Megaphone className="h-10 w-10 text-primary animate-pulse" />
+              <Lock className="h-10 w-10 text-primary" />
             </div>
             <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">広告管理 🔒</CardTitle>
             <CardDescription className="text-sm font-bold text-slate-500 px-6 mt-2">
-              伝統を保護するためのアクセス承認が必要です。
+              このセクションを編集するにはアクセス承認が必要です。
             </CardDescription>
           </CardHeader>
           <CardContent className="p-10 pt-4 space-y-6">
@@ -305,7 +305,7 @@ export function AdManager() {
         <div className="py-24 text-center border-4 border-dashed rounded-[3rem] text-slate-300 bg-white/50 backdrop-blur-sm">
           <Megaphone className="h-16 w-16 mx-auto opacity-10 mb-4" />
           <p className="text-xl font-black">広告データがありません</p>
-          <p className="text-sm font-bold mt-2 opacity-50">新しい広告を登録して「伝統」を支えるスポンサーを迎えましょう。</p>
+          <p className="text-sm font-bold mt-2 opacity-50">新しい広告を登録しましょう。</p>
         </div>
       )}
     </div>

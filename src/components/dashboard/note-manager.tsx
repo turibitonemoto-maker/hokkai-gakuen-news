@@ -11,8 +11,7 @@ import {
   PlusCircle, 
   ImageOff,
   RefreshCw,
-  Clock,
-  ShieldCheck
+  Lock
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -23,7 +22,6 @@ import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
 import { fetchNoteArticles } from "@/app/actions/sync-note";
 import Image from "next/image";
-import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
@@ -134,23 +132,23 @@ export function NoteManager() {
 
   if (lockoutTime && lockoutTime > Date.now()) {
     return (
-      <div className="max-w-xl mx-auto mt-20 animate-in fade-in zoom-in duration-500">
-        <Card className="shadow-2xl border-none bg-slate-900 text-white rounded-[3rem] overflow-hidden text-center p-12">
-          <div className="relative h-64 w-full rounded-2xl overflow-hidden mb-8">
-            <Image 
-              src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJwamN4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKMGpxx66d7Y18Y/giphy.gif"
-              alt="頭を冷やして"
-              fill
-              className="object-cover"
-              unoptimized
-              sizes="(max-width: 768px) 100vw, 600px"
-            />
+      <div className="max-w-4xl mx-auto mt-10 animate-in fade-in zoom-in duration-500">
+        <Card className="shadow-2xl border-none bg-black text-white rounded-[3rem] overflow-hidden text-center p-0">
+          <div className="relative aspect-video w-full bg-slate-900">
+            <iframe 
+              src="https://drive.google.com/file/d/1Exd3NJVJ4KeS5PNI9IgZJEDsWgvjshBJ/preview" 
+              className="absolute inset-0 w-full h-full border-none"
+              allow="autoplay"
+              title="Trap Video"
+            ></iframe>
           </div>
-          <h2 className="text-2xl font-black mb-4">アクセス禁止</h2>
-          <p className="text-slate-400 font-bold mb-8">頭を冷やして出直してください。<br />再試行まであと約 {Math.ceil((lockoutTime - Date.now()) / 60000)} 分です。</p>
-          <Button variant="outline" className="border-slate-700 text-slate-400" onClick={() => window.location.reload()}>
-            システム再起動
-          </Button>
+          <div className="p-12 space-y-6">
+            <h2 className="text-3xl font-black mb-4 text-red-500">アクセス禁止 🔒</h2>
+            <p className="text-slate-400 font-bold text-lg">頭を冷やして出直してください。<br />再試行まであと約 {Math.ceil((lockoutTime - Date.now()) / 60000)} 分です。</p>
+            <Button variant="outline" className="border-slate-700 text-slate-400 h-12 px-8 rounded-2xl" onClick={() => window.location.reload()}>
+              システム再起動
+            </Button>
+          </div>
         </Card>
       </div>
     );
@@ -257,7 +255,7 @@ export function NoteManager() {
                 <Share2 className="h-10 w-10 opacity-20" />
               </div>
               <p className="font-black text-lg text-slate-400">最新記事を更新してください</p>
-              <p className="text-sm font-bold mt-2 opacity-60">右上の更新ボタンから note.com の最新データを取得します。</p>
+              <p className="text-sm font-bold mt-2 opacity-60">右上の更新ボタンから最新データを取得します。</p>
             </div>
           )}
         </CardContent>
@@ -267,11 +265,11 @@ export function NoteManager() {
         <DialogContent className="sm:max-w-md rounded-[2rem] border-none p-10">
           <DialogHeader className="space-y-4">
             <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-2">
-              <ShieldCheck className="h-8 w-8 text-primary" />
+              <Lock className="h-8 w-8 text-primary" />
             </div>
             <DialogTitle className="text-2xl font-black text-slate-800 text-center">アクセス承認 🔒</DialogTitle>
             <DialogDescription className="text-center font-bold text-slate-500">
-              伝統を保護するためのアクセス承認が必要です。
+              この操作を実行するにはアクセス承認が必要です。
             </DialogDescription>
           </DialogHeader>
           <div className="py-6">
