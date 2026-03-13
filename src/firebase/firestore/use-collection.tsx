@@ -86,27 +86,21 @@ export function useCollection<T = any>(
             : (memoizedTargetRefOrQuery as unknown as InternalQuery)._query.path.canonicalString()
 
         // 【最重要】認証同期ラグ（フライング）対策
-        // ログイン済み（またはログイン中）であるにもかかわらず権限エラーが出た場合は、
+        // ログイン済みであるにもかかわらず権限エラーが出た場合は、
         // サーバー側での認証情報の浸透待ちと判断し、RSOD（赤画面）を出さずに警告にとどめる
         const currentAuthUser = getAuth().currentUser;
         const isAuthLikelyPresent = !!(user || currentAuthUser);
-        const isPermissionError = serverError.code === 'permission-denied' || serverError.message.toLowerCase().includes('permission');
+        const isPermissionError = serverError.code === 'permission-denied';
         
         if (isPermissionError && isAuthLikelyPresent) {
-          console.warn(`Firestore (useCollection): 認証同期ラグ（フライング）を検知しました。権限の浸透を待機しています... Path: ${path}`);
+          console.warn(`Firestore (useCollection) [HANDLED]: 認証同期ラグ（フライング）を検知しました。権限の浸透を待機しています... Path: ${path}`);
+          setError(serverError);
           setIsLoading(false);
           // ここで return することで、致命的なエラーとしての emit/throw を回避します
           return;
         }
 
-        // 権限エラーが発生しても、開発中の利便性を優先してクラッシュを回避する
-        if (isPermissionError) {
-          console.error(`Firestore (useCollection): 権限エラーが発生しました。設定が反映されるまで数分かかる場合があります。 Path: ${path}`, serverError);
-          setError(serverError);
-          setIsLoading(false);
-          return;
-        }
-
+        // ログインしていない状態での権限エラー、またはその他の致命的エラー
         const contextualError = new FirestorePermissionError({
           operation: 'list',
           path,
@@ -115,6 +109,13 @@ export function useCollection<T = any>(
         setError(contextualError)
         setData(null)
         setIsLoading(false)
+        
+        // 開発中の利便性を優先し、ログインしていない場合の権限エラーも警告に留める（RSOD回避）
+        if (isPermissionError) {
+           console.warn(`Firestore (useCollection) [DENIED]: 権限不足または未ログインです。 Path: ${path}`);
+           return;
+        }
+
         errorEmitter.emit('permission-error', contextualError);
       }
     );

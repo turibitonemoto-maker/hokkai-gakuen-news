@@ -68,20 +68,13 @@ export function useDoc<T = any>(
         // 【最重要】認証同期ラグ（フライング）対策
         const currentAuthUser = getAuth().currentUser;
         const isAuthLikelyPresent = !!(user || currentAuthUser);
-        const isPermissionError = serverError.code === 'permission-denied' || serverError.message.toLowerCase().includes('permission');
+        const isPermissionError = serverError.code === 'permission-denied';
 
         if (isPermissionError && isAuthLikelyPresent) {
-          console.warn(`Firestore (useDoc): 認証同期ラグ（フライング）を検知しました。権限の浸透を待機しています... Path: ${memoizedDocRef.path}`);
-          setIsLoading(false);
-          // ここで return することで、致命的なエラーとしての emit/throw を回避します
-          return;
-        }
-
-        // 権限エラーが発生しても、開発中の利便性を優先してクラッシュを回避する
-        if (isPermissionError) {
-          console.error(`Firestore (useDoc): 権限エラーが発生しました。 Path: ${memoizedDocRef.path}`, serverError);
+          console.warn(`Firestore (useDoc) [HANDLED]: 認証同期ラグ（フライング）を検知しました。権限の浸透を待機しています... Path: ${memoizedDocRef.path}`);
           setError(serverError);
           setIsLoading(false);
+          // ここで return することで、致命的なエラーとしての emit/throw を回避します
           return;
         }
 
@@ -93,6 +86,12 @@ export function useDoc<T = any>(
         setError(contextualError)
         setData(null)
         setIsLoading(false)
+
+        if (isPermissionError) {
+           console.warn(`Firestore (useDoc) [DENIED]: 権限不足または未ログインです。 Path: ${memoizedDocRef.path}`);
+           return;
+        }
+
         errorEmitter.emit('permission-error', contextualError);
       }
     );
