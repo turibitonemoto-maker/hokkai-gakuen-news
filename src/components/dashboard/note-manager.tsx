@@ -1,17 +1,15 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection, doc, query, orderBy } from "firebase/firestore";
-import { Button } from "@/components/ui/button";
+import { collection, doc } from "firebase/firestore";
 import { 
   Share2, 
-  RefreshCw, 
   Loader2, 
   ExternalLink, 
   PlusCircle, 
-  CheckCircle2, 
-  ArrowRight
+  CheckCircle2
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -22,6 +20,9 @@ import { fetchNoteArticles } from "@/app/actions/sync-note";
 import Image from "next/image";
 import Link from "next/link";
 
+/**
+ * NoteManager: 外部メディア（note）の記事を公式サイトへ「選別・採用」するための専用画面。
+ */
 export function NoteManager() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [rssArticles, setRssArticles] = useState<any[]>([]);
@@ -43,12 +44,12 @@ export function NoteManager() {
     return new Set(allArticles.filter(a => a.articleType === "Note").map(a => a.id));
   }, [allArticles]);
 
+  // 初期表示時に自動で最新記事をチェック
   const handleSync = async () => {
     setIsSyncing(true);
     try {
       const articles = await fetchNoteArticles();
       setRssArticles(articles);
-      toast({ title: "取得完了", description: "noteから最新の記事を読み込みました。" });
     } catch (e) {
       toast({ variant: "destructive", title: "エラー", description: "noteの取得に失敗しました。" });
     } finally {
@@ -79,37 +80,19 @@ export function NoteManager() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-800">note記事の選別・採用</h2>
-          <p className="text-sm text-slate-500">外部メディア（note）の最新記事を確認し、公式サイトに掲載するものを「下書き」として取り込みます。</p>
-        </div>
-        <div className="flex gap-3">
-          <Link href="/admin/articles">
-            <Button variant="outline" className="gap-2 font-bold h-11 border-primary/20 text-primary">
-              採用済み記事の公開管理へ
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
-          <Button 
-            onClick={handleSync} 
-            disabled={isSyncing}
-            className="bg-purple-600 hover:bg-purple-700 flex items-center gap-2 h-11 px-6 shadow-lg font-bold"
-          >
-            {isSyncing ? <Loader2 className="h-5 w-5 animate-spin" /> : <RefreshCw className="h-5 w-5" />}
-            note最新記事をチェック
-          </Button>
-        </div>
+      <div>
+        <h2 className="text-2xl font-bold text-slate-800">note記事の選別・採用</h2>
+        <p className="text-sm text-slate-500">外部メディア（note）の最新記事を確認し、公式サイトに掲載するものを「下書き」として取り込みます。</p>
       </div>
 
       <Card className="shadow-sm border-slate-200">
         <CardHeader className="bg-purple-50/50 border-b">
           <CardTitle className="text-lg flex items-center gap-2 text-purple-700">
             <Share2 className="h-5 w-5" />
-            note記事の候補
+            note記事の取り込み候補
           </CardTitle>
           <CardDescription>
-            ここから「サイトに取り込む」を選択した記事だけが、公式サイトの管理対象（下書き）になります。
+            ここから「採用」を選択した記事だけが、公式サイトの管理対象（下書き）になります。
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
@@ -156,7 +139,7 @@ export function NoteManager() {
                       <TableCell className="text-right">
                         {isImported ? (
                           <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 gap-1 h-9 px-4">
-                            <CheckCircle2 className="h-3 w-3" /> 取り込み済み
+                            <CheckCircle2 className="h-3 w-3" /> 採用済み
                           </Badge>
                         ) : (
                           <Button 
@@ -165,7 +148,7 @@ export function NoteManager() {
                             className="h-9 gap-2 font-bold bg-white text-purple-600 border border-purple-200 hover:bg-purple-50"
                           >
                             <PlusCircle className="h-4 w-4" />
-                            サイトに下書き保存
+                            サイトに採用する
                           </Button>
                         )}
                       </TableCell>
@@ -178,9 +161,9 @@ export function NoteManager() {
         </CardContent>
       </Card>
       
-      <div className="bg-slate-100 p-6 rounded-2xl border border-dashed border-slate-300 text-center">
+      <div className="bg-slate-50 p-6 rounded-2xl border border-dashed border-slate-200 text-center">
         <p className="text-sm text-slate-500 font-medium">
-          ※すでに取り込んだ記事のタイトル変更や公開・非公開の切り替えは、
+          ※採用済みの記事の公開・非公開の切り替えや、タイトル・本文の編集は
           <Link href="/admin/articles" className="text-primary font-bold hover:underline mx-1">
             記事管理画面
           </Link>
