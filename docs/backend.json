@@ -3,7 +3,7 @@
   "entities": {
     "Article": {
       "title": "Article",
-      "description": "記事データ。ログイン済みの新聞会員は全権限。",
+      "description": "記事データ。ログイン済みのユーザーは全権限。",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
@@ -23,7 +23,7 @@
     },
     "Ad": {
       "title": "Ad",
-      "description": "バナー広告。ログイン済みの新聞会員は全権限。",
+      "description": "バナー広告。ログイン済みのユーザーは全権限。",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
@@ -39,7 +39,7 @@
     },
     "HeroImage": {
       "title": "HeroImage",
-      "description": "ヒーロー背景。ログイン済みの新聞会員は全権限。",
+      "description": "ヒーロー背景。ログイン済みのユーザーは全権限。",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
@@ -54,15 +54,15 @@
   },
   "firestore": {
     "/articles/{articleId}": {
-      "schema": { "$ref": "#/entities/Article" },
+      "schema": { "$ref": "#/backend/entities/Article" },
       "description": "記事全般。ログイン済みのユーザーは全権限。"
     },
     "/ads/{adId}": {
-      "schema": { "$ref": "#/entities/Ad" },
+      "schema": { "$ref": "#/backend/entities/Ad" },
       "description": "バナー広告。ログイン済みのユーザーは全権限。"
     },
     "/hero-images/{imageId}": {
-      "schema": { "$ref": "#/entities/HeroImage" },
+      "schema": { "$ref": "#/backend/entities/HeroImage" },
       "description": "ヒーロー画像。ログイン済みのユーザーは全権限。"
     },
     "/settings/{settingId}": {

@@ -99,12 +99,19 @@ export function useCollection<T = any>(
           return;
         }
 
+        // 権限エラーが発生しても、開発中の利便性を優先してクラッシュを回避する
+        if (isPermissionError) {
+          console.error(`Firestore (useCollection): 権限エラーが発生しました。設定が反映されるまで数分かかる場合があります。 Path: ${path}`, serverError);
+          setError(serverError);
+          setIsLoading(false);
+          return;
+        }
+
         const contextualError = new FirestorePermissionError({
           operation: 'list',
           path,
         })
 
-        // 致命的な権限エラー（未ログインなのにアクセス等）の場合のみ、グローバル通知を行ってアプリを停止させる
         setError(contextualError)
         setData(null)
         setIsLoading(false)

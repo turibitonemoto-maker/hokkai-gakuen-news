@@ -77,6 +77,14 @@ export function useDoc<T = any>(
           return;
         }
 
+        // 権限エラーが発生しても、開発中の利便性を優先してクラッシュを回避する
+        if (isPermissionError) {
+          console.error(`Firestore (useDoc): 権限エラーが発生しました。 Path: ${memoizedDocRef.path}`, serverError);
+          setError(serverError);
+          setIsLoading(false);
+          return;
+        }
+
         const contextualError = new FirestorePermissionError({
           operation: 'get',
           path: memoizedDocRef.path,
