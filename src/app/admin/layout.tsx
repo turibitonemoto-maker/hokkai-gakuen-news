@@ -157,7 +157,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             className="w-full text-slate-400 hover:text-white hover:bg-slate-800 justify-start gap-3 px-3 rounded-xl h-12"
             onClick={handleLogout}
           >
-            <LogOut className="h-5 w-5 shrink-0" />
+            <LogOut className="h-5 w-5" />
             {isSidebarOpen && <span className="text-sm font-bold">ログアウト</span>}
           </Button>
         </div>
