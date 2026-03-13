@@ -2,14 +2,15 @@
 
 import { useState, useMemo } from "react";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection, doc, orderBy, query } from "firebase/firestore";
+import { collection, doc, orderBy, query, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil, Trash2, Loader2, X, Filter, Tag as TagIcon, AlertCircle, Share2, FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { ArticleForm } from "./article-form";
-import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { deleteDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -106,6 +107,22 @@ export function ArticleManager() {
     setSelectedTags(prev => 
       prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
     );
+  };
+
+  const handleTogglePublish = (article: any) => {
+    if (!firestore) return;
+    const docRef = doc(firestore, "articles", article.id);
+    
+    // 非同期でステータスを更新
+    updateDocumentNonBlocking(docRef, { 
+      isPublished: !article.isPublished,
+      updatedAt: serverTimestamp() 
+    });
+
+    toast({ 
+      title: !article.isPublished ? "公開しました" : "非公開にしました", 
+      description: `「${article.title}」の公開設定を切り替えました。表示サイト側に反映されます。` 
+    });
   };
 
   const confirmDelete = () => {
@@ -208,7 +225,7 @@ export function ArticleManager() {
             <Table>
               <TableHeader className="bg-slate-50/50">
                 <TableRow>
-                  <TableHead className="w-[100px]">状態</TableHead>
+                  <TableHead className="w-[180px]">公開状態</TableHead>
                   <TableHead className="w-[120px]">タイプ</TableHead>
                   <TableHead>記事タイトル / カテゴリー</TableHead>
                   <TableHead>公開予定日</TableHead>
@@ -219,20 +236,27 @@ export function ArticleManager() {
                 {filteredArticles.map((article) => (
                   <TableRow key={article.id} className="group hover:bg-slate-50/80 transition-colors">
                     <TableCell>
-                      {article.isPublished ? (
-                        <Badge className="bg-green-100 text-green-700 hover:bg-green-200 border-green-200 shadow-none font-bold">公開中</Badge>
-                      ) : (
-                        <Badge variant="outline" className="text-slate-400 border-slate-200 bg-slate-50 font-bold">下書き</Badge>
-                      )}
+                      <div className="flex items-center gap-3">
+                        <Switch 
+                          checked={article.isPublished} 
+                          onCheckedChange={() => handleTogglePublish(article)}
+                          className="data-[state=checked]:bg-green-500"
+                        />
+                        {article.isPublished ? (
+                          <Badge className="bg-green-100 text-green-700 hover:bg-green-200 border-green-200 shadow-none font-bold">公開中</Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-slate-400 border-slate-200 bg-slate-50 font-bold">下書き</Badge>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       {article.articleType === "Note" ? (
                         <Badge variant="secondary" className="bg-purple-600 text-white border-transparent gap-1 px-3 py-1 shadow-sm">
-                          <Share2 className="h-3 w-3" /> note記事
+                          <Share2 className="h-3 w-3" /> note
                         </Badge>
                       ) : (
                         <Badge variant="secondary" className="bg-primary text-white border-transparent gap-1 px-3 py-1 shadow-sm">
-                          <FileText className="h-3 w-3" /> 学内記事
+                          <FileText className="h-3 w-3" /> 学内
                         </Badge>
                       )}
                     </TableCell>
