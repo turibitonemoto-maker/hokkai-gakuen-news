@@ -37,11 +37,12 @@ export function getSdks(firebaseApp: FirebaseApp) {
 }
 
 // エクスポートの衝突を避けるための明確なバレル構成
+// useUser は ./auth/use-user からのみエクスポートされます
 export * from './provider';
 export * from './client-provider';
 export * from './firestore/use-collection';
 export * from './firestore/use-doc';
-export * from './auth/use-user'; // useUser はここからのみ供給
+export * from './auth/use-user';
 export * from './non-blocking-updates';
 export * from './non-blocking-login';
 export * from './errors';

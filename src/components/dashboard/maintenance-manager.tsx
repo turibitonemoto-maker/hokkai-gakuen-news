@@ -1,5 +1,4 @@
-
-"use client";
+'use client';
 
 import { useDoc, useFirestore, useMemoFirebase } from "@/firebase";
 import { doc, serverTimestamp } from "firebase/firestore";
@@ -42,7 +41,7 @@ export function MaintenanceManager() {
     defaultValues: {
       isMaintenanceMode: false,
       maintenanceMessage: "現在、システムメンテナンスのためサイトを一時停止しております。",
-      systemStatusMessage: "",
+      systemStatusMessage: "システム正常稼働中：伝統の復興を開始します",
     },
   });
 
@@ -51,7 +50,7 @@ export function MaintenanceManager() {
       form.reset({
         isMaintenanceMode: config.isMaintenanceMode ?? false,
         maintenanceMessage: config.maintenanceMessage ?? "現在、システムメンテナンスのためサイトを一時停止しております。",
-        systemStatusMessage: config.systemStatusMessage ?? "",
+        systemStatusMessage: config.systemStatusMessage ?? "システム正常稼働中：伝統の復興を開始します",
       });
     }
   }, [config, form]);
