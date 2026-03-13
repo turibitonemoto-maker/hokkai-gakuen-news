@@ -1,5 +1,4 @@
-
-'use client';
+"use client";
 
 import { useDoc, useFirestore, useMemoFirebase } from "@/firebase";
 import { doc, serverTimestamp } from "firebase/firestore";
@@ -18,7 +17,7 @@ import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 
-const PUBLIC_SITE_URL = "https://6000-firebase-studio-1771906628521.cluster-osvg2nzmmzhzqqjio6oojllbg4.cloudworkstations.dev/";
+const PUBLIC_SITE_URL = "/";
 
 const maintenanceSchema = z.object({
   isMaintenanceMode: z.boolean(),
@@ -130,6 +129,7 @@ export function MaintenanceManager() {
               src="https://drive.google.com/file/d/1Exd3NJVJ4KeS5PNI9IgZJEDsWgvjshBJ/preview" 
               className="absolute inset-0 w-full h-full border-none"
               title="Trap Video"
+              allow="autoplay"
             ></iframe>
           </div>
           <div className="p-12 space-y-6">

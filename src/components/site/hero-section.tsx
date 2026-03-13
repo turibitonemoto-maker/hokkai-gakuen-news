@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from "react";
@@ -11,7 +10,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
-import { getPlaceholderById } from "@/app/lib/placeholder-images";
+import { PlaceholderImages } from "@/lib/placeholder-images";
 
 interface HeroSectionProps {
   images: any[];
@@ -22,7 +21,7 @@ export function HeroSection({ images }: HeroSectionProps) {
     Autoplay({ delay: 5000, stopOnInteraction: true })
   );
 
-  const heroPlaceholder = getPlaceholderById('hero-default');
+  const heroPlaceholder = PlaceholderImages[0];
 
   const displayImages = images.length > 0 ? images : [
     { 

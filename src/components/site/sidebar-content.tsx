@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
@@ -19,14 +18,11 @@ export function SidebarContent({ ads }: { ads: any[] }) {
   
   const { data: president } = useDoc(presidentRef);
 
-  // 期限切れの広告をフィルタリング（現在時刻と比較）
   const activeAds = useMemo(() => {
     if (!ads) return [];
     const now = new Date();
     return ads.filter(ad => {
-      // 開始日チェック
       if (ad.startDate && new Date(ad.startDate) > now) return false;
-      // 終了日チェック
       if (ad.endDate && new Date(ad.endDate) < now) return false;
       return true;
     });

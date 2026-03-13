@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -28,7 +27,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { LoginForm } from "@/components/auth/login-form";
 
-const PUBLIC_SITE_URL = "https://6000-firebase-studio-1771906628521.cluster-osvg2nzmmzhzqqjio6oojllbg4.cloudworkstations.dev/";
+const PUBLIC_SITE_URL = "/";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
@@ -163,9 +162,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </Button>
             <h2 className="text-xl font-black text-slate-800 tracking-tight">
               {activeLabel}
-              {menuItems.find(i => i.id === pathname)?.isProtected && (
-                <Lock className="h-4 w-4 ml-3 text-slate-400" />
-              )}
             </h2>
           </div>
           <div className="flex items-center gap-3">

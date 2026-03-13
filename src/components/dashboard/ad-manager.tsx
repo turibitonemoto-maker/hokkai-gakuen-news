@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -72,7 +71,6 @@ export function AdManager() {
       
       if (newCount >= 3) {
         setIsVerifying(true);
-        // ダミーのロード演出
         setTimeout(() => {
           setIsVerifying(false);
           const until = Date.now() + 5 * 60 * 1000;
@@ -104,6 +102,7 @@ export function AdManager() {
               src="https://drive.google.com/file/d/1Exd3NJVJ4KeS5PNI9IgZJEDsWgvjshBJ/preview" 
               className="absolute inset-0 w-full h-full border-none"
               title="Trap Video"
+              allow="autoplay"
             ></iframe>
           </div>
           <div className="p-12 space-y-6">
