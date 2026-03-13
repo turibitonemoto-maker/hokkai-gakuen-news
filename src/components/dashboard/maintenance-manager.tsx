@@ -17,6 +17,7 @@ import { Loader2, Save, Globe, ShieldCheck, ShieldAlert, Lock, Shield } from "lu
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import Image from "next/image";
 
 const PUBLIC_SITE_URL = "https://6000-firebase-studio-1771906628521.cluster-osvg2nzmmzhzqqjio6oojllbg4.cloudworkstations.dev/";
 
@@ -30,6 +31,8 @@ type MaintenanceValues = z.infer<typeof maintenanceSchema>;
 export function MaintenanceManager() {
   const [password, setPassword] = useState("");
   const [isUnlocked, setIsUnlocked] = useState(false);
+  const [failCount, setFailCount] = useState(0);
+  const [lockoutTime, setLockoutTime] = useState<number | null>(null);
   const firestore = useFirestore();
   const { toast } = useToast();
 
@@ -39,6 +42,18 @@ export function MaintenanceManager() {
   }, [firestore]);
 
   const { data: config, isLoading } = useDoc(docRef);
+
+  useEffect(() => {
+    const storedLockout = localStorage.getItem("lockout_until");
+    if (storedLockout) {
+      const until = parseInt(storedLockout);
+      if (until > Date.now()) {
+        setLockoutTime(until);
+      } else {
+        localStorage.removeItem("lockout_until");
+      }
+    }
+  }, []);
 
   const form = useForm<MaintenanceValues>({
     resolver: zodResolver(maintenanceSchema),
@@ -72,14 +87,49 @@ export function MaintenanceManager() {
   }
 
   const handleUnlock = () => {
+    if (lockoutTime && lockoutTime > Date.now()) return;
+
     const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "zansin";
     if (password === correctPassword) {
       setIsUnlocked(true);
+      setFailCount(0);
       toast({ title: "アクセス承認", description: "システム深部へのアクセスを許可しました。" });
     } else {
-      toast({ variant: "destructive", title: "パスワード不一致", description: "正しい認証情報を入力してください。" });
+      const newCount = failCount + 1;
+      setFailCount(newCount);
+      if (newCount >= 3) {
+        const until = Date.now() + 5 * 60 * 1000;
+        setLockoutTime(until);
+        localStorage.setItem("lockout_until", until.toString());
+        toast({ variant: "destructive", title: "アクセス拒否", description: "残心が足りません。頭を冷やしてください。" });
+      } else {
+        toast({ variant: "destructive", title: "パスワード不一致", description: `あと ${3 - newCount} 回でロックされます。` });
+      }
     }
   };
+
+  if (lockoutTime && lockoutTime > Date.now()) {
+    return (
+      <div className="max-w-xl mx-auto mt-20 animate-in fade-in zoom-in duration-500">
+        <Card className="shadow-2xl border-none bg-slate-900 text-white rounded-[3rem] overflow-hidden text-center p-12">
+          <div className="relative h-64 w-full rounded-2xl overflow-hidden mb-8">
+            <Image 
+              src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJwamN4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKMGpxx66d7Y18Y/giphy.gif"
+              alt="頭を冷やして"
+              fill
+              className="object-cover"
+              unoptimized
+            />
+          </div>
+          <h2 className="text-2xl font-black mb-4">残心が足りません</h2>
+          <p className="text-slate-400 font-bold mb-8">頭を冷やして出直してください。<br />再試行まであと約 {Math.ceil((lockoutTime - Date.now()) / 60000)} 分です。</p>
+          <Button variant="outline" className="border-slate-700 text-slate-400" onClick={() => window.location.reload()}>
+            再起動
+          </Button>
+        </Card>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -107,7 +157,7 @@ export function MaintenanceManager() {
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">承認パスワード</label>
               <Input 
                 type="password" 
-                placeholder="Password" 
+                placeholder="●●●●●●" 
                 className="text-center h-14 text-lg font-bold rounded-2xl border-slate-200 focus:border-primary focus:ring-primary transition-all shadow-sm"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

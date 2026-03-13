@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc, serverTimestamp } from "firebase/firestore";
 import { 
@@ -32,10 +32,24 @@ export function NoteManager() {
   const [rssArticles, setRssArticles] = useState<any[]>([]);
   const [password, setPassword] = useState("");
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [failCount, setFailCount] = useState(0);
+  const [lockoutTime, setLockoutTime] = useState<number | null>(null);
   
   const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
+
+  useEffect(() => {
+    const storedLockout = localStorage.getItem("lockout_until");
+    if (storedLockout) {
+      const until = parseInt(storedLockout);
+      if (until > Date.now()) {
+        setLockoutTime(until);
+      } else {
+        localStorage.removeItem("lockout_until");
+      }
+    }
+  }, []);
 
   const noteArticlesQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -55,35 +69,49 @@ export function NoteManager() {
   }, [allArticles]);
 
   const startSyncProcess = () => {
+    if (lockoutTime && lockoutTime > Date.now()) {
+      toast({ variant: "destructive", title: "ロック中", description: "頭を冷やして出直してください。" });
+      return;
+    }
     setShowPasswordDialog(true);
   };
 
   const handleSyncWithAuth = async () => {
     const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "zansin";
-    if (password !== correctPassword) {
-      toast({ variant: "destructive", title: "パスワード不一致", description: "正しい認証情報を入力してください。" });
-      return;
-    }
+    if (password === correctPassword) {
+      setShowPasswordDialog(false);
+      setFailCount(0);
+      setIsSyncing(true);
+      try {
+        const articles = await fetchNoteArticles();
+        setRssArticles(articles);
+        
+        if (firestore && syncLogRef) {
+          setDocumentNonBlocking(syncLogRef, {
+            lastSyncAt: new Date().toISOString(),
+            updatedAt: serverTimestamp()
+          }, { merge: true });
+        }
 
-    setShowPasswordDialog(false);
-    setIsSyncing(true);
-    try {
-      const articles = await fetchNoteArticles();
-      setRssArticles(articles);
-      
-      if (firestore && syncLogRef) {
-        setDocumentNonBlocking(syncLogRef, {
-          lastSyncAt: new Date().toISOString(),
-          updatedAt: serverTimestamp()
-        }, { merge: true });
+        toast({ title: "同期完了", description: "最新のnote記事を取得しました。" });
+      } catch (e) {
+        toast({ variant: "destructive", title: "同期エラー", description: "noteの取得に失敗しました。" });
+      } finally {
+        setIsSyncing(false);
+        setPassword("");
       }
-
-      toast({ title: "同期完了", description: "最新のnote記事を取得しました。" });
-    } catch (e) {
-      toast({ variant: "destructive", title: "同期エラー", description: "noteの取得に失敗しました。" });
-    } finally {
-      setIsSyncing(false);
-      setPassword("");
+    } else {
+      const newCount = failCount + 1;
+      setFailCount(newCount);
+      if (newCount >= 3) {
+        const until = Date.now() + 5 * 60 * 1000;
+        setLockoutTime(until);
+        localStorage.setItem("lockout_until", until.toString());
+        setShowPasswordDialog(false);
+        toast({ variant: "destructive", title: "アクセス拒否", description: "残心が足りません。頭を冷やしてください。" });
+      } else {
+        toast({ variant: "destructive", title: "パスワード不一致", description: `あと ${3 - newCount} 回でロックされます。` });
+      }
     }
   };
 
@@ -103,6 +131,29 @@ export function NoteManager() {
       description: `「${article.title}」を下書きとして追加しました。` 
     });
   };
+
+  if (lockoutTime && lockoutTime > Date.now()) {
+    return (
+      <div className="max-w-xl mx-auto mt-20 animate-in fade-in zoom-in duration-500">
+        <Card className="shadow-2xl border-none bg-slate-900 text-white rounded-[3rem] overflow-hidden text-center p-12">
+          <div className="relative h-64 w-full rounded-2xl overflow-hidden mb-8">
+            <Image 
+              src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJwamN4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKMGpxx66d7Y18Y/giphy.gif"
+              alt="頭を冷やして"
+              fill
+              className="object-cover"
+              unoptimized
+            />
+          </div>
+          <h2 className="text-2xl font-black mb-4">残心が足りません</h2>
+          <p className="text-slate-400 font-bold mb-8">頭を冷やして出直してください。<br />再試行まであと約 {Math.ceil((lockoutTime - Date.now()) / 60000)} 分です。</p>
+          <Button variant="outline" className="border-slate-700 text-slate-400" onClick={() => window.location.reload()}>
+            再起動
+          </Button>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700">
@@ -225,7 +276,7 @@ export function NoteManager() {
           <div className="py-6">
             <Input 
               type="password" 
-              placeholder="Password" 
+              placeholder="●●●●●●" 
               className="text-center h-14 text-lg font-bold rounded-2xl border-slate-200 shadow-sm"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
