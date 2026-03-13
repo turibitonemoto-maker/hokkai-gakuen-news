@@ -80,7 +80,7 @@ export function LoginForm() {
         <div className="flex justify-center mb-4">
           <div className="bg-white p-2 rounded-2xl shadow-lg border">
             <Image 
-              src="/favicon.ico" 
+              src="/icon.png" 
               alt="北海学園新聞会" 
               width={64} 
               height={64} 

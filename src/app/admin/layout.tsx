@@ -72,7 +72,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="flex items-center gap-3">
               <div className="bg-white p-1 rounded-xl shadow-md border">
                 <Image 
-                  src="/favicon.ico" 
+                  src="/icon.png" 
                   alt="北海学園新聞会" 
                   width={32} 
                   height={32} 
@@ -109,7 +109,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="p-6 flex items-center gap-3 border-b border-slate-700/50">
           <div className="bg-white p-1 rounded-lg shrink-0 shadow-lg">
             <Image 
-              src="/favicon.ico" 
+              src="/icon.png" 
               alt="北海学園新聞会" 
               width={24} 
               height={24} 

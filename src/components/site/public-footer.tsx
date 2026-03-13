@@ -15,7 +15,7 @@ export function PublicFooter() {
             <Link href="/" className="flex items-center gap-3">
               <div className="bg-white p-1 rounded-xl shadow-md border">
                 <Image 
-                  src="/favicon.ico" 
+                  src="/icon.png" 
                   alt="北海学園新聞会" 
                   width={32} 
                   height={32} 

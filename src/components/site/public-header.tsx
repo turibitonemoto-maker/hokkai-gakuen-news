@@ -30,7 +30,7 @@ export function PublicHeader() {
           <Link href="/" className="flex items-center gap-3 group">
             <div className="bg-white p-1 rounded-xl shadow-md border group-hover:scale-105 transition-transform">
               <Image 
-                src="/favicon.ico" 
+                src="/icon.png" 
                 alt="北海学園新聞会" 
                 width={32} 
                 height={32} 
