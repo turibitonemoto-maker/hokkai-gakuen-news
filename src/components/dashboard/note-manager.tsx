@@ -112,7 +112,7 @@ export function NoteManager() {
           toast({ variant: "destructive", title: "アクセス拒否", description: "頭を冷やしてください。" });
         }, 800);
       } else {
-        toast({ variant: "destructive", title: "パスワード不一致", description: `あと ${3 - newCount} 回でロックされます。` });
+        toast({ variant: "destructive", title: "不一致", description: `あと ${3 - newCount} 回でロックされます。` });
       }
     }
   };
@@ -138,7 +138,7 @@ export function NoteManager() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="font-black text-slate-400 animate-pulse">パスワードを確認中...</p>
+        <p className="font-black text-slate-400 animate-pulse">確認中...</p>
       </div>
     );
   }
@@ -280,9 +280,9 @@ export function NoteManager() {
             <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-2">
               <Lock className="h-8 w-8 text-primary" />
             </div>
-            <DialogTitle className="text-2xl font-black text-slate-800 text-center">アクセス承認 🔒</DialogTitle>
+            <DialogTitle className="text-2xl font-black text-slate-800 text-center">認証 🔒</DialogTitle>
             <DialogDescription className="text-center font-bold text-slate-500">
-              この操作を実行するにはアクセス承認が必要です。
+              この操作を実行するには認証が必要です。
             </DialogDescription>
           </DialogHeader>
           <div className="py-6 flex flex-col gap-2">

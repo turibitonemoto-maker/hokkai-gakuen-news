@@ -79,7 +79,7 @@ export function PresidentMessageManager() {
     if (password === correctPassword) {
       setIsUnlocked(true);
       setFailCount(0);
-      toast({ title: "アクセス承認", description: "編集権限を確認しました。" });
+      toast({ title: "認証完了", description: "編集権限を確認しました。" });
     } else {
       const newCount = failCount + 1;
       setFailCount(newCount);
@@ -93,7 +93,7 @@ export function PresidentMessageManager() {
           toast({ variant: "destructive", title: "アクセス拒否", description: "頭を冷やしてください。" });
         }, 800);
       } else {
-        toast({ variant: "destructive", title: "パスワード不一致", description: `あと ${3 - newCount} 回でロックされます。` });
+        toast({ variant: "destructive", title: "不一致", description: `あと ${3 - newCount} 回でロックされます。` });
       }
     }
   };
@@ -116,7 +116,7 @@ export function PresidentMessageManager() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="font-black text-slate-400 animate-pulse">パスワードを確認中...</p>
+        <p className="font-black text-slate-400 animate-pulse">確認中...</p>
       </div>
     );
   }
@@ -163,7 +163,7 @@ export function PresidentMessageManager() {
             </div>
             <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">会長挨拶 🔒</CardTitle>
             <CardDescription className="text-sm font-bold text-slate-500 px-6 mt-2">
-              このセクションを編集するにはアクセス承認が必要です。
+              このセクションを編集するには認証が必要です。
             </CardDescription>
           </CardHeader>
           <CardContent className="p-10 pt-4 space-y-6">
@@ -180,7 +180,7 @@ export function PresidentMessageManager() {
               />
             </div>
             <Button className="w-full h-14 font-black text-md rounded-2xl shadow-lg hover:scale-[1.02] transition-transform" onClick={handleUnlock}>
-              アクセスを承認する
+              認証する
             </Button>
           </CardContent>
         </Card>
