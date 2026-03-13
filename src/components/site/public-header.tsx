@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Newspaper, Menu, Search, User } from 'lucide-react';
+import { Menu, Search, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
@@ -29,7 +29,14 @@ export function PublicHeader() {
         <div className="flex justify-between items-center">
           <Link href="/" className="flex items-center gap-3 group">
             <div className="bg-white p-1 rounded-xl shadow-md border group-hover:scale-105 transition-transform">
-              <Image src="/favicon.ico" alt="北海学園新聞会" width={32} height={32} className="rounded-lg" />
+              <Image 
+                src="/favicon.ico" 
+                alt="北海学園新聞会" 
+                width={32} 
+                height={32} 
+                className="rounded-lg"
+                priority
+              />
             </div>
             <div>
               <h1 className="text-xl font-bold text-slate-800 leading-tight">北海学園新聞会</h1>

@@ -14,7 +14,13 @@ export function PublicFooter() {
           <div className="space-y-6">
             <Link href="/" className="flex items-center gap-3">
               <div className="bg-white p-1 rounded-xl shadow-md border">
-                <Image src="/favicon.ico" alt="北海学園新聞会" width={32} height={32} className="rounded-lg" />
+                <Image 
+                  src="/favicon.ico" 
+                  alt="北海学園新聞会" 
+                  width={32} 
+                  height={32} 
+                  className="rounded-lg"
+                />
               </div>
               <h1 className="text-xl font-bold text-white leading-tight">北海学園新聞会</h1>
             </Link>

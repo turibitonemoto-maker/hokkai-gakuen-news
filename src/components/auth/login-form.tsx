@@ -79,7 +79,14 @@ export function LoginForm() {
       <CardHeader className="space-y-1 pb-6 text-center">
         <div className="flex justify-center mb-4">
           <div className="bg-white p-3 rounded-2xl shadow-lg border">
-            <Image src="/favicon.ico" alt="北海学園新聞会" width={48} height={48} className="rounded-xl" />
+            <Image 
+              src="/favicon.ico" 
+              alt="北海学園新聞会" 
+              width={48} 
+              height={48} 
+              className="rounded-xl"
+              priority
+            />
           </div>
         </div>
         <CardTitle className="text-2xl font-bold text-primary tracking-tight">
