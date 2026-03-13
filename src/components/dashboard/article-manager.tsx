@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc, orderBy, query } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Loader2, X, Filter, Tag as TagIcon, AlertCircle } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, X, Filter, Tag as TagIcon, AlertCircle, Share2, FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +34,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 /**
- * カテゴリーに応じた固有のカラーを返却
+ * カテゴリー・タイプに応じた固有のカラーを返却
  */
 const getTagColor = (tag: string, isActive: boolean) => {
   const colorMap: Record<string, string> = {
@@ -62,7 +62,6 @@ export function ArticleManager() {
   const { user } = useUser();
   const { toast } = useToast();
 
-  // インデックス不要にするため、複合クエリ（where + orderBy）を避け、JS側でフィルタリングする
   const articlesQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return query(
@@ -73,34 +72,29 @@ export function ArticleManager() {
 
   const { data: allArticles, isLoading, error } = useCollection(articlesQuery);
 
-  // 標準記事のみを抽出
-  const standardArticles = useMemo(() => {
-    if (!allArticles) return [];
-    return allArticles.filter(a => a.articleType === "Standard");
-  }, [allArticles]);
-
   const allTags = useMemo(() => {
     const tagsSet = new Set<string>();
     Object.values(CATEGORY_LABELS).forEach(label => tagsSet.add(label));
-    standardArticles.forEach(article => {
+    allArticles?.forEach(article => {
       article.tags?.forEach((tag: string) => {
         if (tag && tag.trim()) tagsSet.add(tag.trim());
       });
     });
     return Array.from(tagsSet).sort();
-  }, [standardArticles]);
+  }, [allArticles]);
 
   const filteredArticles = useMemo(() => {
-    if (selectedTags.length === 0) return standardArticles;
+    if (!allArticles) return [];
+    if (selectedTags.length === 0) return allArticles;
 
-    return standardArticles.filter(article => {
+    return allArticles.filter(article => {
       const articleTags = [
         CATEGORY_LABELS[article.categoryId] || article.categoryId,
         ...(article.tags || [])
       ];
       return selectedTags.every(tag => articleTags.includes(tag));
     });
-  }, [standardArticles, selectedTags]);
+  }, [allArticles, selectedTags]);
 
   const toggleTag = (tag: string) => {
     setSelectedTags(prev => 
@@ -121,8 +115,10 @@ export function ArticleManager() {
       <Card className="animate-in fade-in zoom-in duration-300">
         <CardHeader className="flex flex-row items-center justify-between border-b bg-slate-50/50">
           <div>
-            <CardTitle>{currentArticle ? "学内記事を編集" : "新規学内記事の作成"}</CardTitle>
-            <CardDescription>学内のニュースやコラムを作成・編集します。</CardDescription>
+            <CardTitle>{currentArticle ? "記事を編集" : "新規記事の作成"}</CardTitle>
+            <CardDescription>
+              {currentArticle?.articleType === "Note" ? "noteから取り込んだ記事の公開設定を編集します。" : "学内のニュースやコラムを作成・編集します。"}
+            </CardDescription>
           </div>
           <Button variant="ghost" onClick={() => setIsEditing(false)}>
             <X className="h-4 w-4 mr-2" /> 閉じる
@@ -139,12 +135,12 @@ export function ArticleManager() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800">学内記事管理</h2>
-          <p className="text-sm text-slate-500">記事の作成、編集、および公式サイトへの公開管理を行います。</p>
+          <h2 className="text-2xl font-bold text-slate-800">全記事・公開管理</h2>
+          <p className="text-sm text-slate-500">作成した記事やnoteから取り込んだ記事の、公開・非公開を一括管理します。</p>
         </div>
         <Button onClick={() => { setCurrentArticle(null); setIsEditing(true); }} className="h-11 px-6 shadow-md gap-2 font-bold">
           <Plus className="h-5 w-5" />
-          新規記事作成
+          新規学内記事作成
         </Button>
       </div>
 
@@ -153,7 +149,7 @@ export function ArticleManager() {
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>データの読み込みに失敗しました</AlertTitle>
           <AlertDescription>
-            データベースへのアクセス権限がないか、通信エラーが発生しています。ログイン直後の場合は数秒待ってからリロードしてください。
+            データベースへのアクセス権限がないか、通信エラーが発生しています。
           </AlertDescription>
         </Alert>
       )}
@@ -206,9 +202,9 @@ export function ArticleManager() {
             <Table>
               <TableHeader className="bg-slate-50/50">
                 <TableRow>
-                  <TableHead className="w-[120px]">ステータス</TableHead>
+                  <TableHead className="w-[100px]">状態</TableHead>
+                  <TableHead className="w-[100px]">タイプ</TableHead>
                   <TableHead>記事タイトル / カテゴリー</TableHead>
-                  <TableHead>追加タグ</TableHead>
                   <TableHead>公開予定日</TableHead>
                   <TableHead className="text-right">操作</TableHead>
                 </TableRow>
@@ -224,20 +220,22 @@ export function ArticleManager() {
                       )}
                     </TableCell>
                     <TableCell>
+                      {article.articleType === "Note" ? (
+                        <Badge variant="secondary" className="bg-purple-50 text-purple-600 border-purple-100 gap-1 px-2">
+                          <Share2 className="h-3 w-3" /> note
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="bg-blue-50 text-blue-600 border-blue-100 gap-1 px-2">
+                          <FileText className="h-3 w-3" /> 学内
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
                       <div className="flex flex-col">
                         <span className="font-bold text-slate-800 leading-tight group-hover:text-primary transition-colors">{article.title}</span>
                         <span className="text-[10px] font-bold text-primary mt-1 uppercase tracking-widest">
                           {CATEGORY_LABELS[article.categoryId] || article.categoryId}
                         </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {article.tags?.map((tag: string, i: number) => (
-                          <span key={i} className="text-[9px] font-bold bg-slate-100 px-2 py-0.5 rounded-full text-slate-500 border border-slate-200">
-                            #{tag}
-                          </span>
-                        ))}
                       </div>
                     </TableCell>
                     <TableCell className="text-sm font-medium text-slate-500">
@@ -258,7 +256,7 @@ export function ArticleManager() {
                 {filteredArticles.length === 0 && !isLoading && (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-20 text-slate-400 font-medium italic">
-                      条件に一致する記事は見つかりませんでした。
+                      表示できる記事はありません。
                     </TableCell>
                   </TableRow>
                 )}
@@ -276,7 +274,7 @@ export function ArticleManager() {
               記事を削除しますか？
             </AlertDialogTitle>
             <AlertDialogDescription>
-              「{articleToDelete?.title}」を完全に削除します。この操作は取り消せません。
+              「{articleToDelete?.title}」を完全に削除します。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
