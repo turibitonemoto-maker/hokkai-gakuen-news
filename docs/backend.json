@@ -3,7 +3,7 @@
   "entities": {
     "Article": {
       "title": "Article",
-      "description": "学内ニュースやnote連動記事。",
+      "description": "記事データ（標準記事およびnote連動記事）。",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
@@ -23,7 +23,7 @@
     },
     "Ad": {
       "title": "Ad",
-      "description": "バナー広告データ。",
+      "description": "バナー広告。公式サイトでランダムまたは一覧表示。クリック数計測あり。",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
@@ -32,12 +32,14 @@
         "linkUrl": { "type": "string", "format": "uri" },
         "clickCount": { "type": "number" },
         "startDate": { "type": "string" },
-        "endDate": { "type": "string" }
+        "endDate": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       }
     },
     "HeroImage": {
       "title": "HeroImage",
-      "description": "トップページの背景画像。",
+      "description": "トップページのヒーロー背景画像。",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
@@ -48,7 +50,7 @@
     },
     "Inquiry": {
       "title": "Inquiry",
-      "description": "お問い合わせメッセージ。",
+      "description": "お問い合わせフォームからの送信データ。",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
@@ -62,7 +64,7 @@
     },
     "MaintenanceSettings": {
       "title": "MaintenanceSettings",
-      "description": "メンテナンスモード設定。",
+      "description": "メンテナンスモードのオンオフとメッセージ。",
       "type": "object",
       "properties": {
         "isMaintenanceMode": { "type": "boolean" },
@@ -72,7 +74,7 @@
     },
     "PresidentMessage": {
       "title": "PresidentMessage",
-      "description": "会長挨拶設定。",
+      "description": "会長挨拶。名前、写真、本文を管理。",
       "type": "object",
       "properties": {
         "authorName": { "type": "string" },
@@ -88,27 +90,27 @@
   "firestore": {
     "/articles/{articleId}": {
       "schema": { "$ref": "#/entities/Article" },
-      "description": "記事。公開読み取り。ログイン者は全権限。"
+      "description": "記事全般。公開読み取り。ログイン済みの新聞会員は全権限。"
     },
     "/ads/{adId}": {
       "schema": { "$ref": "#/entities/Ad" },
-      "description": "広告。公開読み取り。ログイン者は全権限。"
+      "description": "バナー広告。公開読み取り。ログイン済みの新聞会員は全権限。"
     },
     "/hero-images/{imageId}": {
       "schema": { "$ref": "#/entities/HeroImage" },
-      "description": "ヒーロー画像。ログイン者は全権限。"
+      "description": "ヒーロー背景。ログイン済みの新聞会員は全権限。"
     },
     "/inquiries/{inquiryId}": {
       "schema": { "$ref": "#/entities/Inquiry" },
-      "description": "お問い合わせ。ログイン者は全権限。"
+      "description": "お問い合わせ。ログイン済みの新聞会員は全権限。"
     },
     "/settings/maintenance": {
       "schema": { "$ref": "#/entities/MaintenanceSettings" },
-      "description": "メンテナンス設定。公開読み取り。ログイン者は全権限。"
+      "description": "メンテナンス設定。公開読み取り。ログイン済みの新聞会員は全権限。"
     },
     "/settings/president-message": {
       "schema": { "$ref": "#/entities/PresidentMessage" },
-      "description": "会長挨拶設定。公開読み取り。ログイン者は全権限。"
+      "description": "会長挨拶設定。公開読み取り。ログイン済みの新聞会員は全権限。"
     }
   }
 }

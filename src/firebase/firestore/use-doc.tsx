@@ -67,10 +67,10 @@ export function useDoc<T = any>(
         setIsLoading(false);
       },
       async (serverError: FirestoreError) => {
-        // 【最重要】ログイン直後のトークン同期ラグによる一時的な権限エラーを検知
+        // 【最重要】認証同期ラグによる一時的な権限エラーを検知
         const currentAuthUser = getAuth().currentUser;
         if (serverError.code === 'permission-denied' && (user || currentAuthUser)) {
-          console.warn("Firestore (useDoc): Permission denied on doc for authenticated user. Waiting for auth sync...");
+          console.warn("Firestore (useDoc): Auth sync lag detected. Waiting for permission propagation...");
           return;
         }
 

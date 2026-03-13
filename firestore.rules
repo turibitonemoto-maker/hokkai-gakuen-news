@@ -4,13 +4,13 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // 【基本ルール】ログインさえしていれば、メール認証の状態を問わず全員に全権限を許可
-    // これにより、ログイン直後の権限エラーやメール認証によるブロックを回避します
+    // 【最優先】ログインさえしていれば、メール認証の状態を問わず全員に全権限を許可
+    // これにより、ログイン直後のトークン同期ラグやメール認証によるブロックを完全に回避します
     match /{document=**} {
       allow read, write: if request.auth != null;
     }
 
-    // 表示サイト（またはログイン直後）の安定性のために、記事、広告、設定は未ログインでも読めるようにしておく
+    // 表示サイトの安定性のために、一部のデータは未ログインでも読めるようにしておく
     match /articles/{document=**} {
       allow read: if true;
     }
