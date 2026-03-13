@@ -107,7 +107,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {isSidebarOpen && (
             <div className="overflow-hidden whitespace-nowrap">
               <h1 className="text-sm font-black text-white leading-tight">北海学園新聞会</h1>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">CMS Control</p>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">CMS 管理システム</p>
             </div>
           )}
         </div>
@@ -169,7 +169,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <a href={PUBLIC_SITE_URL} target="_blank" rel="noopener noreferrer">
               <Button variant="outline" size="sm" className="gap-2 border-primary/20 text-primary hover:bg-primary/5 font-bold rounded-xl h-9">
                 <Globe className="h-4 w-4" />
-                表示サイトを確認
+                サイトを確認
                 <ExternalLink className="h-3 w-3" />
               </Button>
             </a>

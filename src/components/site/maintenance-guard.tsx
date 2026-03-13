@@ -50,7 +50,7 @@ export function MaintenanceGuard({ message }: MaintenanceGuardProps) {
         </div>
 
         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">
-          Hokkai Gakuen News 1 System Control
+          北海学園新聞会 管制システム
         </p>
       </div>
     </div>
