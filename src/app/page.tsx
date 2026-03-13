@@ -1,9 +1,9 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useCollection, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy, limit, doc } from 'firebase/firestore';
+import { collection, query, orderBy, limit, doc } from 'firebase/firestore';
 import { PublicHeader } from '@/components/site/public-header';
 import { HeroSection } from '@/components/site/hero-section';
 import { ArticleGrid } from '@/components/site/article-grid';
@@ -14,7 +14,6 @@ import { Loader2 } from 'lucide-react';
 
 /**
  * 公開用ウェブサイトのメインページ
- * 管理画面で設定したコンテンツを動的に表示します。
  */
 export default function HomePage() {
   const firestore = useFirestore();
@@ -23,16 +22,21 @@ export default function HomePage() {
   const maintenanceRef = useMemoFirebase(() => doc(firestore, 'settings', 'maintenance'), [firestore]);
   const { data: maintenanceConfig, isLoading: isMaintenanceLoading } = useDoc(maintenanceRef);
 
-  // 公開済み記事の取得
+  // 記事の取得 (インデックス不要にするため where を削除し JS側でフィルタリング)
   const articlesQuery = useMemoFirebase(() => {
     return query(
       collection(firestore, 'articles'),
-      where('isPublished', '==', true),
       orderBy('publishDate', 'desc'),
-      limit(20)
+      limit(50)
     );
   }, [firestore]);
-  const { data: articles, isLoading: isArticlesLoading } = useCollection(articlesQuery);
+  const { data: allArticles, isLoading: isArticlesLoading } = useCollection(articlesQuery);
+
+  // 公開済みの記事だけを抽出 (最大20件)
+  const articles = useMemo(() => {
+    if (!allArticles) return [];
+    return allArticles.filter(a => a.isPublished === true).slice(0, 20);
+  }, [allArticles]);
 
   // ヒーロー画像の取得
   const heroQuery = useMemoFirebase(() => {
