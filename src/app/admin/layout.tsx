@@ -55,7 +55,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const handleLogout = async () => {
     await signOut(auth);
-    router.push('/admin'); // 管理画面トップ（ログインフォーム）へ
+    router.push('/admin');
   };
 
   if (!mounted || isUserLoading) {
@@ -72,7 +72,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="min-h-screen flex flex-col bg-[#F0F2F5]">
         <header className="py-6 px-8 bg-white border-b shadow-sm sticky top-0 z-50">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-3">
+            <div className="flex items-center gap-3">
               <div className="bg-primary p-2 rounded-xl text-white shadow-lg">
                 <Newspaper className="h-6 w-6" />
               </div>
@@ -80,7 +80,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <h1 className="text-xl font-bold text-slate-800 leading-tight">Hokkai Gakuen News 1</h1>
                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">北海学園大学一部新聞会</p>
               </div>
-            </Link>
+            </div>
           </div>
         </header>
         <div className="flex-1 flex items-center justify-center p-4">
@@ -163,13 +163,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </h2>
           </div>
           <div className="flex items-center gap-3">
-            <Link href="/" target="_blank">
+            <a href="https://hokkai-newspaper-frontend.vercel.app/" target="_blank" rel="noopener noreferrer">
               <Button variant="outline" size="sm" className="gap-2 border-primary/20 text-primary hover:bg-primary/5">
                 <Globe className="h-4 w-4" />
-                サイトを確認
+                公開サイトを確認
                 <ExternalLink className="h-3 w-3" />
               </Button>
-            </Link>
+            </a>
             <Badge variant="outline" className="bg-slate-50 text-slate-500 font-normal border-slate-200">
               {user.email}
             </Badge>
