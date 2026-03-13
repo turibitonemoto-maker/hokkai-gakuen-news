@@ -75,7 +75,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </div>
               <div>
                 <h1 className="text-xl font-bold text-slate-800 leading-tight">Hokkai Gakuen News 1</h1>
-                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">北海学園大学一部新聞会</p>
+                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest font-headline">北海学園大学一部新聞会</p>
               </div>
             </div>
           </div>

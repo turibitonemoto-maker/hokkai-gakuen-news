@@ -9,7 +9,6 @@ import {
   Loader2, 
   ExternalLink, 
   PlusCircle, 
-  CheckCircle2,
   ImageOff,
   RefreshCw,
   Clock
