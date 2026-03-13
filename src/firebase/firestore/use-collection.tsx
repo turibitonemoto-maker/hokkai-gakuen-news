@@ -81,12 +81,14 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       async (serverError: FirestoreError) => {
-        // 【最重要】ログイン直後のトークン同期ラグ（フライング）による一時的な権限エラーを検知
-        // SDKがユーザー情報を把握しているのに拒否された場合は、致命的なエラーとせず静かに待機する
+        // 【最重要】認証同期ラグ（フライング）対策
+        // ログイン済み（userが存在する、またはSDKのAuthにcurrentUserがいる）にもかかわらず
+        // 権限エラーが出た場合は、同期待ちのラグと判断してエラー画面（RSOD）を出さずに静かに待機する
         const currentAuthUser = getAuth().currentUser;
         if (serverError.code === 'permission-denied' && (user || currentAuthUser)) {
           console.warn("Firestore (useCollection): Auth sync lag detected. Waiting for permission propagation...");
-          // isLoadingを維持し、エラーもセットせずにリターン。次のスナップショットまたはリトライを待つ。
+          // isLoading状態を維持し、エラーをセットせずにリターン。
+          // 認証が通れば自動的に snapshot が再発火されるか、コンポーネントの再レンダリングでリトライされます。
           return;
         }
 
@@ -104,7 +106,7 @@ export function useCollection<T = any>(
         setData(null)
         setIsLoading(false)
 
-        // グローバルエラー通知（ラグ対策でフィルタリングした後の本当のエラーのみ通知）
+        // 致命的なエラー（本当に権限がない場合）のみグローバル通知
         errorEmitter.emit('permission-error', contextualError);
       }
     );
