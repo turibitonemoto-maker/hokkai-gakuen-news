@@ -3,34 +3,30 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
+    // デプロイ強制用のタイムスタンプ: 2024-05-24T18:40:00Z
+    
     // 基本ルール: ログイン済みユーザーは全ドキュメントの読み書きが可能
-    // タイムスタンプ更新で再デプロイをトリガー: 2024-05-24T16:00:00Z
     match /{document=**} {
       allow read, write: if request.auth != null;
     }
 
-    // 公開データの閲覧許可設定
-    // 明示的にコレクションとドキュメントの両方の読み取りを許可する
+    // 公開データ（記事、広告、設定、ヒーロー画像）へのパブリックアクセス許可
+    // ログイン直後の同期ラグ対策として、これらは未ログインでも読み取り可能にします
     
     match /articles/{articleId} {
       allow read: if true;
-    }
-    match /articles {
-      allow list: if true;
     }
     
     match /ads/{adId} {
       allow read: if true;
     }
-    match /ads {
-      allow list: if true;
-    }
     
     match /settings/{settingId} {
       allow read: if true;
     }
-    match /settings {
-      allow list: if true;
+
+    match /hero-images/{imageId} {
+      allow read: if true;
     }
   }
 }

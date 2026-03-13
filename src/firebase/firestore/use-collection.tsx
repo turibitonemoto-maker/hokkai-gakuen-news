@@ -93,25 +93,24 @@ export function useCollection<T = any>(
           errorMessage.includes('insufficient') ||
           errorMessage.includes('denied');
 
-        // 認証同期ラグ対策
-        if (isPermissionError && user && retryCount < 3) {
-          console.warn(`Firestore (useCollection) [WAITING]: 権限反映待ち... (${retryCount + 1}/3). Path: ${path}`);
+        // 認証同期ラグ（フライング）対策: 
+        // ログイン済みであれば、エラーを投げずに1秒後に自動再試行する
+        if (isPermissionError && user && retryCount < 5) {
           setTimeout(() => setRetryCount(prev => prev + 1), 1000);
           return;
         }
 
+        // ラグではない、またはリトライ上限に達した場合はエラー状態を更新
         const contextualError = new FirestorePermissionError({
           operation: 'list',
           path,
         });
 
-        // 重要: アプリをクラッシュさせないよう、グローバルへの通知をスキップし、
-        // ローカルなエラー状態のみを更新する
+        // 重要: アプリをクラッシュさせないよう、console.error を避け、
+        // ローカルなエラー状態として保持する（UI側でハンドリング可能にする）
         setError(contextualError);
         setData(null);
         setIsLoading(false);
-        
-        console.error(`Firestore access denied: ${path}. User logged in: ${!!user}`);
       }
     );
 

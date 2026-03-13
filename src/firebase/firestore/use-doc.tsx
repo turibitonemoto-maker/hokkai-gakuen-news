@@ -75,8 +75,7 @@ export function useDoc<T = any>(
           errorMessage.includes('denied');
 
         // 認証同期ラグ対策
-        if (isPermissionError && user && retryCount < 3) {
-          console.warn(`Firestore (useDoc) [WAITING]: 権限反映待ち... (${retryCount + 1}/3). Path: ${memoizedDocRef.path}`);
+        if (isPermissionError && user && retryCount < 5) {
           setTimeout(() => setRetryCount(prev => prev + 1), 1000);
           return;
         }
@@ -86,12 +85,9 @@ export function useDoc<T = any>(
           path: memoizedDocRef.path,
         });
 
-        // 重要: アプリをクラッシュさせないようローカルエラーのみ保持
         setError(contextualError);
         setData(null);
         setIsLoading(false);
-
-        console.error(`Firestore access denied: ${memoizedDocRef.path}`);
       }
     );
 
