@@ -1,9 +1,8 @@
-
 {
   "entities": {
     "Article": {
       "title": "Article",
-      "description": "記事データ。ログイン済みのユーザーは全権限。",
+      "description": "記事データ（学内記事・note記事）。",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
@@ -24,7 +23,7 @@
     },
     "Ad": {
       "title": "Ad",
-      "description": "バナー広告。ログイン済みのユーザーは全権限。",
+      "description": "バナー広告。",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
@@ -40,7 +39,7 @@
     },
     "Inquiry": {
       "title": "Inquiry",
-      "description": "読者からのお問い合わせ。ログイン済みのユーザーのみアクセス可能。",
+      "description": "読者からのお問い合わせ。",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
@@ -55,7 +54,7 @@
     },
     "HeroImage": {
       "title": "HeroImage",
-      "description": "ヒーロー背景。ログイン済みのユーザーは全権限。",
+      "description": "ヒーロー背景。",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
@@ -71,23 +70,23 @@
   "firestore": {
     "/articles/{articleId}": {
       "schema": { "$ref": "#/backend/entities/Article" },
-      "description": "記事全般。ログイン済みのユーザーは全権限。"
+      "description": "記事データ全般。"
     },
     "/ads/{adId}": {
       "schema": { "$ref": "#/backend/entities/Ad" },
-      "description": "バナー広告。ログイン済みのユーザーは全権限。"
+      "description": "バナー広告。"
     },
     "/inquiries/{inquiryId}": {
       "schema": { "$ref": "#/backend/entities/Inquiry" },
-      "description": "お問い合わせデータ。ログイン済みのユーザーは全権限。"
+      "description": "お問い合わせデータ。"
     },
     "/hero-images/{imageId}": {
       "schema": { "$ref": "#/backend/entities/HeroImage" },
-      "description": "ヒーロー画像。ログイン済みのユーザーは全権限。"
+      "description": "ヒーロー画像。"
     },
     "/settings/{settingId}": {
       "schema": { "type": "object" },
-      "description": "システム設定（メンテナンス、会長挨拶、同期ログなど）。ログイン済みのユーザーは全権限。"
+      "description": "システム設定（メンテナンス、会長挨拶、同期ログなど）。"
     }
   }
 }

@@ -3,14 +3,15 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // デプロイ強制用のタイムスタンプ: 2024-05-24T18:50:00Z
+    // デプロイ強制用のタイムスタンプ: 2024-05-24T19:00:00Z
     
     // 基本ルール: ログイン済みユーザーは全ドキュメントの読み書きが可能
+    // これにより管理画面からの全操作（書き込み）を許可します
     match /{document=**} {
       allow read, write: if request.auth != null;
     }
 
-    // 公開データへのパブリックアクセス許可
+    // 公開データへのパブリックアクセス許可（表示用サイトが読み込むパス）
     match /articles/{articleId} {
       allow read: if true;
     }
@@ -20,11 +21,20 @@ service cloud.firestore {
     }
     
     match /settings/{settingId} {
+      // 公開サイトがメンテナンス中かどうかや、会長挨拶を表示するために必要
       allow read: if true;
+      // 管理画面からの更新を確実に許可
+      allow write: if request.auth != null;
     }
 
     match /hero-images/{imageId} {
       allow read: if true;
+    }
+    
+    // お問い合わせの送信のみ、一般公開（表示サイト側での投稿用）
+    match /inquiries/{inquiryId} {
+      allow create: if true;
+      allow read, write: if request.auth != null;
     }
   }
 }
