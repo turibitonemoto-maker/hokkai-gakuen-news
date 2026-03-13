@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { FileText, Share2, Tag } from "lucide-react";
+import { FileText, Share2, Tag, Layout, AlignLeft } from "lucide-react";
 
 const articleSchema = z.object({
   title: z.string().min(1, "タイトルを入力してください"),
@@ -22,17 +22,10 @@ const articleSchema = z.object({
   content: z.string().optional(),
   noteUrl: z.string().url("有効なURLを入力してください").optional().or(z.literal("")),
   categoryId: z.enum(["Campus", "Event", "Interview", "Sports", "Column", "Opinion"]),
-  tagsInput: z.string().optional(), // カンマ区切りのタグ入力用
+  tagsInput: z.string().optional(),
   publishDate: z.string(),
   mainImageUrl: z.string().url("有効なURLを入力してください").optional().or(z.literal("")),
   isPublished: z.boolean().default(false),
-}).refine((data) => {
-  if (data.articleType === "Standard" && !data.content) return false;
-  if (data.articleType === "Note" && !data.noteUrl) return false;
-  return true;
-}, {
-  message: "タイプに応じた内容を入力してください",
-  path: ["content"]
 });
 
 type ArticleFormValues = z.infer<typeof articleSchema>;
@@ -53,7 +46,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       content: article?.content || "",
       noteUrl: article?.noteUrl || "",
       categoryId: article?.categoryId || "Campus",
-      tagsInput: article?.tags?.join(", ") || "", // 配列を文字列に変換
+      tagsInput: article?.tags?.join(", ") || "",
       publishDate: article?.publishDate || new Date().toISOString().split("T")[0],
       mainImageUrl: article?.mainImageUrl || "",
       isPublished: article?.isPublished || false,
@@ -65,7 +58,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
   function onSubmit(values: ArticleFormValues) {
     if (!firestore) return;
 
-    // タグを配列に変換（カンマ区切り、空白除去、空文字除外）
     const tags = values.tagsInput 
       ? values.tagsInput.split(",").map(t => t.trim()).filter(t => t !== "") 
       : [];
@@ -89,103 +81,166 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FormField
-            control={form.control}
-            name="articleType"
-            render={({ field }) => (
-              <FormItem className="md:col-span-2">
-                <FormLabel>記事のタイプ</FormLabel>
-                <Tabs 
-                  onValueChange={field.onChange} 
-                  defaultValue={field.value} 
-                  className="w-full"
-                >
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="Standard" className="flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      標準記事（学内）
-                    </TabsTrigger>
-                    <TabsTrigger value="Note" className="flex items-center gap-2">
-                      <Share2 className="h-4 w-4" />
-                      note連携記事
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <div className="space-y-6">
+          <div className="flex items-center gap-2 text-primary font-bold border-b pb-2">
+            <Layout className="h-5 w-5" />
+            <h3>基本設定</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+              control={form.control}
+              name="articleType"
+              render={({ field }) => (
+                <FormItem className="md:col-span-2">
+                  <FormLabel>記事のタイプ</FormLabel>
+                  <Tabs 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value} 
+                    className="w-full"
+                  >
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="Standard" className="flex items-center gap-2">
+                        <FileText className="h-4 w-4" />
+                        標準記事（学内）
+                      </TabsTrigger>
+                      <TabsTrigger value="Note" className="flex items-center gap-2">
+                        <Share2 className="h-4 w-4" />
+                        note連携記事
+                      </TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                </FormItem>
+              )}
+            />
 
-          <FormField
-            control={form.control}
-            name="title"
-            render={({ field }) => (
-              <FormItem className="md:col-span-2">
-                <FormLabel>タイトル</FormLabel>
-                <FormControl>
-                  <Input placeholder="記事のタイトルを入力" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="categoryId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>カテゴリー</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem className="md:col-span-2">
+                  <FormLabel>タイトル</FormLabel>
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="カテゴリーを選択" />
-                    </SelectTrigger>
+                    <Input placeholder="記事のタイトルを入力" className="h-11 font-bold text-lg" {...field} />
                   </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Campus">学内ニュース</SelectItem>
-                    <SelectItem value="Event">イベント</SelectItem>
-                    <SelectItem value="Interview">インタビュー</SelectItem>
-                    <SelectItem value="Sports">スポーツ</SelectItem>
-                    <SelectItem value="Column">コラム</SelectItem>
-                    <SelectItem value="Opinion">オピニオン</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="categoryId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>カテゴリー</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="カテゴリーを選択" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Campus">学内ニュース</SelectItem>
+                      <SelectItem value="Event">イベント</SelectItem>
+                      <SelectItem value="Interview">インタビュー</SelectItem>
+                      <SelectItem value="Sports">スポーツ</SelectItem>
+                      <SelectItem value="Column">コラム</SelectItem>
+                      <SelectItem value="Opinion">オピニオン</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="publishDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>公開日</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="tagsInput"
+              render={({ field }) => (
+                <FormItem className="md:col-span-2">
+                  <FormLabel className="flex items-center gap-2">
+                    <Tag className="h-4 w-4" />
+                    タグ（カンマ区切り）
+                  </FormLabel>
+                  <FormControl>
+                    <Input placeholder="例: 新入生, サークル, 特集" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="mainImageUrl"
+              render={({ field }) => (
+                <FormItem className="md:col-span-2">
+                  <FormLabel>メイン画像URL</FormLabel>
+                  <FormControl>
+                    <Input placeholder="https://example.com/image.jpg" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {articleType === "Note" && (
+              <FormField
+                control={form.control}
+                name="noteUrl"
+                render={({ field }) => (
+                  <FormItem className="md:col-span-2 bg-purple-50 p-4 rounded-lg border border-purple-100">
+                    <FormLabel className="text-purple-700 font-bold flex items-center gap-2">
+                      <Share2 className="h-4 w-4" /> note記事URL
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="https://note.com/..." className="bg-white border-purple-200" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             )}
-          />
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="flex items-center gap-2 text-primary font-bold border-b pb-2">
+            <AlignLeft className="h-5 w-5" />
+            <h3>本文コンテンツ</h3>
+          </div>
 
           <FormField
             control={form.control}
-            name="publishDate"
+            name="content"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>公開日</FormLabel>
+                <FormLabel>記事の本文 {articleType === "Note" && "（公式サイト上の紹介文として使用されます）"}</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="tagsInput"
-            render={({ field }) => (
-              <FormItem className="md:col-span-2">
-                <FormLabel className="flex items-center gap-2">
-                  <Tag className="h-4 w-4" />
-                  タグ（カンマ区切りで複数入力可能）
-                </FormLabel>
-                <FormControl>
-                  <Input placeholder="例: 新入生, サークル, 特集" {...field} />
+                  <Textarea 
+                    placeholder={articleType === "Standard" ? "記事の本文を入力してください..." : "note記事の紹介文や、サイト独自の補足コメントを入力できます。"} 
+                    className="min-h-[500px] text-base leading-relaxed p-6 shadow-inner bg-slate-50 focus:bg-white transition-colors" 
+                    {...field} 
+                  />
                 </FormControl>
                 <FormDescription>
-                  キーワードをカンマ（ , ）で区切って自由に入力してください。
+                  改行はそのまま反映されます。HTMLタグは使用できません。
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -194,61 +249,13 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
 
           <FormField
             control={form.control}
-            name="mainImageUrl"
-            render={({ field }) => (
-              <FormItem className="md:col-span-2">
-                <FormLabel>メイン画像URL</FormLabel>
-                <FormControl>
-                  <Input placeholder="https://example.com/image.jpg" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {articleType === "Standard" ? (
-            <FormField
-              control={form.control}
-              name="content"
-              render={({ field }) => (
-                <FormItem className="md:col-span-2">
-                  <FormLabel>本文（標準記事）</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="原稿をここに貼り付けてください..." 
-                      className="min-h-[400px]" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          ) : (
-            <FormField
-              control={form.control}
-              name="noteUrl"
-              render={({ field }) => (
-                <FormItem className="md:col-span-2">
-                  <FormLabel>note記事URL</FormLabel>
-                  <FormControl>
-                    <Input placeholder="https://note.com/..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
-
-          <FormField
-            control={form.control}
             name="isPublished"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <FormItem className="flex flex-row items-center justify-between rounded-xl border border-primary/20 p-6 bg-primary/5 shadow-sm">
                 <div className="space-y-0.5">
-                  <FormLabel className="text-base">公開状態</FormLabel>
+                  <FormLabel className="text-base font-bold text-primary">サイトに公開する</FormLabel>
                   <FormDescription>
-                    オンにすると公式サイトに表示されます。
+                    オンにすると公式サイトのリストに表示されます。
                   </FormDescription>
                 </div>
                 <FormControl>
@@ -262,9 +269,9 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
           />
         </div>
 
-        <div className="flex justify-end gap-4 pt-4 border-t">
-          <Button type="button" variant="outline" onClick={onSuccess}>キャンセル</Button>
-          <Button type="submit">
+        <div className="flex justify-end gap-4 pt-6 border-t sticky bottom-0 bg-white/80 backdrop-blur-md pb-4 z-10">
+          <Button type="button" variant="outline" onClick={onSuccess} className="w-32">キャンセル</Button>
+          <Button type="submit" className="w-48 shadow-lg font-bold">
             {article?.id ? "変更を保存" : "記事を登録"}
           </Button>
         </div>
