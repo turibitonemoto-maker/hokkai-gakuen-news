@@ -7,7 +7,7 @@ import { Toaster } from "@/components/ui/toaster";
 // 管理サイトのため、検索エンジンにインデックスされないようメタタグを設定
 export const metadata: Metadata = {
   title: '北海学園新聞会 | コンテンツ管理システム',
-  description: '北海学園大学一部新聞会の公式コンテンツ管理システム (北海学園新聞会) です。',
+  description: '北海学園大学一部新聞会の公式コンテンツ管理システムです。',
   robots: {
     index: false,
     follow: false,
