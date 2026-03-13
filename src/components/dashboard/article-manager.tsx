@@ -82,7 +82,7 @@ export function ArticleManager() {
         if (tag && tag.trim()) tagsSet.add(tag.trim());
       });
     });
-    return Array.from(tagsSet).filter(tag => tag !== "note" && tag !== "Note"); // 重複排除
+    return Array.from(tagsSet).filter(tag => tag !== "note" && tag !== "Note");
   }, [allArticles]);
 
   const filteredArticles = useMemo(() => {
@@ -156,7 +156,7 @@ export function ArticleManager() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">記事・公開管理</h2>
-          <p className="text-sm font-bold text-slate-500 mt-1">記事の公開・非公開を一括管理します。</p>
+          <p className="text-sm font-bold text-slate-500 mt-1">学内・note記事の公開・非公開を一括管理します。</p>
         </div>
         <Button onClick={() => { setCurrentArticle(null); setIsEditing(true); }} className="w-full md:w-auto h-12 px-6 shadow-lg gap-2 font-black rounded-2xl">
           <Plus className="h-5 w-5" />
@@ -284,7 +284,7 @@ export function ArticleManager() {
                   {filteredArticles.length === 0 && !isLoading && (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center py-20 text-slate-400 font-bold italic">
-                        条件に一致する記事はありません。
+                        記事が見つかりません。
                       </TableCell>
                     </TableRow>
                   )}
@@ -303,12 +303,12 @@ export function ArticleManager() {
               <AlertDialogTitle className="text-2xl font-black">記事を完全に削除しますか？</AlertDialogTitle>
             </div>
             <AlertDialogDescription className="font-bold">
-              「{articleToDelete?.title}」を削除します。この操作は取り消せません。
+              「{articleToDelete?.title}」をデータベースから抹消します。この操作は取り消せません。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2 mt-6">
             <AlertDialogCancel className="rounded-xl font-bold h-12">キャンセル</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90 rounded-xl font-black h-12 px-8">削除する</AlertDialogAction>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90 rounded-xl font-black h-12 px-8">削除を実行</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

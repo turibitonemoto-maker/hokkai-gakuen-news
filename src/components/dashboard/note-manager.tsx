@@ -11,7 +11,7 @@ import {
   ImageOff,
   RefreshCw,
   Lock,
-  ChevronRight
+  ArrowRight
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -24,6 +24,7 @@ import { fetchNoteArticles } from "@/app/actions/sync-note";
 import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import Link from "next/link";
 
 export function NoteManager() {
   const [isSyncing, setIsSyncing] = useState(false);
@@ -92,7 +93,7 @@ export function NoteManager() {
           }, { merge: true });
         }
 
-        toast({ title: "同期完了", description: "最新のnote記事を287件取得しました（全件検証済み）。" });
+        toast({ title: "同期完了", description: "最新のnote記事を取得しました。記事管理で公開設定を行えます。" });
       } catch (e) {
         toast({ variant: "destructive", title: "同期エラー", description: "noteの取得に失敗しました。" });
       } finally {
@@ -130,8 +131,8 @@ export function NoteManager() {
     }, { merge: true });
 
     toast({ 
-      title: "採用しました", 
-      description: `「${article.title}」を下書きとして追加しました。` 
+      title: "記事管理へ送りました", 
+      description: `「${article.title}」を下書きとして採用しました。記事管理ページで公開してください。` 
     });
   };
 
@@ -172,18 +173,26 @@ export function NoteManager() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div className="space-y-1">
           <h2 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">note管理</h2>
-          <p className="text-sm font-bold text-slate-500">外部メディア（note）との高度な同期を管理します。</p>
+          <p className="text-sm font-bold text-slate-500">外部メディア（note）からの記事取得を管理します。</p>
         </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={startSyncProcess} 
-          disabled={isSyncing}
-          className="w-full md:w-auto gap-3 border-purple-200 text-purple-700 hover:bg-purple-50 font-black h-12 px-8 rounded-2xl shadow-sm"
-        >
-          <RefreshCw className={cn("h-5 w-5", isSyncing && "animate-spin")} />
-          最新の287件を同期 🔒
-        </Button>
+        <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+          <Link href="/admin/articles">
+            <Button variant="ghost" className="w-full md:w-auto gap-2 font-bold h-12 rounded-2xl">
+              記事管理へ移動
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </Link>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={startSyncProcess} 
+            disabled={isSyncing}
+            className="w-full md:w-auto gap-3 border-purple-200 text-purple-700 hover:bg-purple-50 font-black h-12 px-8 rounded-2xl shadow-sm"
+          >
+            <RefreshCw className={cn("h-5 w-5", isSyncing && "animate-spin")} />
+            noteから最新記事を取得 🔒
+          </Button>
+        </div>
       </div>
 
       <Card className="shadow-sm border-slate-200 overflow-hidden bg-white rounded-2xl md:rounded-[2rem]">
@@ -194,7 +203,7 @@ export function NoteManager() {
               note 投稿同期ハブ
             </CardTitle>
             <CardDescription className="text-xs md:text-sm font-bold text-purple-600/70">
-              lucky_minnow287 (北海学園大学一部新聞会) の全データを取得します。
+              lucky_minnow287 (北海学園大学一部新聞会) の全データを捕捉します。
             </CardDescription>
           </div>
         </CardHeader>
@@ -205,7 +214,7 @@ export function NoteManager() {
                 <div className="bg-purple-50 p-6 rounded-full animate-pulse">
                   <Loader2 className="h-12 w-12 animate-spin text-purple-500" />
                 </div>
-                <p className="text-sm text-slate-400 font-black uppercase tracking-widest">高度な解析を実行中...</p>
+                <p className="text-sm text-slate-400 font-black uppercase tracking-widest text-center px-6">noteサーバーから情報を解析中...</p>
               </div>
             ) : rssArticles.length > 0 ? (
               <Table>
@@ -240,7 +249,7 @@ export function NoteManager() {
                             <div className="flex flex-col min-w-0">
                               <span className="font-black text-slate-800 truncate text-sm md:text-base leading-tight group-hover:text-purple-700 transition-colors">{article.title}</span>
                               <a href={article.noteUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-purple-500 hover:underline flex items-center gap-1.5 mt-2 font-black uppercase tracking-tight">
-                                <ExternalLink className="h-3 w-3" /> オリジナルを検証
+                                <ExternalLink className="h-3 w-3" /> note原文をみる
                               </a>
                             </div>
                           </div>
@@ -254,7 +263,7 @@ export function NoteManager() {
                           ) : (
                             <Button size="sm" onClick={() => handleImport(article)} className="h-8 md:h-9 gap-2 font-black bg-white text-purple-600 border-2 border-purple-100 hover:bg-purple-50 hover:border-purple-300 shadow-sm rounded-xl px-3 md:px-5 text-[10px]">
                               <PlusCircle className="h-3 w-3 md:h-4 md:w-4" />
-                              取り込む
+                              採用する
                             </Button>
                           )}
                         </TableCell>
@@ -269,7 +278,7 @@ export function NoteManager() {
                   <Share2 className="h-8 w-8 md:h-10 md:w-10 opacity-20" />
                 </div>
                 <p className="font-black text-base md:text-lg text-slate-400">同期ハブを起動してください</p>
-                <p className="text-xs md:text-sm font-bold mt-2 opacity-60 px-6">右上の同期ボタンから全287件のデータを取得します。</p>
+                <p className="text-xs md:text-sm font-bold mt-2 opacity-60 px-6">右上のボタンから最新のnoteデータを一括取得し、記事管理へ送ることができます。</p>
               </div>
             )}
           </CardContent>
@@ -284,7 +293,7 @@ export function NoteManager() {
             </div>
             <DialogTitle className="text-xl md:text-2xl font-black text-slate-800 text-center">管制認証 🔒</DialogTitle>
             <DialogDescription className="text-center font-bold text-slate-500 text-sm">
-              noteデータの全同期には高度な権限が必要です。
+              noteデータの同期には管理者権限が必要です。
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 md:py-6 flex flex-col gap-2">
