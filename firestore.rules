@@ -10,7 +10,7 @@ service cloud.firestore {
       allow read, write: if request.auth != null;
     }
 
-    // 未ログインユーザー向けの閲覧許可
+    // 未ログインユーザー向けの閲覧許可（公式サイトの表示に必要）
     match /articles/{document=**} {
       allow read: if true;
     }

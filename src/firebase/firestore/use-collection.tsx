@@ -86,7 +86,6 @@ export function useCollection<T = any>(
         // 【最重要】認証同期ラグ（フライング）対策
         // ログイン状態に関わらず、権限エラー(permission-denied)が発生した場合は
         // アプリをクラッシュさせずに警告ログに留めます。
-        // これにより、セキュリティルールの反映待ちや認証情報の浸透待ちで画面が真っ白になるのを防ぎます。
         if (serverError.code === 'permission-denied') {
           console.warn(`Firestore (useCollection) [HANDLED]: 権限エラーまたは同期ラグを検知しました。再試行を待機しています... Path: ${path}`);
           setError(serverError);
