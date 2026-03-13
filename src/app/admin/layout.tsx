@@ -219,7 +219,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </h2>
           </div>
           <div className="flex items-center gap-2 md:gap-3">
-            <a href={PUBLIC_SITE_URL} target="_blank" rel="noopener noreferrer" className="hidden sm:block">
+            <a href="/articles" target="_blank" rel="noopener noreferrer" className="hidden sm:block">
               <Button variant="outline" size="sm" className="gap-2 border-primary/20 text-primary hover:bg-primary/5 font-bold rounded-xl h-9">
                 <Globe className="h-4 w-4" />
                 サイトを確認

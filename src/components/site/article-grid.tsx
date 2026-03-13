@@ -82,7 +82,8 @@ function ArticleCard({ article }: { article: any }) {
           {article.title}
         </h3>
 
-        <p className="text-sm text-slate-500 line-clamp-3 mb-6 leading-relaxed">
+        {/* 修正：whitespace-pre-wrap を追加して改行を維持 */}
+        <p className="text-sm text-slate-500 line-clamp-3 mb-6 leading-relaxed whitespace-pre-wrap">
           {article.content || "この記事の概要は現在準備中です。"}
         </p>
 
