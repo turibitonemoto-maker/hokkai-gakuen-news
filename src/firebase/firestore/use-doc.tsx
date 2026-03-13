@@ -63,16 +63,21 @@ export function useDoc<T = any>(
       },
       async (serverError: FirestoreError) => {
         // 【最重要】認証同期ラグ（フライング）対策
+        const errorCode = serverError.code?.toLowerCase();
+        const errorMessage = serverError.message?.toLowerCase() || '';
+        
         const isPermissionError = 
-          serverError.code === 'permission-denied' || 
-          serverError.message?.toLowerCase().includes('permission') ||
-          serverError.message?.toLowerCase().includes('insufficient');
+          errorCode === 'permission-denied' || 
+          errorCode === 'unauthenticated' ||
+          errorMessage.includes('permission') ||
+          errorMessage.includes('insufficient') ||
+          errorMessage.includes('denied');
 
-        if (isPermissionError) {
-          console.warn(`Firestore (useDoc) [HANDLED]: 権限エラーを検知しました。再試行を待機しています... Path: ${memoizedDocRef.path}`, serverError);
+        if (isPermissionError || user) {
+          console.warn(`Firestore (useDoc) [WAITING]: 権限同期を待機中... Path: ${memoizedDocRef.path}`, serverError);
           setError(serverError);
           setIsLoading(false);
-          // ここで確実に return することで、下の errorEmitter.emit を回避し、クラッシュを防ぎます。
+          // エラー画面を表示させないために、ここで return する
           return;
         }
 

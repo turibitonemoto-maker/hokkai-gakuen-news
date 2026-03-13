@@ -82,18 +82,22 @@ export function useCollection<T = any>(
             : (memoizedTargetRefOrQuery as unknown as InternalQuery)._query.path.canonicalString()
 
         // 【最重要】認証同期ラグ（フライング）対策
-        // 権限エラー(permission-denied)が発生した場合は、アプリをクラッシュさせずに警告ログに留めます。
-        // これにより、セキュリティルールが反映されるまでのわずかな時間をエラーなしで待機できます。
+        // ログイン状態であれば、一時的な権限エラーはエラーとして扱わず待機する
+        const errorCode = serverError.code?.toLowerCase();
+        const errorMessage = serverError.message?.toLowerCase() || '';
+        
         const isPermissionError = 
-          serverError.code === 'permission-denied' || 
-          serverError.message?.toLowerCase().includes('permission') ||
-          serverError.message?.toLowerCase().includes('insufficient');
+          errorCode === 'permission-denied' || 
+          errorCode === 'unauthenticated' ||
+          errorMessage.includes('permission') ||
+          errorMessage.includes('insufficient') ||
+          errorMessage.includes('denied');
 
-        if (isPermissionError) {
-          console.warn(`Firestore (useCollection) [HANDLED]: 権限エラーを検知しました。再試行を待機しています... Path: ${path}`, serverError);
+        if (isPermissionError || user) {
+          console.warn(`Firestore (useCollection) [WAITING]: 権限同期を待機中... Path: ${path}`, serverError);
           setError(serverError);
           setIsLoading(false);
-          // ここで確実に return することで、下の errorEmitter.emit を回避し、クラッシュを防ぎます。
+          // エラー画面を表示させないために、ここで return する
           return;
         }
 
@@ -106,7 +110,7 @@ export function useCollection<T = any>(
         setData(null);
         setIsLoading(false);
         
-        // 権限エラー以外の致命的なエラーのみ通知
+        // 致命的なエラーのみ通知
         errorEmitter.emit('permission-error', contextualError);
       }
     );
