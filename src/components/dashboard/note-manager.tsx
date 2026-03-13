@@ -70,7 +70,7 @@ export function NoteManager() {
 
   const startSyncProcess = () => {
     if (lockoutTime && lockoutTime > Date.now()) {
-      toast({ variant: "destructive", title: "ロック中", description: "頭を冷やして出直してください。" });
+      toast({ variant: "destructive", title: "ロック中", description: "頭を冷やしてください。" });
       return;
     }
     setShowPasswordDialog(true);
@@ -108,7 +108,7 @@ export function NoteManager() {
         setLockoutTime(until);
         localStorage.setItem("lockout_until", until.toString());
         setShowPasswordDialog(false);
-        toast({ variant: "destructive", title: "アクセス拒否", description: "残心が足りません。頭を冷やしてください。" });
+        toast({ variant: "destructive", title: "アクセス拒否", description: "頭を冷やしてください。" });
       } else {
         toast({ variant: "destructive", title: "パスワード不一致", description: `あと ${3 - newCount} 回でロックされます。` });
       }
@@ -143,12 +143,13 @@ export function NoteManager() {
               fill
               className="object-cover"
               unoptimized
+              sizes="(max-width: 768px) 100vw, 600px"
             />
           </div>
-          <h2 className="text-2xl font-black mb-4">残心が足りません</h2>
+          <h2 className="text-2xl font-black mb-4">アクセス禁止</h2>
           <p className="text-slate-400 font-bold mb-8">頭を冷やして出直してください。<br />再試行まであと約 {Math.ceil((lockoutTime - Date.now()) / 60000)} 分です。</p>
           <Button variant="outline" className="border-slate-700 text-slate-400" onClick={() => window.location.reload()}>
-            再起動
+            システム再起動
           </Button>
         </Card>
       </div>

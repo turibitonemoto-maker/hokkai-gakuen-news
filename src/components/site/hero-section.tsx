@@ -51,6 +51,7 @@ export function HeroSection({ images }: HeroSectionProps) {
                   className="object-cover opacity-70"
                   priority={index === 0}
                   data-ai-hint={image.imageHint || heroPlaceholder.imageHint}
+                  sizes="100vw"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
                 <div className="absolute inset-0 flex flex-col justify-end p-8 md:p-16 max-w-7xl mx-auto w-full">

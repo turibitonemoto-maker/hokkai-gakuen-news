@@ -87,7 +87,7 @@ export function PresidentMessageManager() {
         const until = Date.now() + 5 * 60 * 1000;
         setLockoutTime(until);
         localStorage.setItem("lockout_until", until.toString());
-        toast({ variant: "destructive", title: "アクセス拒否", description: "残心が足りません。頭を冷やしてください。" });
+        toast({ variant: "destructive", title: "アクセス拒否", description: "頭を冷やしてください。" });
       } else {
         toast({ variant: "destructive", title: "パスワードが正しくありません", description: `あと ${3 - newCount} 回でロックされます。` });
       }
@@ -119,12 +119,13 @@ export function PresidentMessageManager() {
               fill
               className="object-cover"
               unoptimized
+              sizes="(max-width: 768px) 100vw, 600px"
             />
           </div>
-          <h2 className="text-2xl font-black mb-4">残心が足りません</h2>
+          <h2 className="text-2xl font-black mb-4">アクセス禁止</h2>
           <p className="text-slate-400 font-bold mb-8">頭を冷やして出直してください。<br />再試行まであと約 {Math.ceil((lockoutTime - Date.now()) / 60000)} 分です。</p>
           <Button variant="outline" className="border-slate-700 text-slate-400" onClick={() => window.location.reload()}>
-            再起動
+            システム再起動
           </Button>
         </Card>
       </div>
