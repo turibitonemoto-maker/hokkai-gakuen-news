@@ -32,6 +32,7 @@ export function NoteManager() {
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [failCount, setFailCount] = useState(0);
   const [lockoutTime, setLockoutTime] = useState<number | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
   
   const firestore = useFirestore();
   const { user } = useUser();
@@ -102,11 +103,15 @@ export function NoteManager() {
       const newCount = failCount + 1;
       setFailCount(newCount);
       if (newCount >= 3) {
-        const until = Date.now() + 5 * 60 * 1000;
-        setLockoutTime(until);
-        localStorage.setItem("lockout_until", until.toString());
-        setShowPasswordDialog(false);
-        toast({ variant: "destructive", title: "アクセス拒否", description: "頭を冷やしてください。" });
+        setIsVerifying(true);
+        setTimeout(() => {
+          setIsVerifying(false);
+          const until = Date.now() + 5 * 60 * 1000;
+          setLockoutTime(until);
+          localStorage.setItem("lockout_until", until.toString());
+          setShowPasswordDialog(false);
+          toast({ variant: "destructive", title: "アクセス拒否", description: "頭を冷やしてください。" });
+        }, 800);
       } else {
         toast({ variant: "destructive", title: "パスワード不一致", description: `あと ${3 - newCount} 回でロックされます。` });
       }
@@ -130,15 +135,23 @@ export function NoteManager() {
     });
   };
 
+  if (isVerifying) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="font-black text-slate-400 animate-pulse">パスワードを確認中...</p>
+      </div>
+    );
+  }
+
   if (lockoutTime && lockoutTime > Date.now()) {
     return (
       <div className="max-w-4xl mx-auto mt-10 animate-in fade-in zoom-in duration-500">
         <Card className="shadow-2xl border-none bg-black text-white rounded-[3rem] overflow-hidden text-center p-0">
           <div className="relative aspect-video w-full bg-slate-900">
             <iframe 
-              src="https://drive.google.com/file/d/1Exd3NJVJ4KeS5PNI9IgZJEDsWgvjshBJ/preview?autoplay=1" 
+              src="https://drive.google.com/file/d/1Exd3NJVJ4KeS5PNI9IgZJEDsWgvjshBJ/preview" 
               className="absolute inset-0 w-full h-full border-none"
-              allow="autoplay"
               title="Trap Video"
             ></iframe>
           </div>

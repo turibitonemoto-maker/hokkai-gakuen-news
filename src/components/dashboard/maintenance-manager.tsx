@@ -127,9 +127,8 @@ export function MaintenanceManager() {
         <Card className="shadow-2xl border-none bg-black text-white rounded-[3rem] overflow-hidden text-center p-0">
           <div className="relative aspect-video w-full bg-slate-900">
             <iframe 
-              src="https://drive.google.com/file/d/1Exd3NJVJ4KeS5PNI9IgZJEDsWgvjshBJ/preview?autoplay=1" 
+              src="https://drive.google.com/file/d/1Exd3NJVJ4KeS5PNI9IgZJEDsWgvjshBJ/preview" 
               className="absolute inset-0 w-full h-full border-none"
-              allow="autoplay"
               title="Trap Video"
             ></iframe>
           </div>
