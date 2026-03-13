@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { FileText, Share2, Tag, Layout, AlignLeft } from "lucide-react";
+import { FileText, Share2, Tag, Layout, AlignLeft, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const articleSchema = z.object({
@@ -94,23 +94,48 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
               name="articleType"
               render={({ field }) => (
                 <FormItem className="md:col-span-2">
-                  <FormLabel className="text-xs font-bold text-slate-500 uppercase">記事タイプを選択</FormLabel>
-                  <Tabs 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value} 
-                    className="w-full"
-                  >
-                    <TabsList className="grid w-full grid-cols-2 h-12">
-                      <TabsTrigger value="Standard" className="flex items-center gap-2 font-bold data-[state=active]:bg-primary data-[state=active]:text-white">
-                        <FileText className="h-4 w-4" />
-                        学内記事
-                      </TabsTrigger>
-                      <TabsTrigger value="Note" className="flex items-center gap-2 font-bold data-[state=active]:bg-purple-600 data-[state=active]:text-white">
-                        <Share2 className="h-4 w-4" />
-                        note記事
-                      </TabsTrigger>
-                    </TabsList>
-                  </Tabs>
+                  <FormLabel className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
+                    記事タイプ
+                    {article?.id && <Lock className="h-3 w-3" />}
+                  </FormLabel>
+                  {article?.id ? (
+                    <div className={cn(
+                      "flex items-center gap-3 px-4 py-3 rounded-lg border font-bold text-sm",
+                      field.value === "Note" 
+                        ? "bg-purple-50 border-purple-200 text-purple-700" 
+                        : "bg-blue-50 border-blue-200 text-primary"
+                    )}>
+                      {field.value === "Note" ? (
+                        <>
+                          <Share2 className="h-4 w-4" />
+                          note記事（採用済みのため変更不可）
+                        </>
+                      ) : (
+                        <>
+                          <FileText className="h-4 w-4" />
+                          学内記事（作成済みのため変更不可）
+                        </>
+                      )}
+                      <input type="hidden" {...field} />
+                    </div>
+                  ) : (
+                    <Tabs 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value} 
+                      className="w-full"
+                    >
+                      <TabsList className="grid w-full grid-cols-2 h-12">
+                        <TabsTrigger value="Standard" className="flex items-center gap-2 font-bold data-[state=active]:bg-primary data-[state=active]:text-white">
+                          <FileText className="h-4 w-4" />
+                          学内記事
+                        </TabsTrigger>
+                        <TabsTrigger value="Note" className="flex items-center gap-2 font-bold data-[state=active]:bg-purple-600 data-[state=active]:text-white">
+                          <Share2 className="h-4 w-4" />
+                          note記事
+                        </TabsTrigger>
+                      </TabsList>
+                    </Tabs>
+                  )}
                 </FormItem>
               )}
             />
