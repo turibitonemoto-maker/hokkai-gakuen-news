@@ -2,7 +2,7 @@
   "entities": {
     "Article": {
       "title": "Article",
-      "description": "記事データ（学内記事・note記事）。",
+      "description": "記事データ。表示用サイトは isPublished == true のもののみを取得すること。",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
@@ -15,7 +15,7 @@
         "publishDate": { "type": "string", "format": "date" },
         "mainImageUrl": { "type": "string", "format": "uri" },
         "isPublished": { "type": "boolean" },
-        "viewCount": { "type": "number", "description": "閲覧数" },
+        "viewCount": { "type": "number" },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
@@ -39,7 +39,7 @@
     },
     "Inquiry": {
       "title": "Inquiry",
-      "description": "読者からのお問い合わせ。",
+      "description": "お問い合わせ。",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
@@ -49,18 +49,16 @@
         "message": { "type": "string" },
         "isRead": { "type": "boolean" },
         "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["name", "email", "message"]
+      }
     },
-    "HeroImage": {
-      "title": "HeroImage",
-      "description": "ヒーロー背景。",
+    "MaintenanceConfig": {
+      "title": "MaintenanceConfig",
+      "description": "表示用サイトのメンテナンス制御フラグ。",
       "type": "object",
       "properties": {
-        "id": { "type": "string" },
-        "imageUrl": { "type": "string", "format": "uri" },
-        "title": { "type": "string" },
-        "order": { "type": "number" }
+        "isMaintenanceMode": { "type": "boolean" },
+        "maintenanceMessage": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       }
     }
   },
@@ -70,23 +68,27 @@
   "firestore": {
     "/articles/{articleId}": {
       "schema": { "$ref": "#/backend/entities/Article" },
-      "description": "記事データ全般。"
+      "description": "記事データ。"
     },
     "/ads/{adId}": {
       "schema": { "$ref": "#/backend/entities/Ad" },
-      "description": "バナー広告。"
+      "description": "広告データ。"
     },
     "/inquiries/{inquiryId}": {
       "schema": { "$ref": "#/backend/entities/Inquiry" },
-      "description": "お問い合わせデータ。"
+      "description": "お問い合わせ。"
     },
-    "/hero-images/{imageId}": {
-      "schema": { "$ref": "#/backend/entities/HeroImage" },
-      "description": "ヒーロー画像。"
+    "/settings/maintenance": {
+      "schema": { "$ref": "#/backend/entities/MaintenanceConfig" },
+      "description": "メンテナンス設定。"
     },
-    "/settings/{settingId}": {
+    "/settings/president-message": {
       "schema": { "type": "object" },
-      "description": "システム設定（メンテナンス、会長挨拶、同期ログなど）。"
+      "description": "会長挨拶。"
+    },
+    "/settings/note-sync": {
+      "schema": { "type": "object" },
+      "description": "note同期ログ。"
     }
   }
 }
