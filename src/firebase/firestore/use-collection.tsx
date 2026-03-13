@@ -80,32 +80,33 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       async (serverError: FirestoreError) => {
+        const path: string =
+          memoizedTargetRefOrQuery.type === 'collection'
+            ? (memoizedTargetRefOrQuery as CollectionReference).path
+            : (memoizedTargetRefOrQuery as unknown as InternalQuery)._query.path.canonicalString()
+
         // 【最重要】認証同期ラグ（フライング）対策
         // ログイン済み（またはログイン中）であるにもかかわらず権限エラーが出た場合は、
         // サーバー側での認証情報の浸透待ちと判断し、RSOD（赤画面）を出さずに警告にとどめる
         const currentAuthUser = getAuth().currentUser;
         const isAuthLikelyPresent = !!(user || currentAuthUser);
+        const isPermissionError = serverError.code === 'permission-denied' || serverError.message.toLowerCase().includes('permission');
         
-        if ((serverError.code === 'permission-denied' || serverError.message.includes('permission')) && isAuthLikelyPresent) {
-          console.warn("Firestore (useCollection): 認証同期ラグを検知しました。権限の浸透を待機しています...");
+        if (isPermissionError && isAuthLikelyPresent) {
+          console.warn(`Firestore (useCollection): 認証同期ラグを検知しました。権限の浸透を待機しています... Path: ${path}`);
+          setIsLoading(false);
           return;
         }
-
-        const path: string =
-          memoizedTargetRefOrQuery.type === 'collection'
-            ? (memoizedTargetRefOrQuery as CollectionReference).path
-            : (memoizedTargetRefOrQuery as unknown as InternalQuery)._query.path.canonicalString()
 
         const contextualError = new FirestorePermissionError({
           operation: 'list',
           path,
         })
 
+        // 致命的な権限エラーの場合のみ、グローバル通知を行ってアプリを停止させる
         setError(contextualError)
         setData(null)
         setIsLoading(false)
-
-        // 本当に権限がない場合（かつラグでもない場合）のみグローバル通知
         errorEmitter.emit('permission-error', contextualError);
       }
     );

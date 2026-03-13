@@ -68,9 +68,11 @@ export function useDoc<T = any>(
         // 【最重要】認証同期ラグ（フライング）対策
         const currentAuthUser = getAuth().currentUser;
         const isAuthLikelyPresent = !!(user || currentAuthUser);
+        const isPermissionError = serverError.code === 'permission-denied' || serverError.message.toLowerCase().includes('permission');
 
-        if ((serverError.code === 'permission-denied' || serverError.message.includes('permission')) && isAuthLikelyPresent) {
-          console.warn("Firestore (useDoc): 認証同期ラグを検知しました。権限の浸透を待機しています...");
+        if (isPermissionError && isAuthLikelyPresent) {
+          console.warn(`Firestore (useDoc): 認証同期ラグを検知しました。権限の浸透を待機しています... Path: ${memoizedDocRef.path}`);
+          setIsLoading(false);
           return;
         }
 
@@ -82,7 +84,6 @@ export function useDoc<T = any>(
         setError(contextualError)
         setData(null)
         setIsLoading(false)
-
         errorEmitter.emit('permission-error', contextualError);
       }
     );
