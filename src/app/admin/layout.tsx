@@ -14,7 +14,8 @@ import {
   Globe,
   ExternalLink,
   Share2,
-  Loader2
+  Loader2,
+  Newspaper
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -64,11 +65,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
+  // 未ログイン時の表示：サイトのブランドイメージを維持したログイン画面
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#1e293b] p-4">
-        <div className="w-full max-w-md">
-          <LoginForm />
+      <div className="min-h-screen flex flex-col bg-[#F0F2F5]">
+        <header className="py-6 px-8 bg-white border-b shadow-sm">
+          <Link href="/" className="flex items-center gap-3 w-fit">
+            <div className="bg-primary p-2 rounded-xl text-white">
+              <Newspaper className="h-6 w-6" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-slate-800 leading-tight">Hokkai Gakuen News 1</h1>
+              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">CMS 管理システム</p>
+            </div>
+          </Link>
+        </header>
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="w-full max-w-md">
+            <LoginForm />
+          </div>
         </div>
       </div>
     );
@@ -86,7 +101,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       >
         <div className="p-6 flex items-center gap-3 border-b border-slate-700/50">
           <div className="bg-primary text-white p-2 rounded-lg shrink-0">
-            <LayoutDashboard className="h-5 w-5" />
+            <Newspaper className="h-5 w-5" />
           </div>
           {isSidebarOpen && (
             <div className="overflow-hidden whitespace-nowrap">

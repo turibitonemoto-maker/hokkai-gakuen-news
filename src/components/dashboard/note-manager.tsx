@@ -79,7 +79,7 @@ export function NoteManager() {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div>
         <h2 className="text-2xl font-bold text-slate-800">note記事の選別・採用</h2>
-        <p className="text-sm text-slate-500">外部メディア（note）の最新記事を確認し、掲載するものを「下書き」として取り込みます。</p>
+        <p className="text-sm text-slate-500">外部メディア（note）の最新記事を確認し、公式サイトに掲載するものを「下書き」として取り込みます。</p>
       </div>
 
       <Card className="shadow-sm border-slate-200">
