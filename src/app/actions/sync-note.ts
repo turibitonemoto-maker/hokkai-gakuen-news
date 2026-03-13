@@ -16,9 +16,13 @@ export async function fetchNoteArticles() {
     const feed = await parser.parseURL(NOTE_RSS_URL);
 
     return feed.items.map((item, index) => {
-      // noteのRSSから画像URLを抽出（記事の先頭画像など）
-      // 画像が見つからない場合は空文字列にする
-      const firstImage = item.content?.match(/<img[^>]+src="([^">]+)"/)?.[1] || "";
+      // noteのRSSから画像URLを抽出（より広範なパターンに対応）
+      // content または contentSnippet (description) の中から img タグを探す
+      const searchTarget = (item.content || "") + (item.description || "");
+      
+      // 通常の src 属性だけでなく、note特有の属性やエンコードされたパターンにも配慮
+      const imageMatch = searchTarget.match(/<img[^>]+src=["']([^"'>]+)["']/i);
+      const firstImage = imageMatch ? imageMatch[1] : "";
 
       // リンクからnote固有のIDを抽出
       const guid = item.guid || item.link || "";
