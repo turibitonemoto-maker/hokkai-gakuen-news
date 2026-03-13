@@ -14,6 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { FileText, Share2, Tag, Layout, AlignLeft } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const articleSchema = z.object({
   title: z.string().min(1, "タイトルを入力してください"),
