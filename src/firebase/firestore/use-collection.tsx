@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -85,11 +84,16 @@ export function useCollection<T = any>(
         // 【最重要】認証同期ラグ（フライング）対策
         // 権限エラー(permission-denied)が発生した場合は、アプリをクラッシュさせずに警告ログに留めます。
         // これにより、セキュリティルールが反映されるまでのわずかな時間をエラーなしで待機できます。
-        if (serverError.code === 'permission-denied' || serverError.message.toLowerCase().includes('permissions')) {
+        const isPermissionError = 
+          serverError.code === 'permission-denied' || 
+          serverError.message?.toLowerCase().includes('permission') ||
+          serverError.message?.toLowerCase().includes('insufficient');
+
+        if (isPermissionError) {
           console.warn(`Firestore (useCollection) [HANDLED]: 権限エラーを検知しました。再試行を待機しています... Path: ${path}`);
           setError(serverError);
           setIsLoading(false);
-          // ここで return することで、下の errorEmitter.emit を回避し、クラッシュを防ぎます。
+          // ここで確実に return することで、下の errorEmitter.emit を回避し、クラッシュを防ぎます。
           return;
         }
 
