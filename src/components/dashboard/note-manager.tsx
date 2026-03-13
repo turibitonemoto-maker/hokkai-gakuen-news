@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc, serverTimestamp } from "firebase/firestore";
 import { 
@@ -70,10 +70,6 @@ export function NoteManager() {
     }
   };
 
-  useEffect(() => {
-    handleSync();
-  }, []);
-
   const handleImport = (article: any) => {
     if (!firestore) return;
     const docRef = doc(firestore, "articles", article.id);
@@ -82,11 +78,12 @@ export function NoteManager() {
       ...article,
       isPublished: false,
       updatedAt: new Date().toISOString(),
+      updatedBy: user?.email || "unknown"
     }, { merge: true });
 
     toast({ 
       title: "採用しました", 
-      description: `「${article.title}」を記事管理に下書きとして追加しました。` 
+      description: `「${article.title}」を下書きとして追加しました。` 
     });
   };
 
@@ -102,14 +99,14 @@ export function NoteManager() {
           size="sm" 
           onClick={handleSync} 
           disabled={isSyncing}
-          className="gap-2 border-primary/20 text-primary hover:bg-primary/5 font-bold"
+          className="gap-2 border-primary/20 text-primary hover:bg-primary/5 font-bold h-10 px-6"
         >
           <RefreshCw className={cn("h-4 w-4", isSyncing && "animate-spin")} />
-          最新記事をチェック
+          更新
         </Button>
       </div>
 
-      <Card className="shadow-sm border-slate-200 overflow-hidden">
+      <Card className="shadow-sm border-slate-200 overflow-hidden bg-white">
         <CardHeader className="bg-purple-50/50 border-b flex flex-row items-center justify-between">
           <div>
             <CardTitle className="text-lg flex items-center gap-2 text-purple-700">
@@ -122,13 +119,16 @@ export function NoteManager() {
           </div>
           <div className="text-[10px] font-bold text-purple-400 uppercase tracking-widest flex items-center gap-2">
             <Clock className="h-3 w-3" />
-            最終チェック: {isSyncing ? "同期中..." : "完了"}
+            最終チェック: {isSyncing ? "同期中..." : "待機中"}
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          {isSyncing || isDbLoading ? (
-            <div className="p-20 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-purple-400" /></div>
-          ) : (
+          {isSyncing || (isDbLoading && rssArticles.length === 0) ? (
+            <div className="p-20 flex flex-col items-center gap-4">
+              <Loader2 className="h-10 w-10 animate-spin text-purple-400" />
+              <p className="text-sm text-slate-400 font-bold">データを取得しています...</p>
+            </div>
+          ) : rssArticles.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow className="bg-slate-50/50">
@@ -146,7 +146,14 @@ export function NoteManager() {
                         <div className="flex gap-4 items-center py-2">
                           <div className="relative h-12 w-20 rounded-lg overflow-hidden border bg-slate-50 flex-shrink-0">
                             {article.mainImageUrl ? (
-                              <Image src={article.mainImageUrl} alt="" fill className="object-cover" unoptimized />
+                              <Image 
+                                src={article.mainImageUrl} 
+                                alt="" 
+                                fill 
+                                className="object-cover" 
+                                unoptimized 
+                                sizes="80px"
+                              />
                             ) : (
                               <ImageOff className="h-4 w-4 m-auto opacity-20" />
                             )}
@@ -177,6 +184,11 @@ export function NoteManager() {
                 })}
               </TableBody>
             </Table>
+          ) : (
+            <div className="py-20 text-center text-slate-400">
+              <Share2 className="h-10 w-10 mx-auto opacity-20 mb-2" />
+              <p className="font-bold">「更新」ボタンを押して最新のnote記事を取得してください</p>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -184,7 +196,7 @@ export function NoteManager() {
       <div className="bg-slate-100/50 p-6 rounded-2xl border border-dashed border-slate-200 text-center">
         <p className="text-sm text-slate-600 font-medium">
           採用した記事の公開・非公開の管理は 
-          <Link href="/admin/articles" className="text-primary font-bold hover:underline mx-1">記事管理</Link> 
+          <Link href="/admin/articles" className="text-primary font-bold hover:underline mx-1">記事・公開管理</Link> 
           で行います。
         </p>
       </div>

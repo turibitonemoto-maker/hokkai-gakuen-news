@@ -1,9 +1,10 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useFirestore } from "@/firebase";
+import { useFirestore, useUser } from "@/firebase";
 import { collection, doc, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +38,7 @@ interface ArticleFormProps {
 
 export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
   const firestore = useFirestore();
+  const { user } = useUser();
   
   const form = useForm<ArticleFormValues>({
     resolver: zodResolver(articleSchema),
@@ -67,6 +69,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       ...rest,
       tags,
       updatedAt: serverTimestamp(),
+      updatedBy: user?.email || "unknown"
     };
 
     if (article?.id) {
@@ -96,7 +99,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                 <FormItem className="md:col-span-2">
                   <FormLabel className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
                     記事タイプ
-                    {article?.id && <Lock className="h-3 w-3" />}
                   </FormLabel>
                   {article?.id ? (
                     <div className={cn(
@@ -108,12 +110,12 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                       {field.value === "Note" ? (
                         <>
                           <Share2 className="h-4 w-4" />
-                          note記事（採用済みのため変更不可）
+                          note記事
                         </>
                       ) : (
                         <>
                           <FileText className="h-4 w-4" />
-                          学内記事（作成済みのため変更不可）
+                          学内記事
                         </>
                       )}
                       <input type="hidden" {...field} />

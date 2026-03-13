@@ -14,7 +14,8 @@ import {
   Database,
   UserCheck,
   Settings,
-  AlertCircle
+  AlertCircle,
+  User
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -90,7 +91,7 @@ export default function AdminDashboard() {
           {maintenanceConfig?.isMaintenanceMode ? (
             <Badge variant="destructive" className="px-3 py-1 flex gap-2 items-center animate-pulse shadow-md">
               <ShieldAlert className="h-3 w-3" />
-              表示サイト: メンテナンス中
+              表示サイト: 停止中
             </Badge>
           ) : (
             <Badge variant="outline" className="bg-green-50 border-green-200 text-green-700 px-3 py-1 flex gap-2 items-center shadow-sm">
@@ -129,7 +130,7 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="lg:col-span-2 shadow-sm border-slate-200 overflow-hidden">
+        <Card className="lg:col-span-2 shadow-sm border-slate-200 overflow-hidden bg-white">
           <CardHeader className="bg-white border-b border-slate-50">
             <CardTitle className="text-base font-bold flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-primary" />
@@ -162,9 +163,16 @@ export default function AdminDashboard() {
                         </Badge>
                         <span className="text-sm font-bold text-slate-700 truncate max-w-[200px]">{article.title}</span>
                       </div>
-                      <span className="text-[10px] text-slate-400 mt-1">
-                        更新: {new Date(article.updatedAt || "").toLocaleString("ja-JP")}
-                      </span>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[10px] text-slate-400">
+                          更新: {new Date(article.updatedAt || "").toLocaleString("ja-JP")}
+                        </span>
+                        {article.updatedBy && (
+                          <span className="text-[10px] text-primary flex items-center gap-1 font-bold">
+                            <User className="h-2 w-2" /> {article.updatedBy}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <Badge variant={article.isPublished ? "default" : "outline"} className={article.isPublished ? "bg-green-100 text-green-700 border-green-200 text-[10px]" : "text-slate-400 text-[10px]"}>
                       {article.isPublished ? "公開中" : "下書き"}
@@ -178,7 +186,7 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm border-slate-200">
+        <Card className="shadow-sm border-slate-200 bg-white">
           <CardHeader>
             <CardTitle className="text-base font-bold">クイック操作</CardTitle>
           </CardHeader>
@@ -224,7 +232,7 @@ function QuickStatCard({ title, value, delta, icon: Icon, color, href }: any) {
 
   return (
     <Link href={href}>
-      <Card className="shadow-sm border-slate-200 hover:shadow-md transition-all cursor-pointer h-full group">
+      <Card className="shadow-sm border-slate-200 hover:shadow-md transition-all cursor-pointer h-full group bg-white">
         <CardContent className="p-6">
           <div className="flex justify-between items-start">
             <div className={cn("p-2 rounded-xl border transition-transform group-hover:scale-110", colorMap[color])}>

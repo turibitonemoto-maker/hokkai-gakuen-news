@@ -35,9 +35,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   Opinion: "オピニオン",
 };
 
-/**
- * カテゴリー・タイプに応じた固有のカラーを返却
- */
 const getTagColor = (tag: string, isActive: boolean) => {
   const colorMap: Record<string, string> = {
     "学内記事": "bg-primary",
@@ -116,7 +113,8 @@ export function ArticleManager() {
     
     updateDocumentNonBlocking(docRef, { 
       isPublished: !article.isPublished,
-      updatedAt: serverTimestamp() 
+      updatedAt: serverTimestamp(),
+      updatedBy: user?.email || "unknown"
     });
 
     toast({ 
@@ -158,7 +156,7 @@ export function ArticleManager() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800">全記事・公開管理</h2>
+          <h2 className="text-2xl font-bold text-slate-800">記事・公開管理</h2>
           <p className="text-sm text-slate-500">記事ごとの閲覧数を確認し、公開・非公開を一括管理します。</p>
         </div>
         <Button onClick={() => { setCurrentArticle(null); setIsEditing(true); }} className="h-11 px-6 shadow-md gap-2 font-bold">
@@ -179,7 +177,7 @@ export function ArticleManager() {
         <CardHeader className="pb-3 border-b bg-slate-50/30">
           <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-500 uppercase tracking-widest">
             <Filter className="h-4 w-4" />
-            タイプ・カテゴリー フィルター
+            カテゴリー・タイプ フィルター
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4">

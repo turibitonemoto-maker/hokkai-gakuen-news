@@ -10,12 +10,8 @@ import { User, MessageCircle, ExternalLink, TrendingUp } from 'lucide-react';
 import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { increment } from 'firebase/firestore';
 import { getPlaceholderById } from '@/app/lib/placeholder-images';
+import { useMemo } from 'react';
 
-/**
- * サイドバーコンテンツ
- * 会長挨拶と広告エリアを表示します。
- * 広告がない場合は、セクション自体を非表示にします。
- */
 export function SidebarContent({ ads }: { ads: any[] }) {
   const firestore = useFirestore();
   const presidentRef = useMemoFirebase(() => {
@@ -24,7 +20,18 @@ export function SidebarContent({ ads }: { ads: any[] }) {
   }, [firestore]);
   
   const { data: president } = useDoc(presidentRef);
-  const presidentPlaceholder = getPlaceholderById('hero-static-1'); // 代替画像
+  const presidentPlaceholder = getPlaceholderById('hero-static-1');
+
+  // 期限切れの広告をフィルタリング
+  const activeAds = useMemo(() => {
+    if (!ads) return [];
+    const now = new Date();
+    return ads.filter(ad => {
+      if (ad.endDate && new Date(ad.endDate) < now) return false;
+      if (ad.startDate && new Date(ad.startDate) > now) return false;
+      return true;
+    });
+  }, [ads]);
 
   const handleAdClick = (ad: any) => {
     if (!firestore) return;
@@ -34,7 +41,6 @@ export function SidebarContent({ ads }: { ads: any[] }) {
 
   return (
     <div className="space-y-10 sticky top-28">
-      {/* 会長挨拶セクション */}
       {president && (
         <Card className="border-none shadow-lg bg-white rounded-2xl overflow-hidden">
           <CardHeader className="bg-primary/5 border-b border-primary/10 pb-4">
@@ -45,13 +51,13 @@ export function SidebarContent({ ads }: { ads: any[] }) {
           </CardHeader>
           <CardContent className="pt-6">
             <div className="flex flex-col items-center mb-6">
-              <div className="relative h-24 w-24 rounded-2xl overflow-hidden shadow-md mb-4 border-2 border-white">
+              <div className="relative h-24 w-24 rounded-2xl overflow-hidden shadow-md mb-4 border-2 border-white bg-slate-50">
                 <Image
                   src={president.authorImageUrl || presidentPlaceholder.imageUrl}
                   alt={president.authorName || "会長"}
                   fill
                   className="object-cover"
-                  data-ai-hint="person portrait"
+                  sizes="96px"
                 />
               </div>
               <h4 className="font-bold text-slate-800 text-lg">{president.authorName}</h4>
@@ -67,15 +73,14 @@ export function SidebarContent({ ads }: { ads: any[] }) {
         </Card>
       )}
 
-      {/* 広告エリア：広告が存在する場合のみセクション全体を表示 */}
-      {ads && ads.length > 0 && (
+      {activeAds.length > 0 && (
         <section className="space-y-4">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="h-4 w-4 text-accent" />
             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">スポンサー</h3>
           </div>
           <div className="space-y-4">
-            {ads.map((ad) => (
+            {activeAds.map((ad) => (
               <a 
                 key={ad.id} 
                 href={ad.linkUrl} 
@@ -91,6 +96,7 @@ export function SidebarContent({ ads }: { ads: any[] }) {
                     fill
                     className="object-contain p-2 bg-white group-hover:scale-105 transition-transform"
                     unoptimized
+                    sizes="(max-width: 768px) 100vw, 300px"
                   />
                   <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 transition-colors flex items-center justify-center">
                     <ExternalLink className="h-6 w-6 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />

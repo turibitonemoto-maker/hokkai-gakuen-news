@@ -1,10 +1,11 @@
+
 "use client";
 
 import { useState } from "react";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Loader2, AlertTriangle } from "lucide-react";
+import { Plus, Trash2, Loader2, AlertTriangle, ImageIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import Image from "next/image";
@@ -27,7 +28,6 @@ export function HeroManager() {
   const { toast } = useToast();
 
   const heroQuery = useMemoFirebase(() => {
-    // ユーザーが存在する時だけ読み込みを実行する
     if (!firestore || !user) return null;
     return collection(firestore, "hero-images");
   }, [firestore, user]);
@@ -35,42 +35,48 @@ export function HeroManager() {
   const { data: heroImages, isLoading } = useCollection(heroQuery);
 
   const handleAdd = () => {
+    if (heroImages && heroImages.length >= 5) {
+      toast({
+        variant: "destructive",
+        title: "追加できません",
+        description: "ヒーロー画像は最大5枚までです。既存の画像を削除してください。",
+      });
+      return;
+    }
+
     const url = prompt("画像のURLを入力してください:");
     if (url && firestore) {
       const colRef = collection(firestore, "hero-images");
       addDocumentNonBlocking(colRef, {
         imageUrl: url,
-        title: "新しい背景",
+        title: "スライド画像",
         order: (heroImages?.length || 0) + 1
       });
       toast({
         title: "画像を追加しました",
-        description: "ヒーロー画像を一覧に追加しました。",
+        description: "ヒーロー画像を追加しました。",
       });
     }
   };
 
   const confirmDelete = () => {
     if (!imageToDelete || !firestore) return;
-    
     const docRef = doc(firestore, "hero-images", imageToDelete.id);
     deleteDocumentNonBlocking(docRef);
-    
-    toast({
-      title: "画像を削除しました",
-      description: "ヒーロー画像を削除しました。",
-    });
-    
+    toast({ title: "削除しました", description: "画像を削除しました。" });
     setImageToDelete(null);
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-slate-800">ヒーロー画像管理</h2>
-        <Button onClick={handleAdd} className="flex items-center gap-2">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-800">ヒーロー画像管理</h2>
+          <p className="text-sm text-slate-500">最大5枚まで設定可能。一定間隔で自動的に切り替わります。</p>
+        </div>
+        <Button onClick={handleAdd} className="flex items-center gap-2 h-11 px-6 shadow-md" disabled={heroImages && heroImages.length >= 5}>
           <Plus className="h-4 w-4" />
-          画像を追加
+          画像を追加 ({heroImages?.length || 0}/5)
         </Button>
       </div>
 
@@ -81,13 +87,14 @@ export function HeroManager() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {heroImages?.map((image) => (
-            <Card key={image.id} className="overflow-hidden group">
-              <div className="relative h-48 bg-slate-200">
+            <Card key={image.id} className="overflow-hidden group border-slate-200 shadow-sm">
+              <div className="relative h-48 bg-slate-100">
                 <Image 
                   src={image.imageUrl} 
                   alt={image.title || "背景画像"} 
                   fill 
                   className="object-cover"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <Button variant="destructive" size="icon" onClick={() => setImageToDelete(image)}>
@@ -95,20 +102,23 @@ export function HeroManager() {
                   </Button>
                 </div>
               </div>
-              <CardContent className="p-4">
-                <p className="font-medium truncate">{image.title || "無題の画像"}</p>
+              <CardContent className="p-4 bg-white">
+                <div className="flex items-center gap-2 text-slate-600">
+                  <ImageIcon className="h-4 w-4 opacity-50" />
+                  <p className="text-xs font-bold truncate">{image.imageUrl}</p>
+                </div>
               </CardContent>
             </Card>
           ))}
           {heroImages?.length === 0 && !isLoading && (
-            <div className="col-span-full py-12 text-center border-2 border-dashed rounded-xl text-slate-400">
-              登録されている画像はありません。
+            <div className="col-span-full py-20 text-center border-2 border-dashed rounded-xl text-slate-400 bg-white">
+              <ImageIcon className="h-10 w-10 mx-auto opacity-20 mb-2" />
+              <p className="font-bold">登録されている画像はありません</p>
             </div>
           )}
         </div>
       )}
 
-      {/* 削除確認ダイアログ */}
       <AlertDialog open={!!imageToDelete} onOpenChange={(open) => !open && setImageToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -117,14 +127,12 @@ export function HeroManager() {
               <AlertDialogTitle>画像を削除しますか？</AlertDialogTitle>
             </div>
             <AlertDialogDescription>
-              この画像をヒーロー背景から削除します。この操作は取り消せません。
+              この画像をスライドから削除します。この操作は取り消せません。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>キャンセル</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              削除する
-            </AlertDialogAction>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">削除する</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
