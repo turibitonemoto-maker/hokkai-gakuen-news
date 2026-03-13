@@ -110,7 +110,7 @@ export function LoginForm() {
                     <div className="relative group">
                       <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
                       <Input
-                        placeholder="admin@hokkai-shinbun.jp"
+                        placeholder=""
                         className="pl-10 h-11 border-slate-200 focus:border-primary focus:ring-primary transition-all duration-200"
                         {...field}
                       />
@@ -131,7 +131,7 @@ export function LoginForm() {
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
                       <Input
                         type="password"
-                        placeholder="••••••••"
+                        placeholder=""
                         className="pl-10 h-11 border-slate-200 focus:border-primary focus:ring-primary transition-all duration-200"
                         {...field}
                       />
