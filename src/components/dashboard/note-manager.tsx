@@ -1,10 +1,11 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc, query, orderBy } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Share2, RefreshCw, Loader2, ExternalLink, Globe, Eye, EyeOff, ShieldAlert } from "lucide-react";
+import { Share2, RefreshCw, Loader2, ExternalLink, Globe, Pencil, X, ShieldAlert, ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
@@ -12,10 +13,14 @@ import { Badge } from "@/components/ui/badge";
 import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
 import { fetchNoteArticles } from "@/app/actions/sync-note";
+import { ArticleForm } from "./article-form";
 import Image from "next/image";
 
 export function NoteManager() {
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentArticle, setCurrentArticle] = useState<any>(null);
+  
   const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
@@ -44,6 +49,7 @@ export function NoteManager() {
       const articles = await fetchNoteArticles();
       articles.forEach(article => {
         const docRef = doc(firestore, "articles", article.id);
+        // 同期時は既存の公開設定などを上書きしないよう merge: true で保存
         setDocumentNonBlocking(docRef, {
           ...article,
           updatedAt: new Date().toISOString(),
@@ -66,6 +72,27 @@ export function NoteManager() {
       description: `「${article.title}」を${checked ? "公開" : "非公開"}にしました。` 
     });
   };
+
+  if (isEditing) {
+    return (
+      <div className="space-y-6 animate-in fade-in zoom-in duration-300">
+        <div className="flex items-center gap-4">
+          <Button variant="outline" size="icon" onClick={() => setIsEditing(false)}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div>
+            <h2 className="text-2xl font-bold text-slate-800">note記事を編集</h2>
+            <p className="text-sm text-slate-500">タイトル、公開設定、タグなどを変更できます。</p>
+          </div>
+        </div>
+        <Card className="shadow-sm border-slate-200">
+          <CardContent className="pt-6">
+            <ArticleForm article={currentArticle} onSuccess={() => setIsEditing(false)} />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -102,12 +129,12 @@ export function NoteManager() {
                     <TableHead>サイト表示</TableHead>
                     <TableHead>記事情報</TableHead>
                     <TableHead>公開日</TableHead>
-                    <TableHead className="text-right">リンク</TableHead>
+                    <TableHead className="text-right">操作</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {noteArticles?.map((article) => (
-                    <TableRow key={article.id}>
+                    <TableRow key={article.id} className="group">
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Switch 
@@ -125,7 +152,13 @@ export function NoteManager() {
                         <div className="flex gap-3 items-center">
                           {article.mainImageUrl && (
                             <div className="relative h-10 w-16 rounded overflow-hidden flex-shrink-0 border bg-slate-100">
-                              <Image src={article.mainImageUrl} alt="" fill className="object-cover" />
+                              <Image 
+                                src={article.mainImageUrl} 
+                                alt="" 
+                                fill 
+                                className="object-cover" 
+                                sizes="64px"
+                              />
                             </div>
                           )}
                           <div className="flex flex-col min-w-0">
@@ -134,15 +167,25 @@ export function NoteManager() {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="text-xs text-slate-500">
+                      <TableCell className="text-xs text-slate-500 whitespace-nowrap">
                         {new Date(article.publishDate).toLocaleDateString("ja-JP")}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" asChild>
-                          <a href={article.noteUrl} target="_blank" rel="noopener noreferrer">
-                            <ExternalLink className="h-4 w-4" />
-                          </a>
-                        </Button>
+                        <div className="flex justify-end gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => { setCurrentArticle(article); setIsEditing(true); }}
+                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" asChild className="h-8 w-8">
+                            <a href={article.noteUrl} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="h-4 w-4" />
+                            </a>
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -170,12 +213,12 @@ export function NoteManager() {
                 <p>noteに投稿した最新記事を自動的にスキャンしてデータベースに追加します。</p>
               </div>
               <div className="flex gap-3">
-                <div className="bg-slate-100 p-2 rounded-lg h-fit"><Globe className="h-4 w-4" /></div>
-                <p>初期状態は「非表示」で登録されます。公開したい記事のスイッチをオンにしてください。</p>
+                <div className="bg-slate-100 p-2 rounded-lg h-fit"><Pencil className="h-4 w-4" /></div>
+                <p>同期した記事のタイトルや画像を、この管理画面から個別に上書き保存できます。</p>
               </div>
               <div className="flex gap-3">
-                <div className="bg-slate-100 p-2 rounded-lg h-fit"><ShieldAlert className="h-4 w-4" /></div>
-                <p>学内記事とは別のエリアで管理するため、大事な内部向け記事を誤って消す心配がありません。</p>
+                <div className="bg-slate-100 p-2 rounded-lg h-fit"><Globe className="h-4 w-4" /></div>
+                <p>初期状態は「非表示」で登録されます。公開したい記事のスイッチをオンにしてください。</p>
               </div>
             </CardContent>
           </Card>
