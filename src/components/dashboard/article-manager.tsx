@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection, doc, orderBy, query, where } from "firebase/firestore";
+import { collection, doc, orderBy, query } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil, Trash2, Loader2, X, Filter, Tag as TagIcon, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -62,42 +62,45 @@ export function ArticleManager() {
   const { user } = useUser();
   const { toast } = useToast();
 
+  // インデックス不要にするため、複合クエリ（where + orderBy）を避け、JS側でフィルタリングする
   const articlesQuery = useMemoFirebase(() => {
-    // ログイン済みの場合のみクエリを実行
     if (!firestore || !user) return null;
     return query(
       collection(firestore, "articles"), 
-      where("articleType", "==", "Standard"),
       orderBy("publishDate", "desc")
     );
   }, [firestore, user]);
 
-  const { data: articles, isLoading, error } = useCollection(articlesQuery);
+  const { data: allArticles, isLoading, error } = useCollection(articlesQuery);
+
+  // 標準記事のみを抽出
+  const standardArticles = useMemo(() => {
+    if (!allArticles) return [];
+    return allArticles.filter(a => a.articleType === "Standard");
+  }, [allArticles]);
 
   const allTags = useMemo(() => {
-    if (!articles) return [];
     const tagsSet = new Set<string>();
     Object.values(CATEGORY_LABELS).forEach(label => tagsSet.add(label));
-    articles.forEach(article => {
+    standardArticles.forEach(article => {
       article.tags?.forEach((tag: string) => {
         if (tag && tag.trim()) tagsSet.add(tag.trim());
       });
     });
     return Array.from(tagsSet).sort();
-  }, [articles]);
+  }, [standardArticles]);
 
   const filteredArticles = useMemo(() => {
-    if (!articles) return [];
-    if (selectedTags.length === 0) return articles;
+    if (selectedTags.length === 0) return standardArticles;
 
-    return articles.filter(article => {
+    return standardArticles.filter(article => {
       const articleTags = [
         CATEGORY_LABELS[article.categoryId] || article.categoryId,
         ...(article.tags || [])
       ];
       return selectedTags.every(tag => articleTags.includes(tag));
     });
-  }, [articles, selectedTags]);
+  }, [standardArticles, selectedTags]);
 
   const toggleTag = (tag: string) => {
     setSelectedTags(prev => 
@@ -150,7 +153,7 @@ export function ArticleManager() {
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>データの読み込みに失敗しました</AlertTitle>
           <AlertDescription>
-            データベースへのアクセス権限がないか、通信エラーが発生しています。ログイン状態を確認し、解決しない場合は管理者にお問い合わせください。
+            データベースへのアクセス権限がないか、通信エラーが発生しています。ログイン直後の場合は数秒待ってからリロードしてください。
           </AlertDescription>
         </Alert>
       )}

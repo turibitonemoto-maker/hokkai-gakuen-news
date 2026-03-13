@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection, doc, query, where, orderBy } from "firebase/firestore";
+import { collection, doc, query, orderBy } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Share2, RefreshCw, Loader2, ExternalLink, Globe, Eye, EyeOff, ShieldAlert } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -20,17 +20,22 @@ export function NoteManager() {
   const { user } = useUser();
   const { toast } = useToast();
 
+  // インデックスエラー回避のためクエリを簡略化し、JS側でフィルタリングする
   const noteArticlesQuery = useMemoFirebase(() => {
-    // ユーザーが存在する時だけ読み込みを実行する
     if (!firestore || !user) return null;
     return query(
       collection(firestore, "articles"), 
-      where("articleType", "==", "Note"),
       orderBy("publishDate", "desc")
     );
   }, [firestore, user]);
 
-  const { data: noteArticles, isLoading } = useCollection(noteArticlesQuery);
+  const { data: allArticles, isLoading } = useCollection(noteArticlesQuery);
+
+  // note記事のみを抽出
+  const noteArticles = useMemo(() => {
+    if (!allArticles) return [];
+    return allArticles.filter(a => a.articleType === "Note");
+  }, [allArticles]);
 
   const handleSync = async () => {
     if (!firestore) return;
@@ -39,7 +44,6 @@ export function NoteManager() {
       const articles = await fetchNoteArticles();
       articles.forEach(article => {
         const docRef = doc(firestore, "articles", article.id);
-        // 既存のドキュメントがある場合は公開状態(isPublished)を維持し、それ以外を更新する
         setDocumentNonBlocking(docRef, {
           ...article,
           updatedAt: new Date().toISOString(),

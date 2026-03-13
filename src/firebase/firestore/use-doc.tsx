@@ -76,6 +76,7 @@ export function useDoc<T = any>(
 
         // 認証同期ラグ対策
         if (isPermissionError && user && retryCount < 5) {
+          console.warn(`Firestore (useDoc) [WAITING]: 権限同期を待機中... Path: ${memoizedDocRef.path}`);
           setTimeout(() => setRetryCount(prev => prev + 1), 1000);
           return;
         }

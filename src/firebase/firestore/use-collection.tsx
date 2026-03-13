@@ -96,18 +96,23 @@ export function useCollection<T = any>(
         // 認証同期ラグ（フライング）対策: 
         // ログイン済みであれば、エラーを投げずに1秒後に自動再試行する
         if (isPermissionError && user && retryCount < 5) {
+          console.warn(`Firestore (useCollection) [WAITING]: 権限同期を待機中... Path: ${path}`);
           setTimeout(() => setRetryCount(prev => prev + 1), 1000);
           return;
         }
 
-        // ラグではない、またはリトライ上限に達した場合はエラー状態を更新
+        // インデックスエラーの場合の警告
+        if (errorCode === 'failed-precondition') {
+          console.error(`Firestore (useCollection) [INDEX_REQUIRED]: 複合インデックスが必要です。コンソールのリンクから作成してください。\nPath: ${path}\nError: ${serverError.message}`);
+        }
+
         const contextualError = new FirestorePermissionError({
           operation: 'list',
           path,
         });
 
-        // 重要: アプリをクラッシュさせないよう、console.error を避け、
-        // ローカルなエラー状態として保持する（UI側でハンドリング可能にする）
+        // 重要: データ取得系のエラーはローカルな状態として保持し、
+        // errorEmitter.emit によるグローバルな例外送出（アプリのクラッシュ）は避ける。
         setError(contextualError);
         setData(null);
         setIsLoading(false);
