@@ -1,1 +1,2 @@
-// Flows will be imported for their side effects in this file.
+
+// AI機能は無効化されました

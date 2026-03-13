@@ -4,25 +4,25 @@
     {
       "id": "article-default",
       "description": "記事のデフォルト画像",
-      "imageUrl": "https://picsum.photos/seed/article-news/800/450",
+      "imageUrl": "https://picsum.photos/seed/newspaper-static-1/800/450",
       "imageHint": "news report"
     },
     {
       "id": "note-default",
       "description": "note記事のデフォルト画像",
-      "imageUrl": "https://picsum.photos/seed/note-writing/800/450",
+      "imageUrl": "https://picsum.photos/seed/note-static-1/800/450",
       "imageHint": "blog writing"
     },
     {
       "id": "hero-default",
       "description": "ヒーローエリアのデフォルト画像",
-      "imageUrl": "https://picsum.photos/seed/hokkai-campus/1200/600",
+      "imageUrl": "https://picsum.photos/seed/campus-static-1/1200/600",
       "imageHint": "university campus"
     },
     {
       "id": "president-default",
       "description": "会長のデフォルト顔写真",
-      "imageUrl": "https://picsum.photos/seed/portrait-placeholder/200/200",
+      "imageUrl": "https://picsum.photos/seed/portrait-static-1/200/200",
       "imageHint": "professional portrait"
     }
   ]
