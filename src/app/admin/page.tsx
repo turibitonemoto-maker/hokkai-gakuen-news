@@ -15,7 +15,8 @@ import {
   UserCheck,
   Settings,
   AlertCircle,
-  User
+  User,
+  ShieldCheck
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -73,10 +74,10 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-8 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row justify-between items-start gap-4">
         <div className="flex flex-col gap-1">
-          <h3 className="text-2xl font-bold text-slate-800">管制塔ダッシュボード</h3>
+          <h3 className="text-3xl font-black text-slate-800 tracking-tight">管制塔ダッシュボード</h3>
           <p className="text-slate-500 text-sm font-medium flex items-center gap-2">
             <Clock className="h-4 w-4" /> {currentTime || "読み込み中..."}
           </p>
@@ -95,7 +96,7 @@ export default function AdminDashboard() {
             </Badge>
           ) : (
             <Badge variant="outline" className="bg-green-50 border-green-200 text-green-700 px-3 py-1 flex gap-2 items-center shadow-sm">
-              <Globe className="h-3 w-3" />
+              <ShieldCheck className="h-3 w-3" />
               表示サイト: 公開中
             </Badge>
           )}
@@ -130,9 +131,9 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="lg:col-span-2 shadow-sm border-slate-200 overflow-hidden bg-white">
-          <CardHeader className="bg-white border-b border-slate-50">
-            <CardTitle className="text-base font-bold flex items-center gap-2">
+        <Card className="lg:col-span-2 shadow-sm border-slate-200 overflow-hidden bg-white rounded-2xl">
+          <CardHeader className="bg-white border-b border-slate-50 p-6">
+            <CardTitle className="text-lg font-bold flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-primary" />
               最新のアクティビティ
             </CardTitle>
@@ -155,63 +156,66 @@ export default function AdminDashboard() {
                 <div className="p-12 flex justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
               ) : recentArticles && recentArticles.length > 0 ? (
                 recentArticles.map((article) => (
-                  <div key={article.id} className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between">
+                  <div key={article.id} className="p-5 hover:bg-slate-50 transition-colors flex items-center justify-between group">
                     <div className="flex flex-col">
                       <div className="flex items-center gap-2">
                         <Badge className={article.articleType === "Note" ? "bg-purple-600 h-4 px-1 text-[8px]" : "bg-primary h-4 px-1 text-[8px]"}>
                           {article.articleType === "Note" ? "note" : "学内"}
                         </Badge>
-                        <span className="text-sm font-bold text-slate-700 truncate max-w-[200px]">{article.title}</span>
+                        <span className="text-sm font-bold text-slate-700 truncate max-w-[200px] group-hover:text-primary transition-colors">{article.title}</span>
                       </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[10px] text-slate-400">
-                          更新: {new Date(article.updatedAt || "").toLocaleString("ja-JP")}
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <span className="text-[10px] text-slate-400 font-medium">
+                          最終更新: {new Date(article.updatedAt || "").toLocaleString("ja-JP")}
                         </span>
                         {article.updatedBy && (
-                          <span className="text-[10px] text-primary flex items-center gap-1 font-bold">
+                          <span className="text-[10px] text-primary flex items-center gap-1 font-bold bg-primary/5 px-1.5 py-0.5 rounded">
                             <User className="h-2 w-2" /> {article.updatedBy}
                           </span>
                         )}
                       </div>
                     </div>
-                    <Badge variant={article.isPublished ? "default" : "outline"} className={article.isPublished ? "bg-green-100 text-green-700 border-green-200 text-[10px]" : "text-slate-400 text-[10px]"}>
+                    <Badge variant={article.isPublished ? "default" : "outline"} className={article.isPublished ? "bg-green-100 text-green-700 border-green-200 text-[10px] font-bold" : "text-slate-400 text-[10px] font-bold"}>
                       {article.isPublished ? "公開中" : "下書き"}
                     </Badge>
                   </div>
                 )
               )) : (
-                <div className="p-12 text-center text-slate-400 text-sm italic">記事がありません。</div>
+                <div className="p-16 text-center text-slate-400 text-sm font-medium italic">アクティビティはまだありません。</div>
               )}
             </div>
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm border-slate-200 bg-white">
-          <CardHeader>
-            <CardTitle className="text-base font-bold">クイック操作</CardTitle>
+        <Card className="shadow-sm border-slate-200 bg-white rounded-2xl">
+          <CardHeader className="p-6">
+            <CardTitle className="text-lg font-bold">クイック操作</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 px-6 pb-6">
             <Link href="/admin/articles">
-              <Button className="w-full justify-start gap-3 h-12 shadow-sm font-bold text-sm">
+              <Button className="w-full justify-start gap-3 h-12 shadow-sm font-bold text-sm rounded-xl">
                 <FileText className="h-5 w-5" />
-                <span>記事の新規作成</span>
+                <span>記事の管理・公開</span>
               </Button>
             </Link>
             <Link href="/admin/note">
-              <Button variant="outline" className="w-full justify-start gap-3 h-12 border-purple-200 text-purple-700 hover:bg-purple-50 font-bold text-sm">
+              <Button variant="outline" className="w-full justify-start gap-3 h-12 border-purple-200 text-purple-700 hover:bg-purple-50 font-bold text-sm rounded-xl">
                 <Share2 className="h-5 w-5" />
                 <span>note管理</span>
               </Button>
             </Link>
             <Link href="/admin/maintenance">
-              <Button variant="outline" className="w-full justify-start gap-3 h-12 border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-sm">
+              <Button variant="outline" className="w-full justify-start gap-3 h-12 border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-sm rounded-xl">
                 <Settings className="h-5 w-5" />
                 <span>システム設定</span>
+                <Badge variant="secondary" className="ml-auto text-[8px] h-4 px-1 gap-1">
+                  <ShieldCheck className="h-2 w-2" /> 🔒
+                </Badge>
               </Button>
             </Link>
             <Separator className="my-2" />
             <a href={PUBLIC_SITE_URL} target="_blank" rel="noopener noreferrer">
-              <Button variant="secondary" className="w-full justify-center gap-2 font-bold h-10 shadow-sm">
+              <Button variant="secondary" className="w-full justify-center gap-2 font-bold h-10 shadow-sm rounded-xl">
                 <Globe className="h-4 w-4" />
                 <span>表示サイトを開く</span>
               </Button>
@@ -232,18 +236,18 @@ function QuickStatCard({ title, value, delta, icon: Icon, color, href }: any) {
 
   return (
     <Link href={href}>
-      <Card className="shadow-sm border-slate-200 hover:shadow-md transition-all cursor-pointer h-full group bg-white">
+      <Card className="shadow-sm border-slate-200 hover:shadow-md transition-all cursor-pointer h-full group bg-white rounded-2xl">
         <CardContent className="p-6">
           <div className="flex justify-between items-start">
-            <div className={cn("p-2 rounded-xl border transition-transform group-hover:scale-110", colorMap[color])}>
-              <Icon className="h-5 w-5" />
+            <div className={cn("p-2.5 rounded-xl border transition-transform group-hover:scale-110", colorMap[color])}>
+              <Icon className="h-6 w-6" />
             </div>
-            <ChevronRight className="h-4 w-4 text-slate-300" />
+            <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-primary transition-colors" />
           </div>
-          <div className="mt-4">
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{title}</p>
-            <div className="text-3xl font-black text-slate-800 mt-1">{value}</div>
-            <p className="text-[10px] text-slate-400 font-medium mt-1">{delta}</p>
+          <div className="mt-5">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{title}</p>
+            <div className="text-4xl font-black text-slate-800 mt-1">{value}</div>
+            <p className="text-[11px] text-slate-500 font-bold mt-1.5">{delta}</p>
           </div>
         </CardContent>
       </Card>

@@ -12,7 +12,8 @@ import {
   ImageOff,
   RefreshCw,
   Clock,
-  Lock
+  Lock,
+  ShieldCheck
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -61,7 +62,7 @@ export function NoteManager() {
   const handleSyncWithAuth = async () => {
     const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "zansin";
     if (password !== correctPassword) {
-      toast({ variant: "destructive", title: "パスワードが正しくありません" });
+      toast({ variant: "destructive", title: "パスワード不一致", description: "正しい認証情報を入力してください。" });
       return;
     }
 
@@ -105,94 +106,98 @@ export function NoteManager() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-10 animate-in fade-in duration-700">
       <div className="flex justify-between items-end">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-800">note管理</h2>
-          <p className="text-sm text-slate-500">外部メディア（note）から最新記事を取得し、公式サイトへ採用します。</p>
+        <div className="space-y-1">
+          <h2 className="text-3xl font-black text-slate-800 tracking-tight">note管理</h2>
+          <p className="text-sm font-bold text-slate-500">外部メディア（note）との連携を管理します。</p>
         </div>
         <Button 
           variant="outline" 
           size="sm" 
           onClick={startSyncProcess} 
           disabled={isSyncing}
-          className="gap-2 border-primary/20 text-primary hover:bg-primary/5 font-bold h-10 px-6"
+          className="gap-3 border-purple-200 text-purple-700 hover:bg-purple-50 font-black h-12 px-8 rounded-2xl shadow-sm"
         >
-          <RefreshCw className={cn("h-4 w-4", isSyncing && "animate-spin")} />
-          更新
+          <RefreshCw className={cn("h-5 w-5", isSyncing && "animate-spin")} />
+          最新記事を同期 🔒
         </Button>
       </div>
 
-      <Card className="shadow-sm border-slate-200 overflow-hidden bg-white">
-        <CardHeader className="bg-purple-50/50 border-b flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="text-lg flex items-center gap-2 text-purple-700">
-              <Share2 className="h-5 w-5" />
+      <Card className="shadow-sm border-slate-200 overflow-hidden bg-white rounded-[2rem]">
+        <CardHeader className="bg-purple-50/50 border-b p-8 flex flex-row items-center justify-between">
+          <div className="space-y-1">
+            <CardTitle className="text-xl flex items-center gap-3 text-purple-800 font-black">
+              <Share2 className="h-6 w-6" />
               note 投稿一覧
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-sm font-bold text-purple-600/70">
               note.com の公式アカウントから取得した最新の投稿です。
             </CardDescription>
           </div>
-          <div className="text-[10px] font-bold text-purple-400 uppercase tracking-widest flex items-center gap-2">
-            <Clock className="h-3 w-3" />
-            状態: {isSyncing ? "同期中..." : "待機中"}
+          <div className="flex items-center gap-3">
+            <div className="text-[10px] font-black text-purple-400 uppercase tracking-[0.2em] flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              STATUS: {isSyncing ? "SYNCING..." : "READY"}
+            </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
           {isSyncing || (isDbLoading && rssArticles.length === 0) ? (
-            <div className="p-20 flex flex-col items-center gap-4">
-              <Loader2 className="h-10 w-10 animate-spin text-purple-400" />
-              <p className="text-sm text-slate-400 font-bold">データを同期しています...</p>
+            <div className="py-24 flex flex-col items-center gap-6">
+              <div className="bg-purple-50 p-6 rounded-full animate-pulse">
+                <Loader2 className="h-12 w-12 animate-spin text-purple-500" />
+              </div>
+              <p className="text-sm text-slate-400 font-black uppercase tracking-widest">データを同期しています...</p>
             </div>
           ) : rssArticles.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow className="bg-slate-50/50">
-                  <TableHead>記事情報</TableHead>
-                  <TableHead>公開日</TableHead>
-                  <TableHead className="text-right">状態</TableHead>
+                  <TableHead className="px-8 h-14 font-black text-slate-400 text-xs uppercase tracking-widest">記事情報</TableHead>
+                  <TableHead className="h-14 font-black text-slate-400 text-xs uppercase tracking-widest">公開日</TableHead>
+                  <TableHead className="text-right px-8 h-14 font-black text-slate-400 text-xs uppercase tracking-widest">操作</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {rssArticles.map((article) => {
                   const isImported = dbNoteIds.has(article.id);
                   return (
-                    <TableRow key={article.id} className="group hover:bg-slate-50/50">
-                      <TableCell>
-                        <div className="flex gap-4 items-center py-2">
-                          <div className="relative h-12 w-20 rounded-lg overflow-hidden border bg-slate-50 flex-shrink-0">
+                    <TableRow key={article.id} className="group hover:bg-purple-50/30 transition-colors">
+                      <TableCell className="px-8 py-5">
+                        <div className="flex gap-5 items-center">
+                          <div className="relative h-14 w-24 rounded-2xl overflow-hidden border-2 border-white shadow-sm bg-slate-100 flex-shrink-0">
                             {article.mainImageUrl ? (
                               <Image 
                                 src={article.mainImageUrl} 
                                 alt="" 
                                 fill 
-                                className="object-cover" 
+                                className="object-cover transition-transform group-hover:scale-110" 
                                 unoptimized 
-                                sizes="80px"
+                                sizes="96px"
                               />
                             ) : (
-                              <ImageOff className="h-4 w-4 m-auto opacity-20" />
+                              <ImageOff className="h-5 w-5 m-auto opacity-20" />
                             )}
                           </div>
                           <div className="flex flex-col min-w-0">
-                            <span className="font-bold text-slate-800 truncate text-sm">{article.title}</span>
-                            <a href={article.noteUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-purple-500 hover:underline flex items-center gap-1 mt-1 font-bold">
-                              <ExternalLink className="h-2 w-2" /> noteで開く
+                            <span className="font-black text-slate-800 truncate text-base leading-tight group-hover:text-purple-700 transition-colors">{article.title}</span>
+                            <a href={article.noteUrl} target="_blank" rel="noopener noreferrer" className="text-[11px] text-purple-500 hover:underline flex items-center gap-1.5 mt-2 font-black uppercase tracking-tight">
+                              <ExternalLink className="h-3 w-3" /> noteで原文を読む
                             </a>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="text-xs text-slate-500 font-bold">
+                      <TableCell className="text-xs text-slate-500 font-black font-mono">
                         {article.publishDate}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right px-8">
                         {isImported ? (
-                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 h-8 px-3 font-bold">採用済み</Badge>
+                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 h-9 px-4 font-black rounded-xl">採用済み</Badge>
                         ) : (
-                          <Button size="sm" onClick={() => handleImport(article)} className="h-8 gap-2 font-bold bg-white text-purple-600 border border-purple-200 hover:bg-purple-50 shadow-sm">
+                          <Button size="sm" onClick={() => handleImport(article)} className="h-9 gap-2 font-black bg-white text-purple-600 border-2 border-purple-100 hover:bg-purple-50 hover:border-purple-300 shadow-sm rounded-xl px-5">
                             <PlusCircle className="h-4 w-4" />
-                            採用
+                            採用する
                           </Button>
                         )}
                       </TableCell>
@@ -202,46 +207,51 @@ export function NoteManager() {
               </TableBody>
             </Table>
           ) : (
-            <div className="py-20 text-center text-slate-400">
-              <Share2 className="h-10 w-10 mx-auto opacity-20 mb-2" />
-              <p className="font-bold text-sm">「更新」ボタンを押して最新のnote記事をチェックしてください</p>
+            <div className="py-32 text-center text-slate-300">
+              <div className="bg-slate-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Share2 className="h-10 w-10 opacity-20" />
+              </div>
+              <p className="font-black text-lg text-slate-400">最新記事を同期してください</p>
+              <p className="text-sm font-bold mt-2 opacity-60">右上の更新ボタンから note.com の最新データを取得します。</p>
             </div>
           )}
         </CardContent>
       </Card>
 
       <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Lock className="h-5 w-5 text-primary" />
-              同期の実行確認
-            </DialogTitle>
-            <DialogDescription>
-              最新のnote記事を同期するには管理用パスワードが必要です。
+        <DialogContent className="sm:max-w-md rounded-[2rem] border-none p-10">
+          <DialogHeader className="space-y-4">
+            <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-2">
+              <ShieldCheck className="h-8 w-8 text-primary" />
+            </div>
+            <DialogTitle className="text-2xl font-black text-slate-800 text-center">アクセス承認 🔒</DialogTitle>
+            <DialogDescription className="text-center font-bold text-slate-500">
+              noteとの通信を安全に実行するため、承認パスワードが必要です。
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
+          <div className="py-6">
             <Input 
               type="password" 
               placeholder="Password" 
+              className="text-center h-14 text-lg font-bold rounded-2xl border-slate-200 shadow-sm"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSyncWithAuth()}
+              autoFocus
             />
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowPasswordDialog(false)}>キャンセル</Button>
-            <Button onClick={handleSyncWithAuth}>実行</Button>
+          <DialogFooter className="sm:justify-center gap-3">
+            <Button variant="outline" onClick={() => setShowPasswordDialog(false)} className="rounded-xl font-bold h-12 px-6">キャンセル</Button>
+            <Button onClick={handleSyncWithAuth} className="rounded-xl font-black h-12 px-10 shadow-lg shadow-primary/20">同期を実行</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
       
-      <div className="bg-slate-100/50 p-6 rounded-2xl border border-dashed border-slate-200 text-center">
-        <p className="text-sm text-slate-600 font-medium">
+      <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm text-center">
+        <p className="text-sm text-slate-500 font-bold">
           採用した記事の公開・非公開の管理は 
-          <Link href="/admin/articles" className="text-primary font-bold hover:underline mx-1">記事・公開管理</Link> 
-          で行います。
+          <Link href="/admin/articles" className="text-primary font-black hover:underline mx-2">記事・公開管理</Link> 
+          セクションで広々と行えます。
         </p>
       </div>
     </div>

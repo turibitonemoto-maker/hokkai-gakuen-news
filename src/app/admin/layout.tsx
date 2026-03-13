@@ -16,7 +16,8 @@ import {
   ExternalLink,
   Share2,
   Loader2,
-  Newspaper
+  Newspaper,
+  Lock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -46,9 +47,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { id: "/admin/articles", label: "記事・公開管理", icon: FileText },
     { id: "/admin/note", label: "note管理", icon: Share2 },
     { id: "/admin/hero", label: "ヒーロー画像", icon: ImageIcon },
-    { id: "/admin/ads", label: "広告管理", icon: Megaphone },
-    { id: "/admin/president", label: "会長挨拶設定", icon: UserRound },
-    { id: "/admin/maintenance", label: "メンテナンス管理", icon: ShieldAlert },
+    { id: "/admin/ads", label: "広告管理", icon: Megaphone, isProtected: true },
+    { id: "/admin/president", label: "会長挨拶設定", icon: UserRound, isProtected: true },
+    { id: "/admin/maintenance", label: "メンテナンス管理", icon: ShieldAlert, isProtected: true },
   ];
 
   const handleLogout = async () => {
@@ -92,7 +93,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const activeLabel = menuItems.find(i => i.id === pathname)?.label || "管理";
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-slate-50 flex font-body">
       <aside 
         className={cn(
           "bg-[#1e293b] text-slate-300 transition-all duration-300 flex flex-col fixed inset-y-0 z-50",
@@ -105,26 +106,33 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
           {isSidebarOpen && (
             <div className="overflow-hidden whitespace-nowrap">
-              <h1 className="text-sm font-bold text-white leading-tight">北海学園一部新聞会</h1>
-              <p className="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">CMS Control</p>
+              <h1 className="text-sm font-black text-white leading-tight">北海学園一部新聞会</h1>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">CMS Control</p>
             </div>
           )}
         </div>
 
-        <nav className="flex-1 p-4 space-y-2 mt-4">
+        <nav className="flex-1 p-4 space-y-1.5 mt-4">
           {menuItems.map((item) => (
             <Link key={item.id} href={item.id}>
               <button
                 className={cn(
-                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group mb-1",
+                  "w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all group relative",
                   pathname === item.id 
                     ? "bg-primary text-white shadow-lg shadow-primary/20" 
                     : "hover:bg-slate-800 hover:text-white"
                 )}
               >
-                <item.icon className={cn("h-5 w-5 shrink-0", pathname === item.id ? "text-white" : "text-slate-400 group-hover:text-white")} />
-                {isSidebarOpen && <span className="text-sm font-medium">{item.label}</span>}
-                {pathname === item.id && isSidebarOpen && <ChevronRight className="h-4 w-4 ml-auto opacity-50" />}
+                <item.icon className={cn("h-5 w-5 shrink-0 transition-transform group-hover:scale-110", pathname === item.id ? "text-white" : "text-slate-400 group-hover:text-white")} />
+                {isSidebarOpen && (
+                  <>
+                    <span className="text-sm font-bold tracking-tight">{item.label}</span>
+                    {item.isProtected && (
+                      <Lock className="h-3 w-3 ml-auto opacity-40 group-hover:opacity-100 transition-opacity" />
+                    )}
+                  </>
+                )}
+                {pathname === item.id && isSidebarOpen && !item.isProtected && <ChevronRight className="h-4 w-4 ml-auto opacity-50" />}
               </button>
             </Link>
           ))}
@@ -133,11 +141,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="p-4 border-t border-slate-700/50">
           <Button 
             variant="ghost" 
-            className="w-full text-slate-400 hover:text-white hover:bg-slate-800 justify-start gap-3 px-3"
+            className="w-full text-slate-400 hover:text-white hover:bg-slate-800 justify-start gap-3 px-3 rounded-xl h-12"
             onClick={handleLogout}
           >
             <LogOut className="h-5 w-5 shrink-0" />
-            {isSidebarOpen && <span className="text-sm font-medium">ログアウト</span>}
+            {isSidebarOpen && <span className="text-sm font-bold">ログアウト</span>}
           </Button>
         </div>
       </aside>
@@ -148,24 +156,29 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           isSidebarOpen ? "ml-64" : "ml-20"
         )}
       >
-        <header className="h-16 bg-white border-b border-slate-200 px-8 flex items-center justify-between sticky top-0 z-40 shadow-sm">
+        <header className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200 px-8 flex items-center justify-between sticky top-0 z-40 shadow-sm">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="text-slate-500">
+            <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="text-slate-500 rounded-full hover:bg-slate-100">
               <Menu className="h-5 w-5" />
             </Button>
-            <h2 className="text-lg font-bold text-slate-800">
+            <h2 className="text-xl font-black text-slate-800 tracking-tight">
               {activeLabel}
+              {menuItems.find(i => i.id === pathname)?.isProtected && (
+                <Badge variant="secondary" className="ml-3 font-bold bg-slate-100 text-slate-500 border-none px-2 py-0.5 text-[10px]">
+                  🔒 伝統保護エリア
+                </Badge>
+              )}
             </h2>
           </div>
           <div className="flex items-center gap-3">
             <a href={PUBLIC_SITE_URL} target="_blank" rel="noopener noreferrer">
-              <Button variant="outline" size="sm" className="gap-2 border-primary/20 text-primary hover:bg-primary/5">
+              <Button variant="outline" size="sm" className="gap-2 border-primary/20 text-primary hover:bg-primary/5 font-bold rounded-xl h-9">
                 <Globe className="h-4 w-4" />
                 表示サイトを確認
                 <ExternalLink className="h-3 w-3" />
               </Button>
             </a>
-            <Badge variant="outline" className="bg-slate-50 text-slate-500 font-normal border-slate-200">
+            <Badge variant="outline" className="bg-slate-50 text-slate-500 font-bold border-slate-200 px-3 py-1 rounded-full">
               {user.email}
             </Badge>
           </div>

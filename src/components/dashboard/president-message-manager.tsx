@@ -13,7 +13,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, User as UserIcon, Lock } from "lucide-react";
+import { Loader2, Save, User as UserIcon, Lock, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const presidentMessageSchema = z.object({
@@ -61,6 +61,7 @@ export function PresidentMessageManager() {
     const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "zansin";
     if (password === correctPassword) {
       setIsUnlocked(true);
+      toast({ title: "アクセス承認", description: "会長挨拶の編集を許可しました。" });
     } else {
       toast({ variant: "destructive", title: "パスワードが正しくありません" });
     }
@@ -82,26 +83,36 @@ export function PresidentMessageManager() {
 
   if (!isUnlocked) {
     return (
-      <Card className="max-w-md mx-auto mt-20 shadow-xl">
-        <CardHeader className="text-center">
-          <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Lock className="h-8 w-8 text-primary" />
-          </div>
-          <CardTitle>会長挨拶ロック</CardTitle>
-          <CardDescription>管理用パスワードを入力してください</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Input 
-            type="password" 
-            placeholder="Password" 
-            className="text-center"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
-          />
-          <Button className="w-full h-12 font-bold" onClick={handleUnlock}>認証</Button>
-        </CardContent>
-      </Card>
+      <div className="max-w-md mx-auto mt-20 animate-in fade-in zoom-in duration-500">
+        <Card className="shadow-2xl border-none bg-white rounded-3xl overflow-hidden">
+          <CardHeader className="text-center pt-10 pb-6 bg-slate-50/50">
+            <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+              <UserRound className="h-10 w-10 text-primary animate-pulse" />
+            </div>
+            <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">会長挨拶保護 🔒</CardTitle>
+            <CardDescription className="text-sm font-bold text-slate-500 px-6 mt-2">
+              会の威信を担うメッセージを保護するため、アクセス承認が必要です。
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-10 pt-4 space-y-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">承認パスワード</label>
+              <Input 
+                type="password" 
+                placeholder="Password" 
+                className="text-center h-14 text-lg font-bold rounded-2xl border-slate-200 shadow-sm"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
+                autoFocus
+              />
+            </div>
+            <Button className="w-full h-14 font-black text-md rounded-2xl shadow-lg hover:scale-[1.02] transition-transform" onClick={handleUnlock}>
+              アクセスを承認する
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
@@ -114,33 +125,33 @@ export function PresidentMessageManager() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-700">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-slate-800">会長挨拶管理</h2>
+        <h2 className="text-3xl font-black text-slate-800 tracking-tight">会長挨拶管理 🔒</h2>
       </div>
 
-      <Card className="shadow-sm border-slate-200">
-        <CardHeader>
-          <CardTitle className="text-xl flex items-center gap-2">
-            <UserIcon className="h-5 w-5 text-primary" />
+      <Card className="shadow-sm border-slate-200 rounded-3xl bg-white overflow-hidden">
+        <CardHeader className="bg-slate-50/50 border-b p-8">
+          <CardTitle className="text-xl font-black flex items-center gap-3">
+            <UserIcon className="h-6 w-6 text-primary" />
             メッセージの編集
           </CardTitle>
-          <CardDescription>
-            公式サイトの「会長挨拶」セクションに表示される内容を編集します。
+          <CardDescription className="text-sm font-bold text-slate-500 mt-1">
+            公式サイトのトップページに表示される「会長の言葉」を編集します。
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-8 md:p-12">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <FormField
                   control={form.control}
                   name="authorName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>会長氏名</FormLabel>
+                      <FormLabel className="font-bold text-slate-600">会長氏名</FormLabel>
                       <FormControl>
-                        <Input placeholder="例：北海 太郎" {...field} />
+                        <Input placeholder="例：北海 太郎" className="h-12 font-bold rounded-xl border-slate-200" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -152,12 +163,12 @@ export function PresidentMessageManager() {
                   name="authorImageUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>顔写真URL</FormLabel>
+                      <FormLabel className="font-bold text-slate-600">顔写真URL</FormLabel>
                       <FormControl>
-                        <Input placeholder="https://example.com/photo.jpg" {...field} />
+                        <Input placeholder="https://example.com/photo.jpg" className="h-12 font-bold rounded-xl border-slate-200" {...field} />
                       </FormControl>
-                      <FormDescription>
-                        会長の顔写真のURLを入力してください（正方形を推奨）。
+                      <FormDescription className="text-[10px] font-bold">
+                        正方形（1:1）の画像を推奨します。
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -169,16 +180,16 @@ export function PresidentMessageManager() {
                   name="content"
                   render={({ field }) => (
                     <FormItem className="md:col-span-2">
-                      <FormLabel>挨拶の本文</FormLabel>
+                      <FormLabel className="font-bold text-slate-600">挨拶の本文</FormLabel>
                       <FormControl>
                         <Textarea 
                           placeholder="新入生の皆さんへ..." 
-                          className="min-h-[300px] text-base leading-relaxed" 
+                          className="min-h-[400px] text-lg leading-relaxed p-8 rounded-2xl border-slate-200 bg-slate-50/30 focus:bg-white transition-colors shadow-inner" 
                           {...field} 
                         />
                       </FormControl>
-                      <FormDescription>
-                        改行は公式サイトでもそのまま反映されます。
+                      <FormDescription className="text-xs font-bold text-primary/60">
+                        ※ 改行は公式サイトでもそのまま反映されます。
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -186,10 +197,10 @@ export function PresidentMessageManager() {
                 />
               </div>
 
-              <div className="flex justify-end pt-4 border-t">
-                <Button type="submit" className="flex items-center gap-2 px-8">
-                  <Save className="h-4 w-4" />
-                  保存する
+              <div className="flex justify-end pt-8 border-t border-slate-100">
+                <Button type="submit" className="flex items-center gap-3 px-12 h-14 font-black rounded-2xl shadow-xl shadow-primary/10 hover:scale-105 transition-transform">
+                  <Save className="h-5 w-5" />
+                  保存して更新する
                 </Button>
               </div>
             </form>
