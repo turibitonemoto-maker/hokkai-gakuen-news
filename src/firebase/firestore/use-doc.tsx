@@ -65,9 +65,10 @@ export function useDoc<T = any>(
       async (serverError: FirestoreError) => {
         // 【最重要】認証同期ラグ（フライング）対策
         if (serverError.code === 'permission-denied' || serverError.message.toLowerCase().includes('permissions')) {
-          console.warn(`Firestore (useDoc) [HANDLED]: 権限エラーまたは同期ラグを検知しました。再試行を待機しています... Path: ${memoizedDocRef.path}`);
+          console.warn(`Firestore (useDoc) [HANDLED]: 権限エラーを検知しました。再試行を待機しています... Path: ${memoizedDocRef.path}`);
           setError(serverError);
           setIsLoading(false);
+          // ここで return することでクラッシュを回避
           return;
         }
 

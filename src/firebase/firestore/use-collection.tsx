@@ -86,9 +86,10 @@ export function useCollection<T = any>(
         // 権限エラー(permission-denied)が発生した場合は、アプリをクラッシュさせずに警告ログに留めます。
         // これにより、セキュリティルールが反映されるまでのわずかな時間をエラーなしで待機できます。
         if (serverError.code === 'permission-denied' || serverError.message.toLowerCase().includes('permissions')) {
-          console.warn(`Firestore (useCollection) [HANDLED]: 権限エラーまたは同期ラグを検知しました。再試行を待機しています... Path: ${path}`);
+          console.warn(`Firestore (useCollection) [HANDLED]: 権限エラーを検知しました。再試行を待機しています... Path: ${path}`);
           setError(serverError);
           setIsLoading(false);
+          // ここで return することで、下の errorEmitter.emit を回避し、クラッシュを防ぎます。
           return;
         }
 
@@ -101,7 +102,7 @@ export function useCollection<T = any>(
         setData(null);
         setIsLoading(false);
         
-        // 権限エラー以外（ネットワークエラー等）のみ、エラーリスナーに通知してRSODを表示させます。
+        // 権限エラー以外の致命的なエラーのみ通知
         errorEmitter.emit('permission-error', contextualError);
       }
     );
