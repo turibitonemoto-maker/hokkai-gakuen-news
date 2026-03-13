@@ -71,8 +71,9 @@ export function useDoc<T = any>(
         const isPermissionError = serverError.code === 'permission-denied' || serverError.message.toLowerCase().includes('permission');
 
         if (isPermissionError && isAuthLikelyPresent) {
-          console.warn(`Firestore (useDoc): 認証同期ラグを検知しました。権限の浸透を待機しています... Path: ${memoizedDocRef.path}`);
+          console.warn(`Firestore (useDoc): 認証同期ラグ（フライング）を検知しました。権限の浸透を待機しています... Path: ${memoizedDocRef.path}`);
           setIsLoading(false);
+          // ここで return することで、致命的なエラーとしての emit/throw を回避します
           return;
         }
 

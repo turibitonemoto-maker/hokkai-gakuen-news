@@ -10,7 +10,7 @@ service cloud.firestore {
       allow read, write: if request.auth != null;
     }
 
-    // 公開用データのフォールバック（未ログインでも閲覧のみ許可）
+    // 未ログインユーザー向けの閲覧許可（フォールバック）
     match /articles/{document=**} {
       allow read: if true;
     }

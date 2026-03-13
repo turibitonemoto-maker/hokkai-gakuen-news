@@ -93,8 +93,9 @@ export function useCollection<T = any>(
         const isPermissionError = serverError.code === 'permission-denied' || serverError.message.toLowerCase().includes('permission');
         
         if (isPermissionError && isAuthLikelyPresent) {
-          console.warn(`Firestore (useCollection): 認証同期ラグを検知しました。権限の浸透を待機しています... Path: ${path}`);
+          console.warn(`Firestore (useCollection): 認証同期ラグ（フライング）を検知しました。権限の浸透を待機しています... Path: ${path}`);
           setIsLoading(false);
+          // ここで return することで、致命的なエラーとしての emit/throw を回避します
           return;
         }
 
@@ -103,7 +104,7 @@ export function useCollection<T = any>(
           path,
         })
 
-        // 致命的な権限エラーの場合のみ、グローバル通知を行ってアプリを停止させる
+        // 致命的な権限エラー（未ログインなのにアクセス等）の場合のみ、グローバル通知を行ってアプリを停止させる
         setError(contextualError)
         setData(null)
         setIsLoading(false)

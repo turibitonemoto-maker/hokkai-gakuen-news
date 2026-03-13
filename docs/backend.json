@@ -47,20 +47,6 @@
         "title": { "type": "string" },
         "order": { "type": "number" }
       }
-    },
-    "Inquiry": {
-      "title": "Inquiry",
-      "description": "お問い合わせ。ログイン済みの新聞会員は全権限。",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string" },
-        "email": { "type": "string", "format": "email" },
-        "subject": { "type": "string" },
-        "message": { "type": "string" },
-        "isRead": { "type": "boolean" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      }
     }
   },
   "auth": {
@@ -78,10 +64,6 @@
     "/hero-images/{imageId}": {
       "schema": { "$ref": "#/entities/HeroImage" },
       "description": "ヒーロー画像。ログイン済みのユーザーは全権限。"
-    },
-    "/inquiries/{inquiryId}": {
-      "schema": { "$ref": "#/entities/Inquiry" },
-      "description": "お問い合わせ。ログイン済みのユーザーは全権限。"
     },
     "/settings/{settingId}": {
       "schema": { "type": "object" },
