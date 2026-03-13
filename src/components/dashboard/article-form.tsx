@@ -261,7 +261,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  {isNote ? "note記事の紹介文（外部編集のため変更不可）" : "学内記事の本文"}
+                  {isNote ? "note記事（編集不可）" : "学内記事の本文"}
                 </FormLabel>
                 <FormControl>
                   <Textarea 

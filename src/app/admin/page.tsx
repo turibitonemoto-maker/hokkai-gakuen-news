@@ -208,9 +208,6 @@ export default function AdminDashboard() {
               <Button variant="outline" className="w-full justify-start gap-3 h-12 border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-sm rounded-xl">
                 <Settings className="h-5 w-5" />
                 <span>システム設定</span>
-                <Badge variant="secondary" className="ml-auto text-[8px] h-4 px-1 gap-1">
-                  <ShieldCheck className="h-2 w-2" /> 🔒
-                </Badge>
               </Button>
             </Link>
             <Separator className="my-2" />

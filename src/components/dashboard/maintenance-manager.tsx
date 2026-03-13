@@ -118,9 +118,6 @@ export function MaintenanceManager() {
             <Button className="w-full h-14 font-black text-md rounded-2xl shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform active:scale-95" onClick={handleUnlock}>
               アクセスを承認する
             </Button>
-            <p className="text-center text-[10px] text-slate-300 font-bold uppercase tracking-widest">
-              Authorized Personnel Only
-            </p>
           </CardContent>
         </Card>
       </div>
@@ -175,7 +172,6 @@ export function MaintenanceManager() {
                       <FormLabel className="text-xl font-black text-slate-800">メンテナンスモード 🔒</FormLabel>
                       <FormDescription className="text-sm font-medium text-slate-500 max-w-md">
                         有効にすると全ページがメンテナンス画面に切り替わります。
-                        緊急時や大規模更新時に使用してください。
                       </FormDescription>
                     </div>
                     <FormControl>

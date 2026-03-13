@@ -12,7 +12,6 @@ import {
   ImageOff,
   RefreshCw,
   Clock,
-  Lock,
   ShieldCheck
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -135,12 +134,6 @@ export function NoteManager() {
               note.com の公式アカウントから取得した最新の投稿です。
             </CardDescription>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="text-[10px] font-black text-purple-400 uppercase tracking-[0.2em] flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              STATUS: {isSyncing ? "SYNCING..." : "READY"}
-            </div>
-          </div>
         </CardHeader>
         <CardContent className="p-0">
           {isSyncing || (isDbLoading && rssArticles.length === 0) ? (
@@ -246,14 +239,6 @@ export function NoteManager() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
-      <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm text-center">
-        <p className="text-sm text-slate-500 font-bold">
-          採用した記事の公開・非公開の管理は 
-          <Link href="/admin/articles" className="text-primary font-black hover:underline mx-2">記事・公開管理</Link> 
-          セクションで広々と行えます。
-        </p>
-      </div>
     </div>
   );
 }

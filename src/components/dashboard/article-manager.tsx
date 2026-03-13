@@ -83,7 +83,7 @@ export function ArticleManager() {
         if (tag && tag.trim()) tagsSet.add(tag.trim());
       });
     });
-    return Array.from(tagsSet).filter(tag => tag !== "note"); // noteタグの重複排除
+    return Array.from(tagsSet).filter(tag => tag !== "note" && tag !== "Note"); // 重複排除
   }, [allArticles]);
 
   const filteredArticles = useMemo(() => {
@@ -138,7 +138,7 @@ export function ArticleManager() {
           <div>
             <CardTitle>{currentArticle ? "記事を編集" : "新規記事の作成"}</CardTitle>
             <CardDescription>
-              {currentArticle?.articleType === "Note" ? "noteから採用した記事の公開設定を編集します。" : "学内のニュースやコラムを作成・編集します。"}
+              {currentArticle?.articleType === "Note" ? "note記事の公開設定を編集します。" : "学内のニュースやコラムを作成・編集します。"}
             </CardDescription>
           </div>
           <Button variant="ghost" onClick={() => setIsEditing(false)}>
@@ -157,7 +157,7 @@ export function ArticleManager() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">記事・公開管理</h2>
-          <p className="text-sm text-slate-500">記事ごとの閲覧数を確認し、公開・非公開を一括管理します。</p>
+          <p className="text-sm text-slate-500">記事の公開・非公開を一括管理します。</p>
         </div>
         <Button onClick={() => { setCurrentArticle(null); setIsEditing(true); }} className="h-11 px-6 shadow-md gap-2 font-bold">
           <Plus className="h-5 w-5" />

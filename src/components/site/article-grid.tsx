@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -47,6 +48,7 @@ function ArticleCard({ article }: { article: any }) {
             fill
             className="object-cover group-hover:scale-110 transition-transform duration-500"
             unoptimized={isNote}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center text-slate-200 gap-2">
