@@ -9,11 +9,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { User, MessageCircle, ExternalLink, TrendingUp } from 'lucide-react';
 import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { increment } from 'firebase/firestore';
+import { getPlaceholderById } from '@/app/lib/placeholder-images';
 
 export function SidebarContent({ ads }: { ads: any[] }) {
   const firestore = useFirestore();
   const presidentRef = useMemoFirebase(() => doc(firestore, 'settings', 'president-message'), [firestore]);
   const { data: president } = useDoc(presidentRef);
+  const presidentPlaceholder = getPlaceholderById('president-default');
 
   const handleAdClick = (ad: any) => {
     if (!firestore) return;
@@ -36,10 +38,11 @@ export function SidebarContent({ ads }: { ads: any[] }) {
             <div className="flex flex-col items-center mb-6">
               <div className="relative h-24 w-24 rounded-2xl overflow-hidden shadow-md mb-4 border-2 border-white">
                 <Image
-                  src={president.authorImageUrl || "https://picsum.photos/seed/president/200/200"}
+                  src={president.authorImageUrl || presidentPlaceholder.imageUrl}
                   alt={president.authorName}
                   fill
                   className="object-cover"
+                  data-ai-hint={presidentPlaceholder.imageHint}
                 />
               </div>
               <h4 className="font-bold text-slate-800 text-lg">{president.authorName}</h4>

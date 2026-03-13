@@ -11,6 +11,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
+import { getPlaceholderById } from "@/app/lib/placeholder-images";
 
 interface HeroSectionProps {
   images: any[];
@@ -21,8 +22,14 @@ export function HeroSection({ images }: HeroSectionProps) {
     Autoplay({ delay: 5000, stopOnInteraction: true })
   );
 
+  const heroPlaceholder = getPlaceholderById('hero-default');
+
   const displayImages = images.length > 0 ? images : [
-    { imageUrl: "https://picsum.photos/seed/hokkai1/1200/600", title: "北海学園大学 キャンパス" }
+    { 
+      imageUrl: heroPlaceholder.imageUrl, 
+      title: "真実を伝え、未来を創る。",
+      imageHint: heroPlaceholder.imageHint
+    }
   ];
 
   return (
@@ -43,6 +50,7 @@ export function HeroSection({ images }: HeroSectionProps) {
                   fill
                   className="object-cover opacity-70"
                   priority={index === 0}
+                  data-ai-hint={image.imageHint || heroPlaceholder.imageHint}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
                 <div className="absolute inset-0 flex flex-col justify-end p-8 md:p-16 max-w-7xl mx-auto w-full">

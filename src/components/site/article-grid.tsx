@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Share2, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getPlaceholderById } from '@/app/lib/placeholder-images';
 
 const CATEGORY_LABELS: Record<string, string> = {
   Campus: "学内ニュース",
@@ -36,15 +37,17 @@ export function ArticleGrid({ articles }: { articles: any[] }) {
 
 function ArticleCard({ article }: { article: any }) {
   const isNote = article.articleType === 'Note';
+  const placeholder = getPlaceholderById(isNote ? 'note-default' : 'article-default');
 
   return (
     <div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100 flex flex-col h-full">
       <div className="relative h-52 overflow-hidden">
         <Image
-          src={article.mainImageUrl || "https://picsum.photos/seed/news/800/450"}
+          src={article.mainImageUrl || placeholder.imageUrl}
           alt={article.title}
           fill
           className="object-cover group-hover:scale-110 transition-transform duration-500"
+          data-ai-hint={placeholder.imageHint}
         />
         <div className="absolute top-4 left-4 flex gap-2">
           <Badge className={cn(
