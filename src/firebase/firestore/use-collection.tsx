@@ -10,6 +10,7 @@ import {
   QuerySnapshot,
   CollectionReference,
 } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { useUser } from '@/firebase';
@@ -81,8 +82,10 @@ export function useCollection<T = any>(
       },
       async (serverError: FirestoreError) => {
         // 【最重要】ログイン直後のトークン同期ラグ（フライング）による一時的な権限エラーを検知
-        // ユーザーが存在するのに「権限なし」と言われた場合は、致命的なエラーとせず静かに待機する
-        if (serverError.code === 'permission-denied' && user) {
+        // ユーザーが存在する（またはAuthインスタンスに存在する）のに「権限なし」と言われた場合は、
+        // 致命的なエラーとせず静かに待機する
+        const currentAuthUser = getAuth().currentUser;
+        if (serverError.code === 'permission-denied' && (user || currentAuthUser)) {
           console.warn("Firestore (useCollection): Permission denied for authenticated user. Waiting for auth sync...");
           // isLoadingを維持し、エラーもセットせずにリターン。次のスナップショットまたはリトライを待つ。
           return;

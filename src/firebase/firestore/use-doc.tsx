@@ -9,6 +9,7 @@ import {
   FirestoreError,
   DocumentSnapshot,
 } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { useUser } from '@/firebase';
@@ -67,8 +68,8 @@ export function useDoc<T = any>(
       },
       async (serverError: FirestoreError) => {
         // 【最重要】ログイン直後のトークン同期ラグによる一時的な権限エラーを検知
-        // ユーザーが存在するのに「権限なし」と言われた場合は、致命的なエラーとせず静かに待機する
-        if (serverError.code === 'permission-denied' && user) {
+        const currentAuthUser = getAuth().currentUser;
+        if (serverError.code === 'permission-denied' && (user || currentAuthUser)) {
           console.warn("Firestore (useDoc): Permission denied on doc for authenticated user. Waiting for auth sync...");
           return;
         }
