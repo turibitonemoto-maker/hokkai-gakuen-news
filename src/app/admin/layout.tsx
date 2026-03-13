@@ -15,7 +15,6 @@ import {
   ExternalLink,
   Share2,
   Loader2,
-  Newspaper,
   Lock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,6 +25,7 @@ import { signOut } from "firebase/auth";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { LoginForm } from "@/components/auth/login-form";
+import Image from "next/image";
 
 const PUBLIC_SITE_URL = "/";
 
@@ -70,8 +70,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <header className="py-6 px-8 bg-white border-b shadow-sm sticky top-0 z-50">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="bg-primary p-2 rounded-xl text-white shadow-lg">
-                <Newspaper className="h-6 w-6" />
+              <div className="bg-white p-1 rounded-xl shadow-md border">
+                <Image src="/favicon.ico" alt="Logo" width={32} height={32} className="rounded-lg" />
               </div>
               <div>
                 <h1 className="text-xl font-bold text-slate-800 leading-tight">北海学園新聞会</h1>
@@ -100,8 +100,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         )}
       >
         <div className="p-6 flex items-center gap-3 border-b border-slate-700/50">
-          <div className="bg-primary text-white p-2 rounded-lg shrink-0 shadow-lg">
-            <Newspaper className="h-5 w-5" />
+          <div className="bg-white p-1 rounded-lg shrink-0 shadow-lg">
+            <Image src="/favicon.ico" alt="Logo" width={24} height={24} className="rounded-md" />
           </div>
           {isSidebarOpen && (
             <div className="overflow-hidden whitespace-nowrap">

@@ -2,10 +2,11 @@
 
 import * as React from "react";
 import { useState, useEffect } from "react";
-import { Lock, Mail, ShieldCheck, Loader2, AlertCircle } from "lucide-react";
+import { Lock, Mail, Loader2, AlertCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -77,8 +78,8 @@ export function LoginForm() {
     <Card className="w-full max-w-md shadow-2xl border-none bg-white/95 backdrop-blur-sm animate-in fade-in zoom-in duration-300">
       <CardHeader className="space-y-1 pb-6 text-center">
         <div className="flex justify-center mb-4">
-          <div className="bg-primary p-3 rounded-2xl text-white shadow-lg">
-            <ShieldCheck className="h-8 w-8" />
+          <div className="bg-white p-3 rounded-2xl shadow-lg border">
+            <Image src="/favicon.ico" alt="Logo" width={48} height={48} className="rounded-xl" />
           </div>
         </div>
         <CardTitle className="text-2xl font-bold text-primary tracking-tight">
