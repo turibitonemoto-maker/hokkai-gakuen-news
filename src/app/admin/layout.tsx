@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -28,7 +29,7 @@ import { LoginForm } from "@/components/auth/login-form";
 
 /**
  * 管理画面の共通レイアウト
- * 認証チェックとサイドバーの表示を行います。
+ * 認証チェックとサイドバー、ブランドロゴの表示を制御します。
  */
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
@@ -44,8 +45,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const menuItems = [
     { id: "/admin", label: "ダッシュボード", icon: LayoutDashboard },
-    { id: "/admin/articles", label: "記事管理", icon: FileText },
-    { id: "/admin/note", label: "note連動", icon: Share2 },
+    { id: "/admin/articles", label: "記事・公開管理", icon: FileText },
+    { id: "/admin/note", label: "note選別・採用", icon: Share2 },
     { id: "/admin/hero", label: "ヒーロー画像", icon: ImageIcon },
     { id: "/admin/ads", label: "広告管理", icon: Megaphone },
     { id: "/admin/president", label: "会長挨拶設定", icon: UserRound },
@@ -54,7 +55,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const handleLogout = async () => {
     await signOut(auth);
-    router.push('/');
+    router.push('/admin'); // 管理画面トップ（ログインフォーム）へ
   };
 
   if (!mounted || isUserLoading) {
@@ -65,20 +66,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  // 未ログイン時の表示：サイトのブランドイメージを維持したログイン画面
+  // 未ログイン時の表示：サイトブランドを維持したログイン画面
   if (!user) {
     return (
       <div className="min-h-screen flex flex-col bg-[#F0F2F5]">
-        <header className="py-6 px-8 bg-white border-b shadow-sm">
-          <Link href="/" className="flex items-center gap-3 w-fit">
-            <div className="bg-primary p-2 rounded-xl text-white">
-              <Newspaper className="h-6 w-6" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-slate-800 leading-tight">Hokkai Gakuen News 1</h1>
-              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">CMS 管理システム</p>
-            </div>
-          </Link>
+        <header className="py-6 px-8 bg-white border-b shadow-sm sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-3">
+              <div className="bg-primary p-2 rounded-xl text-white shadow-lg">
+                <Newspaper className="h-6 w-6" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-slate-800 leading-tight">Hokkai Gakuen News 1</h1>
+                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">北海学園大学一部新聞会</p>
+              </div>
+            </Link>
+          </div>
         </header>
         <div className="flex-1 flex items-center justify-center p-4">
           <div className="w-full max-w-md">
@@ -93,6 +96,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
+      {/* サイドバー */}
       <aside 
         className={cn(
           "bg-[#1e293b] text-slate-300 transition-all duration-300 flex flex-col fixed inset-y-0 z-50",
@@ -100,13 +104,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         )}
       >
         <div className="p-6 flex items-center gap-3 border-b border-slate-700/50">
-          <div className="bg-primary text-white p-2 rounded-lg shrink-0">
+          <div className="bg-primary text-white p-2 rounded-lg shrink-0 shadow-lg">
             <Newspaper className="h-5 w-5" />
           </div>
           {isSidebarOpen && (
             <div className="overflow-hidden whitespace-nowrap">
               <h1 className="text-sm font-bold text-white leading-tight">北海学園一部新聞会</h1>
-              <p className="text-[10px] text-slate-400">CMS 管理パネル</p>
+              <p className="text-[10px] text-slate-400 font-medium">Hokkai Gakuen News 1 CMS</p>
             </div>
           )}
         </div>
@@ -142,6 +146,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </aside>
 
+      {/* メインコンテンツエリア */}
       <div 
         className={cn(
           "flex-1 flex flex-col transition-all duration-300",
@@ -159,13 +164,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
           <div className="flex items-center gap-3">
             <Link href="/" target="_blank">
-              <Button variant="outline" size="sm" className="gap-2">
+              <Button variant="outline" size="sm" className="gap-2 border-primary/20 text-primary hover:bg-primary/5">
                 <Globe className="h-4 w-4" />
-                サイトを表示
+                サイトを確認
                 <ExternalLink className="h-3 w-3" />
               </Button>
             </Link>
-            <Badge variant="outline" className="bg-slate-50 text-slate-500 font-normal">
+            <Badge variant="outline" className="bg-slate-50 text-slate-500 font-normal border-slate-200">
               {user.email}
             </Badge>
           </div>

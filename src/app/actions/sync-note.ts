@@ -1,10 +1,11 @@
+
 'use server';
 
 import Parser from 'rss-parser';
 
 /**
  * @fileOverview note記事同期のためのサーバーアクション
- * RSSからリッチコンテンツ(content:encoded)を解析し、画像を抽出します。
+ * RSSからリッチコンテンツを解析し、アイキャッチ画像を確実に抽出します。
  */
 
 const parser = new Parser();
@@ -16,7 +17,7 @@ export async function fetchNoteArticles() {
     const feed = await parser.parseURL(NOTE_RSS_URL);
 
     return feed.items.map((item, index) => {
-      // 抽出対象の文字列を結合
+      // 抽出対象の文字列を結合（リッチコンテンツを優先）
       const searchTarget = (
         (item as any)['content:encoded'] || 
         item.content || 
@@ -27,17 +28,10 @@ export async function fetchNoteArticles() {
       let firstImage = "";
       
       // 1. noteの画像サーバー(st-note.com)のURLを直接探す（これが最も確実）
+      // アイキャッチ画像は通常 production/uploads/images 配下にあります
       const anyImgMatch = searchTarget.match(/https:\/\/assets\.st-note\.com\/[^"'\s>]+/i);
       if (anyImgMatch) {
-        firstImage = anyImgMatch[0];
-      }
-
-      // 2. もし見つからなければ、imgタグのsrc属性を探す
-      if (!firstImage) {
-        const imageMatch = searchTarget.match(/<img[^>]+src=["']([^"'>]+)["']/i);
-        if (imageMatch) {
-          firstImage = imageMatch[1];
-        }
+        firstImage = anyImgMatch[0].replace(/&amp;/g, '&'); // HTMLエスケープの修正
       }
 
       // 記事IDの抽出
@@ -49,7 +43,7 @@ export async function fetchNoteArticles() {
       const pubDate = item.pubDate ? new Date(item.pubDate) : new Date();
       const formattedDate = pubDate.toISOString().split('T')[0];
 
-      // スニペットの作成
+      // スニペットの作成（HTMLタグを除去）
       const snippet = (item.contentSnippet || item.content || item.description || "")
         .replace(/<[^>]*>/g, '') 
         .substring(0, 300);
