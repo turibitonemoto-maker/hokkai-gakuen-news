@@ -28,7 +28,7 @@ const maintenanceSchema = z.object({
 type MaintenanceValues = z.infer<typeof maintenanceSchema>;
 
 export function MaintenanceManager() {
-  const [pin, setPin] = useState("");
+  const [password, setPassword] = useState("");
   const [isUnlocked, setIsUnlocked] = useState(false);
   const firestore = useFirestore();
   const { toast } = useToast();
@@ -72,10 +72,11 @@ export function MaintenanceManager() {
   }
 
   const handleUnlock = () => {
-    if (pin === "1950") {
+    const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "zansin";
+    if (password === correctPassword) {
       setIsUnlocked(true);
     } else {
-      toast({ variant: "destructive", title: "PINコードが違います" });
+      toast({ variant: "destructive", title: "パスワードが正しくありません" });
     }
   };
 
@@ -95,16 +96,16 @@ export function MaintenanceManager() {
             <Lock className="h-8 w-8 text-primary" />
           </div>
           <CardTitle>システム保護</CardTitle>
-          <CardDescription>設定を変更するには4桁の認証コードが必要です</CardDescription>
+          <CardDescription>設定を変更するには管理用パスワードが必要です</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Input 
             type="password" 
-            placeholder="****" 
-            className="text-center text-2xl tracking-[1em]"
-            maxLength={4}
-            value={pin}
-            onChange={(e) => setPin(e.target.value)}
+            placeholder="Password" 
+            className="text-center"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
           />
           <Button className="w-full h-12 font-bold" onClick={handleUnlock}>認証</Button>
         </CardContent>
@@ -135,15 +136,15 @@ export function MaintenanceManager() {
           <div className="flex justify-between items-center">
             <CardTitle className="text-lg flex items-center gap-2">
               <ShieldCheck className="h-5 w-5 text-green-600" />
-              現在のステータス
+              稼働状況
             </CardTitle>
             {config?.isMaintenanceMode ? (
               <Badge variant="destructive" className="h-8 px-4 font-bold text-sm animate-pulse">
-                <ShieldAlert className="h-4 w-4 mr-2" /> 停止中
+                <ShieldAlert className="h-4 w-4 mr-2" /> メンテナンス中
               </Badge>
             ) : (
               <Badge variant="default" className="h-8 px-4 font-bold text-sm bg-green-500 hover:bg-green-600">
-                <ShieldCheck className="h-4 w-4 mr-2" /> 稼働中
+                <ShieldCheck className="h-4 w-4 mr-2" /> 正常稼働中
               </Badge>
             )}
           </div>

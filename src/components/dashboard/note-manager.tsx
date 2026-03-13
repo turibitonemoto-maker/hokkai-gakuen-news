@@ -11,7 +11,8 @@ import {
   PlusCircle, 
   ImageOff,
   RefreshCw,
-  Clock
+  Clock,
+  Lock
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -23,10 +24,14 @@ import { useToast } from "@/hooks/use-toast";
 import { fetchNoteArticles } from "@/app/actions/sync-note";
 import Image from "next/image";
 import Link from "next/link";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 export function NoteManager() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [rssArticles, setRssArticles] = useState<any[]>([]);
+  const [password, setPassword] = useState("");
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   
   const firestore = useFirestore();
   const { user } = useUser();
@@ -49,7 +54,18 @@ export function NoteManager() {
     return new Set(allArticles.filter(a => a.articleType === "Note").map(a => a.id));
   }, [allArticles]);
 
-  const handleSync = async () => {
+  const startSyncProcess = () => {
+    setShowPasswordDialog(true);
+  };
+
+  const handleSyncWithAuth = async () => {
+    const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "zansin";
+    if (password !== correctPassword) {
+      toast({ variant: "destructive", title: "パスワードが正しくありません" });
+      return;
+    }
+
+    setShowPasswordDialog(false);
     setIsSyncing(true);
     try {
       const articles = await fetchNoteArticles();
@@ -67,6 +83,7 @@ export function NoteManager() {
       toast({ variant: "destructive", title: "同期エラー", description: "noteの取得に失敗しました。" });
     } finally {
       setIsSyncing(false);
+      setPassword("");
     }
   };
 
@@ -92,12 +109,12 @@ export function NoteManager() {
       <div className="flex justify-between items-end">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">note管理</h2>
-          <p className="text-sm text-slate-500">外部メディア（note）から記事を公式サイトへ取り込みます。</p>
+          <p className="text-sm text-slate-500">外部メディア（note）から最新記事を取得し、公式サイトへ採用します。</p>
         </div>
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={handleSync} 
+          onClick={startSyncProcess} 
           disabled={isSyncing}
           className="gap-2 border-primary/20 text-primary hover:bg-primary/5 font-bold h-10 px-6"
         >
@@ -119,14 +136,14 @@ export function NoteManager() {
           </div>
           <div className="text-[10px] font-bold text-purple-400 uppercase tracking-widest flex items-center gap-2">
             <Clock className="h-3 w-3" />
-            最終チェック: {isSyncing ? "同期中..." : "待機中"}
+            状態: {isSyncing ? "同期中..." : "待機中"}
           </div>
         </CardHeader>
         <CardContent className="p-0">
           {isSyncing || (isDbLoading && rssArticles.length === 0) ? (
             <div className="p-20 flex flex-col items-center gap-4">
               <Loader2 className="h-10 w-10 animate-spin text-purple-400" />
-              <p className="text-sm text-slate-400 font-bold">データを取得しています...</p>
+              <p className="text-sm text-slate-400 font-bold">データを同期しています...</p>
             </div>
           ) : rssArticles.length > 0 ? (
             <Table>
@@ -187,11 +204,38 @@ export function NoteManager() {
           ) : (
             <div className="py-20 text-center text-slate-400">
               <Share2 className="h-10 w-10 mx-auto opacity-20 mb-2" />
-              <p className="font-bold">「更新」ボタンを押して最新のnote記事を取得してください</p>
+              <p className="font-bold text-sm">「更新」ボタンを押して最新のnote記事をチェックしてください</p>
             </div>
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Lock className="h-5 w-5 text-primary" />
+              同期の実行確認
+            </DialogTitle>
+            <DialogDescription>
+              最新のnote記事を同期するには管理用パスワードが必要です。
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Input 
+              type="password" 
+              placeholder="Password" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSyncWithAuth()}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPasswordDialog(false)}>キャンセル</Button>
+            <Button onClick={handleSyncWithAuth}>実行</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       <div className="bg-slate-100/50 p-6 rounded-2xl border border-dashed border-slate-200 text-center">
         <p className="text-sm text-slate-600 font-medium">

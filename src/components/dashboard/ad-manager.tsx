@@ -25,7 +25,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 export function AdManager() {
-  const [pin, setPin] = useState("");
+  const [password, setPassword] = useState("");
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [selectedAd, setSelectedAd] = useState<any>(null);
@@ -43,20 +43,12 @@ export function AdManager() {
   const { data: ads, isLoading } = useCollection(adsQuery);
 
   const handleUnlock = () => {
-    if (pin === "1950") {
+    const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "zansin";
+    if (password === correctPassword) {
       setIsUnlocked(true);
     } else {
-      toast({ variant: "destructive", title: "PINコードが違います" });
+      toast({ variant: "destructive", title: "パスワードが正しくありません" });
     }
-  };
-
-  const confirmDelete = () => {
-    if (!adToDelete || !firestore) return;
-    const docRef = doc(firestore, "ads", adToDelete.id);
-    deleteDocumentNonBlocking(docRef);
-    toast({ title: "削除しました", description: `「${adToDelete.title}」を削除しました。` });
-    setAdToDelete(null);
-    setSelectedAd(null);
   };
 
   if (!isUnlocked) {
@@ -67,16 +59,16 @@ export function AdManager() {
             <Lock className="h-8 w-8 text-primary" />
           </div>
           <CardTitle>広告管理ロック</CardTitle>
-          <CardDescription>4桁の暗証番号を入力してください</CardDescription>
+          <CardDescription>管理用パスワードを入力してください</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Input 
             type="password" 
-            placeholder="****" 
-            className="text-center text-2xl tracking-[1em]"
-            maxLength={4}
-            value={pin}
-            onChange={(e) => setPin(e.target.value)}
+            placeholder="Password" 
+            className="text-center"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
           />
           <Button className="w-full h-12 font-bold" onClick={handleUnlock}>認証</Button>
         </CardContent>
@@ -92,7 +84,6 @@ export function AdManager() {
     );
   }
 
-  // 詳細管理画面
   if (selectedAd) {
     return (
       <div className="space-y-6">
@@ -180,7 +171,6 @@ export function AdManager() {
     );
   }
 
-  // 広告作成画面
   if (isAdding) {
     return (
       <div className="space-y-6">
@@ -226,7 +216,7 @@ export function AdManager() {
                   alt={ad.title || "広告バナー"} 
                   fill 
                   className="object-contain p-2"
-                  sizes="(max-width: 768px) 100vw, 300px"
+                  sizes="(max-width: 768px) 100vw, 400px"
                   unoptimized
                 />
                 <div className="absolute top-2 right-2 flex gap-1">

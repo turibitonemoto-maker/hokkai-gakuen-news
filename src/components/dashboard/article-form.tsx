@@ -261,7 +261,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  {isNote ? "note記事の紹介文（外部編集のため読み取り専用）" : "学内記事の本文"}
+                  {isNote ? "note記事の紹介文（外部編集のため変更不可）" : "学内記事の本文"}
                 </FormLabel>
                 <FormControl>
                   <Textarea 
@@ -273,7 +273,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                 </FormControl>
                 {isNote && (
                   <FormDescription className="text-purple-600 font-bold">
-                    ※ note記事の本文は外部のnote.comで編集してください。ここでの編集は反映されません。
+                    ※ note記事の本文は note.com で編集してください。ここでの変更は反映されません。
                   </FormDescription>
                 )}
                 {!isNote && (

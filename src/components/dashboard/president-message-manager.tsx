@@ -25,7 +25,7 @@ const presidentMessageSchema = z.object({
 type PresidentMessageValues = z.infer<typeof presidentMessageSchema>;
 
 export function PresidentMessageManager() {
-  const [pin, setPin] = useState("");
+  const [password, setPassword] = useState("");
   const [isUnlocked, setIsUnlocked] = useState(false);
   const firestore = useFirestore();
   const { user } = useUser();
@@ -58,10 +58,11 @@ export function PresidentMessageManager() {
   }, [messageData, form]);
 
   const handleUnlock = () => {
-    if (pin === "1950") {
+    const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "zansin";
+    if (password === correctPassword) {
       setIsUnlocked(true);
     } else {
-      toast({ variant: "destructive", title: "PINコードが違います" });
+      toast({ variant: "destructive", title: "パスワードが正しくありません" });
     }
   };
 
@@ -87,16 +88,16 @@ export function PresidentMessageManager() {
             <Lock className="h-8 w-8 text-primary" />
           </div>
           <CardTitle>会長挨拶ロック</CardTitle>
-          <CardDescription>4桁の暗証番号を入力してください</CardDescription>
+          <CardDescription>管理用パスワードを入力してください</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Input 
             type="password" 
-            placeholder="****" 
-            className="text-center text-2xl tracking-[1em]"
-            maxLength={4}
-            value={pin}
-            onChange={(e) => setPin(e.target.value)}
+            placeholder="Password" 
+            className="text-center"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
           />
           <Button className="w-full h-12 font-bold" onClick={handleUnlock}>認証</Button>
         </CardContent>
