@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "Article": {
@@ -53,11 +54,12 @@
     },
     "MaintenanceConfig": {
       "title": "MaintenanceConfig",
-      "description": "表示用サイトのメンテナンス制御フラグ。",
+      "description": "表示用サイトの制御フラグと伝令メッセージ。",
       "type": "object",
       "properties": {
         "isMaintenanceMode": { "type": "boolean" },
         "maintenanceMessage": { "type": "string" },
+        "systemStatusMessage": { "type": "string", "description": "表示サイトへの緊急伝令（例：インデックス作成中）" },
         "updatedAt": { "type": "string", "format": "date-time" }
       }
     }
@@ -80,7 +82,7 @@
     },
     "/settings/maintenance": {
       "schema": { "$ref": "#/backend/entities/MaintenanceConfig" },
-      "description": "メンテナンス設定。"
+      "description": "メンテナンスおよびシステム状況設定。"
     },
     "/settings/president-message": {
       "schema": { "type": "object" },
