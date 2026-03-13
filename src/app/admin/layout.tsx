@@ -16,7 +16,8 @@ import {
   ExternalLink,
   Share2,
   Loader2,
-  Newspaper
+  Newspaper,
+  Inbox
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +48,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { id: "/admin", label: "ダッシュボード", icon: LayoutDashboard },
     { id: "/admin/articles", label: "記事・公開管理", icon: FileText },
     { id: "/admin/note", label: "note選別・採用", icon: Share2 },
+    { id: "/admin/inquiries", label: "お問い合わせ", icon: Inbox },
     { id: "/admin/hero", label: "ヒーロー画像", icon: ImageIcon },
     { id: "/admin/ads", label: "広告管理", icon: Megaphone },
     { id: "/admin/president", label: "会長挨拶設定", icon: UserRound },
