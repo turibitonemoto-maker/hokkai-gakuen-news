@@ -195,7 +195,7 @@ export default function AdminDashboard() {
             <Link href="/admin/articles">
               <Button className="w-full justify-start gap-3 h-12 shadow-sm font-bold text-sm rounded-xl">
                 <FileText className="h-5 w-5" />
-                <span>記事の管理・公開</span>
+                <span>記事・公開管理</span>
               </Button>
             </Link>
             <Link href="/admin/note">

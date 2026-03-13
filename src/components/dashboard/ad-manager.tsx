@@ -69,9 +69,9 @@ export function AdManager() {
             <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
               <Megaphone className="h-10 w-10 text-primary animate-pulse" />
             </div>
-            <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">広告管理承認 🔒</CardTitle>
+            <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">広告管理 🔒</CardTitle>
             <CardDescription className="text-sm font-bold text-slate-500 px-6 mt-2">
-              スポンサー情報の完全性を保つため、アクセス承認が必要です。
+              伝統を保護するためのアクセス承認が必要です。
             </CardDescription>
           </CardHeader>
           <CardContent className="p-10 pt-4 space-y-6">
@@ -212,7 +212,7 @@ export function AdManager() {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-black text-slate-800 tracking-tight">スポンサー広告管理 🔒</h2>
+          <h2 className="text-3xl font-black text-slate-800 tracking-tight">広告管理 🔒</h2>
           <p className="text-sm font-bold text-slate-500 mt-1">バナーの編集や統計データの確認を行います。</p>
         </div>
         <Button onClick={() => setIsAdding(true)} className="flex items-center gap-2 h-12 px-8 font-black rounded-2xl shadow-lg shadow-primary/20">

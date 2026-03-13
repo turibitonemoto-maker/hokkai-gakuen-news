@@ -120,7 +120,7 @@ export function NoteManager() {
           className="gap-3 border-purple-200 text-purple-700 hover:bg-purple-50 font-black h-12 px-8 rounded-2xl shadow-sm"
         >
           <RefreshCw className={cn("h-5 w-5", isSyncing && "animate-spin")} />
-          最新記事を同期 🔒
+          最新記事を更新 🔒
         </Button>
       </div>
 
@@ -211,7 +211,7 @@ export function NoteManager() {
               <div className="bg-slate-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Share2 className="h-10 w-10 opacity-20" />
               </div>
-              <p className="font-black text-lg text-slate-400">最新記事を同期してください</p>
+              <p className="font-black text-lg text-slate-400">最新記事を更新してください</p>
               <p className="text-sm font-bold mt-2 opacity-60">右上の更新ボタンから note.com の最新データを取得します。</p>
             </div>
           )}
@@ -226,7 +226,7 @@ export function NoteManager() {
             </div>
             <DialogTitle className="text-2xl font-black text-slate-800 text-center">アクセス承認 🔒</DialogTitle>
             <DialogDescription className="text-center font-bold text-slate-500">
-              noteとの通信を安全に実行するため、承認パスワードが必要です。
+              伝統を保護するためのアクセス承認が必要です。
             </DialogDescription>
           </DialogHeader>
           <div className="py-6">
@@ -242,7 +242,7 @@ export function NoteManager() {
           </div>
           <DialogFooter className="sm:justify-center gap-3">
             <Button variant="outline" onClick={() => setShowPasswordDialog(false)} className="rounded-xl font-bold h-12 px-6">キャンセル</Button>
-            <Button onClick={handleSyncWithAuth} className="rounded-xl font-black h-12 px-10 shadow-lg shadow-primary/20">同期を実行</Button>
+            <Button onClick={handleSyncWithAuth} className="rounded-xl font-black h-12 px-10 shadow-lg shadow-primary/20">更新を実行</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

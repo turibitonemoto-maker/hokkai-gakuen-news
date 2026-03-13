@@ -273,7 +273,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                 </FormControl>
                 {isNote && (
                   <FormDescription className="text-purple-600 font-bold">
-                    ※ note記事の本文は note.com で編集してください。ここでの変更は反映されません。
+                    ※ note記事の本文は note.com で編集してください。
                   </FormDescription>
                 )}
                 {!isNote && (

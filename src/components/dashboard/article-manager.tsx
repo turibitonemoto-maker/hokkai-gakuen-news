@@ -83,7 +83,7 @@ export function ArticleManager() {
         if (tag && tag.trim()) tagsSet.add(tag.trim());
       });
     });
-    return Array.from(tagsSet);
+    return Array.from(tagsSet).filter(tag => tag !== "note"); // noteタグの重複排除
   }, [allArticles]);
 
   const filteredArticles = useMemo(() => {

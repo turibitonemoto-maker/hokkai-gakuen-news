@@ -97,9 +97,9 @@ export function MaintenanceManager() {
             <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
               <Shield className="h-10 w-10 text-primary animate-pulse" />
             </div>
-            <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">伝統保護エリア</CardTitle>
+            <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">メンテナンス管理 🔒</CardTitle>
             <CardDescription className="text-sm font-bold text-slate-500 px-6 mt-2">
-              システムの中枢を保護するため、アクセス承認が必要です。
+              伝統を保護するためのアクセス承認が必要です。
             </CardDescription>
           </CardHeader>
           <CardContent className="p-10 pt-4 space-y-6">
@@ -131,7 +131,7 @@ export function MaintenanceManager() {
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-700">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-black text-slate-800 tracking-tight">表示サイト制御</h2>
+          <h2 className="text-3xl font-black text-slate-800 tracking-tight">メンテナンス管理 🔒</h2>
           <p className="text-sm font-bold text-slate-500 mt-1">サイトの稼働状況をコントロールします。</p>
         </div>
         <Button 

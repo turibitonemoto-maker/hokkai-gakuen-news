@@ -89,9 +89,9 @@ export function PresidentMessageManager() {
             <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
               <UserRound className="h-10 w-10 text-primary animate-pulse" />
             </div>
-            <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">会長挨拶保護 🔒</CardTitle>
+            <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">会長挨拶 🔒</CardTitle>
             <CardDescription className="text-sm font-bold text-slate-500 px-6 mt-2">
-              会の威信を担うメッセージを保護するため、アクセス承認が必要です。
+              伝統を保護するためのアクセス承認が必要です。
             </CardDescription>
           </CardHeader>
           <CardContent className="p-10 pt-4 space-y-6">
@@ -127,7 +127,7 @@ export function PresidentMessageManager() {
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-700">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-black text-slate-800 tracking-tight">会長挨拶管理 🔒</h2>
+        <h2 className="text-3xl font-black text-slate-800 tracking-tight">会長挨拶 🔒</h2>
       </div>
 
       <Card className="shadow-sm border-slate-200 rounded-3xl bg-white overflow-hidden">
