@@ -5,12 +5,13 @@ import { useState } from "react";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Loader2, ExternalLink, AlertTriangle, Pencil, Users, ArrowLeft, Calendar, Clock } from "lucide-react";
+import { Plus, Trash2, Loader2, ExternalLink, AlertTriangle, Pencil, Users, ArrowLeft, Calendar, Clock, Lock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { AdForm } from "./ad-form";
+import { Input } from "@/components/ui/input";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,6 +25,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 export function AdManager() {
+  const [pin, setPin] = useState("");
+  const [isUnlocked, setIsUnlocked] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [selectedAd, setSelectedAd] = useState<any>(null);
   const [adToDelete, setAdToDelete] = useState<any>(null);
@@ -39,6 +42,14 @@ export function AdManager() {
 
   const { data: ads, isLoading } = useCollection(adsQuery);
 
+  const handleUnlock = () => {
+    if (pin === "1950") {
+      setIsUnlocked(true);
+    } else {
+      toast({ variant: "destructive", title: "PINコードが違います" });
+    }
+  };
+
   const confirmDelete = () => {
     if (!adToDelete || !firestore) return;
     const docRef = doc(firestore, "ads", adToDelete.id);
@@ -47,6 +58,31 @@ export function AdManager() {
     setAdToDelete(null);
     setSelectedAd(null);
   };
+
+  if (!isUnlocked) {
+    return (
+      <Card className="max-w-md mx-auto mt-20 shadow-xl">
+        <CardHeader className="text-center">
+          <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Lock className="h-8 w-8 text-primary" />
+          </div>
+          <CardTitle>広告管理ロック</CardTitle>
+          <CardDescription>4桁の暗証番号を入力してください</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Input 
+            type="password" 
+            placeholder="****" 
+            className="text-center text-2xl tracking-[1em]"
+            maxLength={4}
+            value={pin}
+            onChange={(e) => setPin(e.target.value)}
+          />
+          <Button className="w-full h-12 font-bold" onClick={handleUnlock}>認証</Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -190,6 +226,7 @@ export function AdManager() {
                   alt={ad.title || "広告バナー"} 
                   fill 
                   className="object-contain p-2"
+                  sizes="(max-width: 768px) 100vw, 300px"
                   unoptimized
                 />
                 <div className="absolute top-2 right-2 flex gap-1">

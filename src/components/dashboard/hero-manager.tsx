@@ -5,11 +5,12 @@ import { useState } from "react";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Loader2, AlertTriangle, ImageIcon } from "lucide-react";
+import { Plus, Trash2, Loader2, AlertTriangle, ImageIcon, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,6 +23,8 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export function HeroManager() {
+  const [isAdding, setIsAdding] = useState(false);
+  const [newUrl, setNewUrl] = useState("");
   const [imageToDelete, setImageToDelete] = useState<any>(null);
   const firestore = useFirestore();
   const { user } = useUser();
@@ -35,20 +38,20 @@ export function HeroManager() {
   const { data: heroImages, isLoading } = useCollection(heroQuery);
 
   const handleAdd = () => {
+    if (!newUrl) return;
     if (heroImages && heroImages.length >= 5) {
       toast({
         variant: "destructive",
         title: "追加できません",
-        description: "ヒーロー画像は最大5枚までです。既存の画像を削除してください。",
+        description: "ヒーロー画像は最大5枚までです。",
       });
       return;
     }
 
-    const url = prompt("画像のURLを入力してください:");
-    if (url && firestore) {
+    if (firestore) {
       const colRef = collection(firestore, "hero-images");
       addDocumentNonBlocking(colRef, {
-        imageUrl: url,
+        imageUrl: newUrl,
         title: "スライド画像",
         order: (heroImages?.length || 0) + 1
       });
@@ -56,6 +59,8 @@ export function HeroManager() {
         title: "画像を追加しました",
         description: "ヒーロー画像を追加しました。",
       });
+      setNewUrl("");
+      setIsAdding(false);
     }
   };
 
@@ -74,10 +79,25 @@ export function HeroManager() {
           <h2 className="text-2xl font-bold text-slate-800">ヒーロー画像管理</h2>
           <p className="text-sm text-slate-500">最大5枚まで設定可能。一定間隔で自動的に切り替わります。</p>
         </div>
-        <Button onClick={handleAdd} className="flex items-center gap-2 h-11 px-6 shadow-md" disabled={heroImages && heroImages.length >= 5}>
-          <Plus className="h-4 w-4" />
-          画像を追加 ({heroImages?.length || 0}/5)
-        </Button>
+        {!isAdding ? (
+          <Button onClick={() => setIsAdding(true)} className="flex items-center gap-2 h-11 px-6 shadow-md" disabled={heroImages && heroImages.length >= 5}>
+            <Plus className="h-4 w-4" />
+            画像を追加 ({heroImages?.length || 0}/5)
+          </Button>
+        ) : (
+          <div className="flex gap-2 w-full max-w-md animate-in slide-in-from-right-4 duration-300">
+            <Input 
+              placeholder="画像のURLを入力" 
+              value={newUrl} 
+              onChange={(e) => setNewUrl(e.target.value)} 
+              className="bg-white"
+            />
+            <Button onClick={handleAdd} className="font-bold">追加</Button>
+            <Button variant="ghost" size="icon" onClick={() => setIsAdding(false)}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </div>
 
       {isLoading ? (
@@ -95,6 +115,7 @@ export function HeroManager() {
                   fill 
                   className="object-cover"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  unoptimized
                 />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <Button variant="destructive" size="icon" onClick={() => setImageToDelete(image)}>

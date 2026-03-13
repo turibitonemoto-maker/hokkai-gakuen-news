@@ -4,12 +4,10 @@
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import Image from 'next/image';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { User, MessageCircle, ExternalLink, TrendingUp } from 'lucide-react';
 import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { increment } from 'firebase/firestore';
-import { getPlaceholderById } from '@/app/lib/placeholder-images';
 import { useMemo } from 'react';
 
 export function SidebarContent({ ads }: { ads: any[] }) {
@@ -20,15 +18,16 @@ export function SidebarContent({ ads }: { ads: any[] }) {
   }, [firestore]);
   
   const { data: president } = useDoc(presidentRef);
-  const presidentPlaceholder = getPlaceholderById('hero-static-1');
 
-  // 期限切れの広告をフィルタリング
+  // 期限切れの広告をフィルタリング（現在時刻と比較）
   const activeAds = useMemo(() => {
     if (!ads) return [];
     const now = new Date();
     return ads.filter(ad => {
-      if (ad.endDate && new Date(ad.endDate) < now) return false;
+      // 開始日チェック
       if (ad.startDate && new Date(ad.startDate) > now) return false;
+      // 終了日チェック
+      if (ad.endDate && new Date(ad.endDate) < now) return false;
       return true;
     });
   }, [ads]);
@@ -52,13 +51,20 @@ export function SidebarContent({ ads }: { ads: any[] }) {
           <CardContent className="pt-6">
             <div className="flex flex-col items-center mb-6">
               <div className="relative h-24 w-24 rounded-2xl overflow-hidden shadow-md mb-4 border-2 border-white bg-slate-50">
-                <Image
-                  src={president.authorImageUrl || presidentPlaceholder.imageUrl}
-                  alt={president.authorName || "会長"}
-                  fill
-                  className="object-cover"
-                  sizes="96px"
-                />
+                {president.authorImageUrl ? (
+                  <Image
+                    src={president.authorImageUrl}
+                    alt={president.authorName || "会長"}
+                    fill
+                    className="object-cover"
+                    sizes="96px"
+                    unoptimized
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-300">
+                    <User className="h-10 w-10" />
+                  </div>
+                )}
               </div>
               <h4 className="font-bold text-slate-800 text-lg">{president.authorName}</h4>
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">会長 / 会長職</p>

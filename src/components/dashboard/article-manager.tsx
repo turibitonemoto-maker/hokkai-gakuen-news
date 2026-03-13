@@ -177,7 +177,7 @@ export function ArticleManager() {
         <CardHeader className="pb-3 border-b bg-slate-50/30">
           <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-500 uppercase tracking-widest">
             <Filter className="h-4 w-4" />
-            カテゴリー・タイプ フィルター
+            フィルター
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4">

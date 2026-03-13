@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useDoc, useFirestore, useMemoFirebase, useUser } from "@/firebase";
@@ -12,8 +13,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, User as UserIcon } from "lucide-react";
-import { useEffect } from "react";
+import { Loader2, Save, User as UserIcon, Lock } from "lucide-react";
+import { useEffect, useState } from "react";
 
 const presidentMessageSchema = z.object({
   authorName: z.string().min(1, "会長の氏名を入力してください"),
@@ -24,12 +25,13 @@ const presidentMessageSchema = z.object({
 type PresidentMessageValues = z.infer<typeof presidentMessageSchema>;
 
 export function PresidentMessageManager() {
+  const [pin, setPin] = useState("");
+  const [isUnlocked, setIsUnlocked] = useState(false);
   const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
 
   const docRef = useMemoFirebase(() => {
-    // ユーザーが存在する時だけ読み込みを実行する
     if (!firestore || !user) return null;
     return doc(firestore, "settings", "president-message");
   }, [firestore, user]);
@@ -45,7 +47,6 @@ export function PresidentMessageManager() {
     },
   });
 
-  // データがロードされたらフォームにセット
   useEffect(() => {
     if (messageData) {
       form.reset({
@@ -55,6 +56,14 @@ export function PresidentMessageManager() {
       });
     }
   }, [messageData, form]);
+
+  const handleUnlock = () => {
+    if (pin === "1950") {
+      setIsUnlocked(true);
+    } else {
+      toast({ variant: "destructive", title: "PINコードが違います" });
+    }
+  };
 
   function onSubmit(values: PresidentMessageValues) {
     if (!firestore || !docRef) return;
@@ -68,6 +77,31 @@ export function PresidentMessageManager() {
       title: "更新しました",
       description: "会長挨拶の内容を保存しました。",
     });
+  }
+
+  if (!isUnlocked) {
+    return (
+      <Card className="max-w-md mx-auto mt-20 shadow-xl">
+        <CardHeader className="text-center">
+          <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Lock className="h-8 w-8 text-primary" />
+          </div>
+          <CardTitle>会長挨拶ロック</CardTitle>
+          <CardDescription>4桁の暗証番号を入力してください</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Input 
+            type="password" 
+            placeholder="****" 
+            className="text-center text-2xl tracking-[1em]"
+            maxLength={4}
+            value={pin}
+            onChange={(e) => setPin(e.target.value)}
+          />
+          <Button className="w-full h-12 font-bold" onClick={handleUnlock}>認証</Button>
+        </CardContent>
+      </Card>
+    );
   }
 
   if (isLoading) {

@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { FileText, Share2, Tag, Layout, AlignLeft, Lock } from "lucide-react";
+import { FileText, Share2, Tag, Layout, AlignLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const articleSchema = z.object({
@@ -56,6 +56,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
   });
 
   const articleType = form.watch("articleType");
+  const isNote = articleType === "Note";
 
   function onSubmit(values: ArticleFormValues) {
     if (!firestore) return;
@@ -260,18 +261,26 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  {articleType === "Standard" ? "学内記事の本文" : "note記事の紹介文"}
+                  {isNote ? "note記事の紹介文（外部編集のため読み取り専用）" : "学内記事の本文"}
                 </FormLabel>
                 <FormControl>
                   <Textarea 
-                    placeholder={articleType === "Standard" ? "記事の本文を入力してください..." : "note記事の内容を要約した紹介文を入力してください。"} 
+                    placeholder={isNote ? "note記事の内容" : "記事の本文を入力してください..."} 
                     className="min-h-[400px] text-base leading-relaxed p-6 shadow-inner bg-slate-50 focus:bg-white transition-colors" 
+                    readOnly={isNote}
                     {...field} 
                   />
                 </FormControl>
-                <FormDescription>
-                  改行はそのまま反映されます。HTMLタグは使用できません。
-                </FormDescription>
+                {isNote && (
+                  <FormDescription className="text-purple-600 font-bold">
+                    ※ note記事の本文は外部のnote.comで編集してください。ここでの編集は反映されません。
+                  </FormDescription>
+                )}
+                {!isNote && (
+                  <FormDescription>
+                    改行はそのまま反映されます。HTMLタグは使用できません。
+                  </FormDescription>
+                )}
                 <FormMessage />
               </FormItem>
             )}
@@ -303,7 +312,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
           <Button type="button" variant="outline" onClick={onSuccess} className="w-32">キャンセル</Button>
           <Button type="submit" className={cn(
             "w-48 shadow-lg font-bold",
-            articleType === "Note" ? "bg-purple-600 hover:bg-purple-700" : ""
+            isNote ? "bg-purple-600 hover:bg-purple-700" : ""
           )}>
             {article?.id ? "変更を保存" : "記事を登録"}
           </Button>
