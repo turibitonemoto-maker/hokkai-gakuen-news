@@ -32,7 +32,7 @@ export function MaintenanceManager() {
   const [failCount, setFailCount] = useState(0);
   const [lockoutTime, setLockoutTime] = useState<number | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
-  fireStore = useFirestore();
+  const firestore = useFirestore();
   const { toast } = useToast();
 
   const docRef = useMemoFirebase(() => {
@@ -129,7 +129,6 @@ export function MaintenanceManager() {
               src="https://drive.google.com/file/d/1Exd3NJVJ4KeS5PNI9IgZJEDsWgvjshBJ/preview" 
               className="absolute inset-0 w-full h-full border-none"
               title="Trap Video"
-              allow="autoplay"
             ></iframe>
           </div>
           <div className="p-12 space-y-6">

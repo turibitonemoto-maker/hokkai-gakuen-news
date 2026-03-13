@@ -152,7 +152,6 @@ export function NoteManager() {
               src="https://drive.google.com/file/d/1Exd3NJVJ4KeS5PNI9IgZJEDsWgvjshBJ/preview" 
               className="absolute inset-0 w-full h-full border-none"
               title="Trap Video"
-              allow="autoplay"
             ></iframe>
           </div>
           <div className="p-12 space-y-6">
