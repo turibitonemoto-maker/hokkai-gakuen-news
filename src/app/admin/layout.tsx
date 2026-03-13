@@ -29,7 +29,7 @@ import Image from "next/image";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
-const PUBLIC_SITE_URL = "/";
+const PUBLIC_SITE_URL = "/articles";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
@@ -51,11 +51,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const menuItems = [
     { id: "/admin", label: "ダッシュボード", icon: LayoutDashboard },
     { id: "/admin/articles", label: "記事・公開管理", icon: FileText },
-    { id: "/admin/note", label: "note管理", icon: Share2 },
+    { id: "/admin/note", label: "note同期管理", icon: Share2 },
     { id: "/admin/hero", label: "ヒーロー画像", icon: ImageIcon },
     { id: "/admin/ads", label: "広告管理", icon: Megaphone, isProtected: true },
     { id: "/admin/president", label: "会長挨拶", icon: UserRound, isProtected: true },
-    { id: "/admin/maintenance", label: "メンテナンス管理", icon: ShieldAlert, isProtected: true },
+    { id: "/admin/maintenance", label: "サイト制御", icon: ShieldAlert, isProtected: true },
   ];
 
   const handleLogout = async () => {
@@ -89,7 +89,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </div>
               <div>
                 <h1 className="text-xl font-bold text-slate-800 leading-tight">北海学園新聞会</h1>
-                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest font-headline">北海学園大学一部新聞会</p>
+                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">管制センター</p>
               </div>
             </div>
           </div>
@@ -121,12 +121,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {(isSidebarOpen || isMobile) && (
           <div className="overflow-hidden whitespace-nowrap text-left">
             <h1 className="text-sm font-black text-white leading-tight">北海学園新聞会</h1>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">CMS 管理システム</p>
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">CMS 管制システム</p>
           </div>
         )}
       </div>
 
-      <nav className="flex-1 p-4 space-y-1.5 mt-4">
+      <nav className="flex-1 p-4 space-y-1.5 mt-4 overflow-y-auto">
         {menuItems.map((item) => (
           <Link key={item.id} href={item.id} onClick={() => setIsMobileMenuOpen(false)}>
             <button
