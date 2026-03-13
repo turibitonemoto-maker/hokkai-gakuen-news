@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -61,9 +60,10 @@ export default function AdminDashboard() {
     return doc(firestore, "settings", "note-sync");
   }, [firestore, user]);
 
-  // 4. 最新のアクティビティ（並べ替えが必要な箇所）
+  // 4. 最新のアクティビティ
   const recentActivityQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
+    // updatedAtでの並べ替えを試みる。インデックスがない場合はエラーが発生し、案内が表示される
     return query(collection(firestore, "articles"), orderBy("updatedAt", "desc"), limit(6));
   }, [firestore, user]);
   
@@ -117,7 +117,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* 2. クイックスタッツ（DB件数、お問い合わせ、同期ログ） */}
+      {/* 2. クイックスタッツ */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <QuickStatCard 
           title="DB登録記事数" 
