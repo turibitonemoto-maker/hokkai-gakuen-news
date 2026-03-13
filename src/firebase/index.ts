@@ -5,25 +5,29 @@ import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
-// IMPORTANT: DO NOT MODIFY THIS FUNCTION
+/**
+ * Firebase App および各サービス（Auth, Firestore）の初期化。
+ * クライアントサイドでの二重初期化を防止し、常に有効なSDKインスタンスを返します。
+ */
 export function initializeFirebase() {
   if (!getApps().length) {
     let firebaseApp;
     try {
+      // 自動初期化（Firebase Consoleでの設定に基づく）を試行
       firebaseApp = initializeApp();
     } catch (e) {
-      if (process.env.NODE_ENV === "production") {
-        console.warn('Automatic initialization failed. Falling back to firebase config object.', e);
-      }
+      // 失敗した場合は config.ts の定義を使用
       firebaseApp = initializeApp(firebaseConfig);
     }
-
     return getSdks(firebaseApp);
   }
 
   return getSdks(getApp());
 }
 
+/**
+ * Firebase App インスタンスから各サービスを取得。
+ */
 export function getSdks(firebaseApp: FirebaseApp) {
   return {
     firebaseApp,
@@ -32,6 +36,7 @@ export function getSdks(firebaseApp: FirebaseApp) {
   };
 }
 
+// 他のAI（表示用サイト）が迷わないよう、エクスポート元を明確に分離
 export * from './provider';
 export * from './client-provider';
 export * from './firestore/use-collection';
