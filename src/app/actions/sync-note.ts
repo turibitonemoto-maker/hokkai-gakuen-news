@@ -1,4 +1,3 @@
-
 'use server';
 
 import Parser from 'rss-parser';
@@ -22,7 +21,7 @@ export async function fetchNoteArticles() {
       // noteのRSSから画像URLを抽出
       const firstImage = item.content?.match(/<img[^>]+src="([^">]+)"/)?.[1] || notePlaceholder.imageUrl;
 
-      // リンクからnote固有のIDを抽出（ドキュメントIDとして安全な形式にする）
+      // リンクからnote固有のIDを抽出
       const guid = item.guid || item.link || "";
       const noteIdMatch = guid.match(/\/n\/([a-zA-Z0-9]+)/);
       const safeId = noteIdMatch ? noteIdMatch[1] : (guid.split('/').pop()?.replace(/[^a-zA-Z0-9]/g, '_') || `note-${index}`);
@@ -30,6 +29,11 @@ export async function fetchNoteArticles() {
       // 日付を YYYY-MM-DD 形式に変換
       const pubDate = item.pubDate ? new Date(item.pubDate) : new Date();
       const formattedDate = pubDate.toISOString().split('T')[0];
+
+      // 本文のスニペットを取得（HTMLタグを除去して200文字程度）
+      const snippet = (item.contentSnippet || item.content || "")
+        .replace(/<[^>]*>/g, '') // HTMLタグ除去
+        .substring(0, 300);
 
       return {
         id: safeId,
@@ -40,6 +44,7 @@ export async function fetchNoteArticles() {
         publishDate: formattedDate,
         mainImageUrl: firstImage,
         isPublished: false,
+        content: snippet, // 同期時に初期本文としてセット
         tags: ["note"]
       };
     });

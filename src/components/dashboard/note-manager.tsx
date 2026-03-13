@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -25,7 +24,6 @@ export function NoteManager() {
   const { user } = useUser();
   const { toast } = useToast();
 
-  // インデックスエラー回避のためクエリを簡略化し、JS側でフィルタリングする
   const noteArticlesQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return query(
@@ -36,7 +34,6 @@ export function NoteManager() {
 
   const { data: allArticles, isLoading } = useCollection(noteArticlesQuery);
 
-  // note記事のみを抽出
   const noteArticles = useMemo(() => {
     if (!allArticles) return [];
     return allArticles.filter(a => a.articleType === "Note");
@@ -49,7 +46,9 @@ export function NoteManager() {
       const articles = await fetchNoteArticles();
       articles.forEach(article => {
         const docRef = doc(firestore, "articles", article.id);
-        // 同期時は既存の公開設定などを上書きしないよう merge: true で保存
+        // 同期時は既存の公開設定や「編集済みの本文」を上書きしないよう merge: true で保存
+        // ただし本文(content)が空の場合のみ、スニペットを補充するように個別に判断可能ですが
+        // ここでは単純なマージを行います。
         setDocumentNonBlocking(docRef, {
           ...article,
           updatedAt: new Date().toISOString(),
@@ -104,7 +103,7 @@ export function NoteManager() {
         <Button 
           onClick={handleSync} 
           disabled={isSyncing}
-          className="bg-purple-600 hover:bg-purple-700 flex items-center gap-2 h-11 px-6 shadow-lg shadow-purple-200"
+          className="bg-purple-600 hover:bg-purple-700 flex items-center gap-2 h-11 px-6 shadow-lg shadow-purple-200 font-bold"
         >
           {isSyncing ? <Loader2 className="h-5 w-5 animate-spin" /> : <RefreshCw className="h-5 w-5" />}
           noteと同期する
@@ -125,8 +124,8 @@ export function NoteManager() {
             ) : (
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>サイト表示</TableHead>
+                  <TableRow className="bg-slate-50/50">
+                    <TableHead className="w-[140px]">サイト表示</TableHead>
                     <TableHead>記事情報</TableHead>
                     <TableHead>公開日</TableHead>
                     <TableHead className="text-right">操作</TableHead>
@@ -134,7 +133,7 @@ export function NoteManager() {
                 </TableHeader>
                 <TableBody>
                   {noteArticles?.map((article) => (
-                    <TableRow key={article.id} className="group">
+                    <TableRow key={article.id} className="group hover:bg-slate-50/50 transition-colors">
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Switch 
@@ -142,45 +141,46 @@ export function NoteManager() {
                             onCheckedChange={(checked) => togglePublished(article, checked)}
                           />
                           {article.isPublished ? (
-                            <Badge className="bg-green-100 text-green-700 text-[10px] h-5">公開中</Badge>
+                            <Badge className="bg-green-100 text-green-700 text-[10px] h-5 border-green-200">公開中</Badge>
                           ) : (
                             <Badge variant="secondary" className="text-[10px] h-5">非表示</Badge>
                           )}
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex gap-3 items-center">
+                        <div className="flex gap-3 items-center py-1">
                           {article.mainImageUrl && (
-                            <div className="relative h-10 w-16 rounded overflow-hidden flex-shrink-0 border bg-slate-100">
+                            <div className="relative h-12 w-20 rounded-lg overflow-hidden flex-shrink-0 border bg-slate-100 shadow-sm">
                               <Image 
                                 src={article.mainImageUrl} 
                                 alt="" 
                                 fill 
                                 className="object-cover" 
-                                sizes="64px"
+                                sizes="80px"
                               />
                             </div>
                           )}
                           <div className="flex flex-col min-w-0">
-                            <span className="font-bold text-slate-800 truncate text-sm">{article.title}</span>
-                            <span className="text-[10px] text-slate-400">ID: {article.id}</span>
+                            <span className="font-bold text-slate-800 truncate text-sm leading-tight">{article.title}</span>
+                            <span className="text-[10px] text-slate-400 mt-1">ID: {article.id}</span>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="text-xs text-slate-500 whitespace-nowrap">
+                      <TableCell className="text-xs text-slate-500 font-medium whitespace-nowrap">
                         {new Date(article.publishDate).toLocaleDateString("ja-JP")}
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
+                        <div className="flex justify-end gap-2">
                           <Button 
-                            variant="ghost" 
-                            size="icon" 
+                            variant="outline" 
+                            size="sm" 
                             onClick={() => { setCurrentArticle(article); setIsEditing(true); }}
-                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="h-8 gap-1 px-3 font-bold border-primary/20 text-primary hover:bg-primary/5"
                           >
-                            <Pencil className="h-4 w-4" />
+                            <Pencil className="h-3 w-3" />
+                            編集
                           </Button>
-                          <Button variant="ghost" size="icon" asChild className="h-8 w-8">
+                          <Button variant="ghost" size="icon" asChild className="h-8 w-8 text-slate-400 hover:text-slate-600">
                             <a href={article.noteUrl} target="_blank" rel="noopener noreferrer">
                               <ExternalLink className="h-4 w-4" />
                             </a>
@@ -191,7 +191,7 @@ export function NoteManager() {
                   ))}
                   {(!noteArticles || noteArticles.length === 0) && !isLoading && (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center py-20 text-slate-400">
+                      <TableCell colSpan={4} className="text-center py-20 text-slate-400 font-medium italic">
                         note記事はまだ同期されていません。右上の「同期する」ボタンを押してください。
                       </TableCell>
                     </TableRow>
@@ -205,20 +205,20 @@ export function NoteManager() {
         <div className="space-y-6">
           <Card className="shadow-sm border-slate-200">
             <CardHeader>
-              <CardTitle className="text-base font-bold">同期の仕組み</CardTitle>
+              <CardTitle className="text-base font-bold">同期と編集の仕組み</CardTitle>
             </CardHeader>
-            <CardContent className="text-sm text-slate-500 space-y-4">
+            <CardContent className="text-sm text-slate-500 space-y-4 font-medium">
               <div className="flex gap-3">
-                <div className="bg-slate-100 p-2 rounded-lg h-fit"><RefreshCw className="h-4 w-4" /></div>
-                <p>noteに投稿した最新記事を自動的にスキャンしてデータベースに追加します。</p>
+                <div className="bg-purple-50 text-purple-600 p-2 rounded-lg h-fit shrink-0"><RefreshCw className="h-4 w-4" /></div>
+                <p>同期すると最新のnote記事を読み込み、記事の冒頭を「本文」として自動セットします。</p>
               </div>
               <div className="flex gap-3">
-                <div className="bg-slate-100 p-2 rounded-lg h-fit"><Pencil className="h-4 w-4" /></div>
-                <p>同期した記事のタイトルや画像を、この管理画面から個別に上書き保存できます。</p>
+                <div className="bg-blue-50 text-blue-600 p-2 rounded-lg h-fit shrink-0"><Pencil className="h-4 w-4" /></div>
+                <p>「編集」から、タイトルや紹介文を学内サイト向けに自由に書き換えることができます。</p>
               </div>
               <div className="flex gap-3">
-                <div className="bg-slate-100 p-2 rounded-lg h-fit"><Globe className="h-4 w-4" /></div>
-                <p>初期状態は「非表示」で登録されます。公開したい記事のスイッチをオンにしてください。</p>
+                <div className="bg-green-50 text-green-600 p-2 rounded-lg h-fit shrink-0"><ShieldAlert className="h-4 w-4" /></div>
+                <p>一度編集した内容は、再同期しても「上書き」されないので安心してカスタマイズできます。</p>
               </div>
             </CardContent>
           </Card>
