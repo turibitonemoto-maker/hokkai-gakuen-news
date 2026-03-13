@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection, doc } from "firebase/firestore";
+import { collection, doc, serverTimestamp } from "firebase/firestore";
 import { 
   Share2, 
   Loader2, 
@@ -10,7 +10,8 @@ import {
   PlusCircle, 
   CheckCircle2,
   ImageOff,
-  RefreshCw
+  RefreshCw,
+  Clock
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -25,7 +26,7 @@ import Link from "next/link";
 
 /**
  * NoteManager: 外部メディア（note）の記事を公式サイトへ「選別・採用」するための専用画面。
- * AIによる画像生成は行わず、画像がない場合はクリーンな空白を表示します。
+ * 同期ログ（いつ同期したか）を記録し、DB件数のズレを防ぎます。
  */
 export function NoteManager() {
   const [isSyncing, setIsSyncing] = useState(false);
@@ -41,6 +42,12 @@ export function NoteManager() {
   }, [firestore, user]);
 
   const { data: allArticles, isLoading: isDbLoading } = useCollection(noteArticlesQuery);
+  
+  // 3. 同期ログ用のドキュメント
+  const syncLogRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, "settings", "note-sync");
+  }, [firestore, user]);
 
   const dbNoteIds = useMemo(() => {
     if (!allArticles) return new Set();
@@ -52,6 +59,15 @@ export function NoteManager() {
     try {
       const articles = await fetchNoteArticles();
       setRssArticles(articles);
+      
+      // 同期ログを保存
+      if (firestore && syncLogRef) {
+        setDocumentNonBlocking(syncLogRef, {
+          lastSyncAt: new Date().toISOString(),
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+      }
+
       toast({ title: "同期完了", description: "最新のnote記事を取得しました。" });
     } catch (e) {
       toast({ variant: "destructive", title: "同期エラー", description: "noteの取得に失敗しました。" });
@@ -86,29 +102,38 @@ export function NoteManager() {
       <div className="flex justify-between items-end">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">note記事の選別・採用</h2>
-          <p className="text-sm text-slate-500">外部メディア（note）の最新記事を確認し、公式サイトに掲載するものを「下書き」として採用します。</p>
+          <p className="text-sm text-slate-500">外部メディア（note）から記事を確認し、公式サイトに掲載するものを「下書き」として採用します。</p>
         </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleSync} 
-          disabled={isSyncing}
-          className="gap-2 border-primary/20 text-primary hover:bg-primary/5"
-        >
-          <RefreshCw className={cn("h-4 w-4", isSyncing && "animate-spin")} />
-          最新記事をチェック
-        </Button>
+        <div className="flex flex-col items-end gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleSync} 
+            disabled={isSyncing}
+            className="gap-2 border-primary/20 text-primary hover:bg-primary/5 font-bold"
+          >
+            <RefreshCw className={cn("h-4 w-4", isSyncing && "animate-spin")} />
+            最新記事をチェック (同期実行)
+          </Button>
+        </div>
       </div>
 
       <Card className="shadow-sm border-slate-200 overflow-hidden">
-        <CardHeader className="bg-purple-50/50 border-b">
-          <CardTitle className="text-lg flex items-center gap-2 text-purple-700">
-            <Share2 className="h-5 w-5" />
-            note記事の取り込み候補
-          </CardTitle>
-          <CardDescription>
-            noteで公開されている最新記事の一覧です。
-          </CardDescription>
+        <CardHeader className="bg-purple-50/50 border-b flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-lg flex items-center gap-2 text-purple-700">
+              <Share2 className="h-5 w-5" />
+              候補一覧
+            </CardTitle>
+            <CardDescription>
+              note.com から取得した最新の投稿です。
+            </CardDescription>
+          </div>
+          {/* 同期ステータスの表示 */}
+          <div className="text-[10px] font-bold text-purple-400 uppercase tracking-widest flex items-center gap-2">
+            <Clock className="h-3 w-3" />
+            最終チェック: {isSyncing ? "実行中..." : "完了"}
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           {isSyncing || isDbLoading ? (
@@ -117,9 +142,9 @@ export function NoteManager() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-slate-50/50">
-                  <TableHead>記事</TableHead>
+                  <TableHead>記事情報</TableHead>
                   <TableHead>note公開日</TableHead>
-                  <TableHead className="text-right">アクション</TableHead>
+                  <TableHead className="text-right">DB登録状況</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -179,7 +204,7 @@ export function NoteManager() {
                 {rssArticles.length === 0 && !isSyncing && (
                   <TableRow>
                     <TableCell colSpan={3} className="text-center py-20 text-slate-400 font-medium italic">
-                      note記事が見つかりませんでした。
+                      記事が取得できませんでした。RSSフィードURLを確認してください。
                     </TableCell>
                   </TableRow>
                 )}
@@ -190,9 +215,9 @@ export function NoteManager() {
       </Card>
       
       <div className="bg-slate-100/50 p-6 rounded-2xl border border-dashed border-slate-200 text-center">
-        <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mb-2">Notice</p>
+        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-2">Notice</p>
         <p className="text-sm text-slate-600 font-medium">
-          採用済みの記事の「公開・非公開」や「内容の編集」は
+          採用済みの記事の「公開・非公開」の切り替えは
           <Link href="/admin/articles" className="text-primary font-bold hover:underline mx-1">
             記事管理画面
           </Link>
