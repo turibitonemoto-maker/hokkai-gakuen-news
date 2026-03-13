@@ -30,6 +30,7 @@ export function PresidentMessageManager() {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [failCount, setFailCount] = useState(0);
   const [lockoutTime, setLockoutTime] = useState<number | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
   const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
@@ -84,10 +85,14 @@ export function PresidentMessageManager() {
       const newCount = failCount + 1;
       setFailCount(newCount);
       if (newCount >= 3) {
-        const until = Date.now() + 5 * 60 * 1000;
-        setLockoutTime(until);
-        localStorage.setItem("lockout_until", until.toString());
-        toast({ variant: "destructive", title: "アクセス拒否", description: "頭を冷やしてください。" });
+        setIsVerifying(true);
+        setTimeout(() => {
+          setIsVerifying(false);
+          const until = Date.now() + 5 * 60 * 1000;
+          setLockoutTime(until);
+          localStorage.setItem("lockout_until", until.toString());
+          toast({ variant: "destructive", title: "アクセス拒否", description: "頭を冷やしてください。" });
+        }, 800);
       } else {
         toast({ variant: "destructive", title: "パスワード不一致", description: `あと ${3 - newCount} 回でロックされます。` });
       }
@@ -106,6 +111,15 @@ export function PresidentMessageManager() {
       title: "更新しました",
       description: "会長挨拶の内容を保存しました。",
     });
+  }
+
+  if (isVerifying) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="font-black text-slate-400 animate-pulse">パスワードを確認中...</p>
+      </div>
+    );
   }
 
   if (lockoutTime && lockoutTime > Date.now()) {

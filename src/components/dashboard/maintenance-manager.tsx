@@ -32,6 +32,7 @@ export function MaintenanceManager() {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [failCount, setFailCount] = useState(0);
   const [lockoutTime, setLockoutTime] = useState<number | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
   const firestore = useFirestore();
   const { toast } = useToast();
 
@@ -71,6 +72,32 @@ export function MaintenanceManager() {
     }
   }, [config, form]);
 
+  const handleUnlock = () => {
+    if (lockoutTime && lockoutTime > Date.now()) return;
+
+    const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "zansin";
+    if (password === correctPassword) {
+      setIsUnlocked(true);
+      setFailCount(0);
+      toast({ title: "アクセス承認", description: "編集権限を確認しました。" });
+    } else {
+      const newCount = failCount + 1;
+      setFailCount(newCount);
+      if (newCount >= 3) {
+        setIsVerifying(true);
+        setTimeout(() => {
+          setIsVerifying(false);
+          const until = Date.now() + 5 * 60 * 1000;
+          setLockoutTime(until);
+          localStorage.setItem("lockout_until", until.toString());
+          toast({ variant: "destructive", title: "アクセス拒否", description: "頭を冷やしてください。" });
+        }, 800);
+      } else {
+        toast({ variant: "destructive", title: "パスワード不一致", description: `あと ${3 - newCount} 回でロックされます。` });
+      }
+    }
+  };
+
   function onSubmit(maintenanceValues: MaintenanceValues) {
     if (!firestore || !docRef) return;
 
@@ -85,27 +112,14 @@ export function MaintenanceManager() {
     });
   }
 
-  const handleUnlock = () => {
-    if (lockoutTime && lockoutTime > Date.now()) return;
-
-    const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "zansin";
-    if (password === correctPassword) {
-      setIsUnlocked(true);
-      setFailCount(0);
-      toast({ title: "アクセス承認", description: "編集権限を確認しました。" });
-    } else {
-      const newCount = failCount + 1;
-      setFailCount(newCount);
-      if (newCount >= 3) {
-        const until = Date.now() + 5 * 60 * 1000;
-        setLockoutTime(until);
-        localStorage.setItem("lockout_until", until.toString());
-        toast({ variant: "destructive", title: "アクセス拒否", description: "頭を冷やしてください。" });
-      } else {
-        toast({ variant: "destructive", title: "パスワード不一致", description: `あと ${3 - newCount} 回でロックされます。` });
-      }
-    }
-  };
+  if (isVerifying) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="font-black text-slate-400 animate-pulse">パスワードを確認中...</p>
+      </div>
+    );
+  }
 
   if (lockoutTime && lockoutTime > Date.now()) {
     return (
