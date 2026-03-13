@@ -5,7 +5,7 @@ service cloud.firestore {
     
     // 【最強設定】ログインさえしていれば、メール認証の状態や同期ラグを問わず、全ドキュメントへの全権限を許可
     // これにより、ログイン直後のトークン同期タイミングによる 403 (Permission Denied) をバックエンド側で最小化します
-    // Note: このコメント変更によりルールの再デプロイを強制します
+    // Note: このコメント変更によりルールの再デプロイを強制し、最新の権限設定を反映させます
     match /{document=**} {
       allow read, write: if request.auth != null;
     }

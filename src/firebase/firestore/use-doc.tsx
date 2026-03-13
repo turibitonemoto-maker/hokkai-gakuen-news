@@ -69,10 +69,10 @@ export function useDoc<T = any>(
           serverError.message?.toLowerCase().includes('insufficient');
 
         if (isPermissionError) {
-          console.warn(`Firestore (useDoc) [HANDLED]: 権限エラーを検知しました。再試行を待機しています... Path: ${memoizedDocRef.path}`);
+          console.warn(`Firestore (useDoc) [HANDLED]: 権限エラーを検知しました。再試行を待機しています... Path: ${memoizedDocRef.path}`, serverError);
           setError(serverError);
           setIsLoading(false);
-          // ここで確実に return することでクラッシュを回避
+          // ここで確実に return することで、下の errorEmitter.emit を回避し、クラッシュを防ぎます。
           return;
         }
 

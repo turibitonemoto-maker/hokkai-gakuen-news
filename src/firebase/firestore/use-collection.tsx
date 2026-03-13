@@ -90,7 +90,7 @@ export function useCollection<T = any>(
           serverError.message?.toLowerCase().includes('insufficient');
 
         if (isPermissionError) {
-          console.warn(`Firestore (useCollection) [HANDLED]: 権限エラーを検知しました。再試行を待機しています... Path: ${path}`);
+          console.warn(`Firestore (useCollection) [HANDLED]: 権限エラーを検知しました。再試行を待機しています... Path: ${path}`, serverError);
           setError(serverError);
           setIsLoading(false);
           // ここで確実に return することで、下の errorEmitter.emit を回避し、クラッシュを防ぎます。
