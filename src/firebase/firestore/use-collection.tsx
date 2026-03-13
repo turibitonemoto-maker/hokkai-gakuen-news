@@ -42,7 +42,6 @@ export interface InternalQuery extends Query<DocumentData> {
 
 /**
  * React hook to subscribe to a Firestore collection or query in real-time.
- * Handles auth synchronization to prevent early permission errors (flying).
  */
 export function useCollection<T = any>(
     memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean})  | null | undefined,
@@ -57,7 +56,6 @@ export function useCollection<T = any>(
   const { user, isUserLoading } = useUser();
 
   useEffect(() => {
-    // 1. 認証チェック中、またはターゲットがない場合は待機
     if (isUserLoading || !memoizedTargetRefOrQuery) {
       setData(null);
       setIsLoading(false);
@@ -86,21 +84,16 @@ export function useCollection<T = any>(
             : (memoizedTargetRefOrQuery as unknown as InternalQuery)._query.path.canonicalString()
 
         // 【最重要】認証同期ラグ（フライング）対策
-        // ログイン済みであるにもかかわらず権限エラーが出た場合は、
-        // サーバー側での認証情報の浸透待ちと判断し、RSOD（赤画面）を出さずに警告にとどめる
-        const currentAuthUser = getAuth().currentUser;
-        const isAuthLikelyPresent = !!(user || currentAuthUser);
-        const isPermissionError = serverError.code === 'permission-denied';
-        
-        if (isPermissionError && isAuthLikelyPresent) {
-          console.warn(`Firestore (useCollection) [HANDLED]: 認証同期ラグ（フライング）を検知しました。権限の浸透を待機しています... Path: ${path}`);
+        // ログイン状態に関わらず、権限エラー(permission-denied)が発生した場合は
+        // アプリをクラッシュさせずに警告ログに留めます。
+        // これにより、セキュリティルールの反映待ちや認証情報の浸透待ちで画面が真っ白になるのを防ぎます。
+        if (serverError.code === 'permission-denied') {
+          console.warn(`Firestore (useCollection) [HANDLED]: 権限エラーまたは同期ラグを検知しました。再試行を待機しています... Path: ${path}`);
           setError(serverError);
           setIsLoading(false);
-          // ここで return することで、致命的なエラーとしての emit/throw を回避します
           return;
         }
 
-        // ログインしていない状態での権限エラー、またはその他の致命的エラー
         const contextualError = new FirestorePermissionError({
           operation: 'list',
           path,
@@ -110,12 +103,6 @@ export function useCollection<T = any>(
         setData(null)
         setIsLoading(false)
         
-        // 開発中の利便性を優先し、ログインしていない場合の権限エラーも警告に留める（RSOD回避）
-        if (isPermissionError) {
-           console.warn(`Firestore (useCollection) [DENIED]: 権限不足または未ログインです。 Path: ${path}`);
-           return;
-        }
-
         errorEmitter.emit('permission-error', contextualError);
       }
     );

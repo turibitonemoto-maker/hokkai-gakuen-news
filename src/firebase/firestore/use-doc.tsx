@@ -29,7 +29,6 @@ export interface UseDocResult<T> {
 
 /**
  * React hook to subscribe to a single Firestore document in real-time.
- * Handles auth synchronization to prevent early permission errors (flying).
  */
 export function useDoc<T = any>(
   memoizedDocRef: DocumentReference<DocumentData> | null | undefined,
@@ -66,15 +65,11 @@ export function useDoc<T = any>(
       },
       async (serverError: FirestoreError) => {
         // 【最重要】認証同期ラグ（フライング）対策
-        const currentAuthUser = getAuth().currentUser;
-        const isAuthLikelyPresent = !!(user || currentAuthUser);
-        const isPermissionError = serverError.code === 'permission-denied';
-
-        if (isPermissionError && isAuthLikelyPresent) {
-          console.warn(`Firestore (useDoc) [HANDLED]: 認証同期ラグ（フライング）を検知しました。権限の浸透を待機しています... Path: ${memoizedDocRef.path}`);
+        // 権限エラー(permission-denied)が発生した場合はアプリを止めずに警告のみとします。
+        if (serverError.code === 'permission-denied') {
+          console.warn(`Firestore (useDoc) [HANDLED]: 権限エラーまたは同期ラグを検知しました。再試行を待機しています... Path: ${memoizedDocRef.path}`);
           setError(serverError);
           setIsLoading(false);
-          // ここで return することで、致命的なエラーとしての emit/throw を回避します
           return;
         }
 
@@ -86,11 +81,6 @@ export function useDoc<T = any>(
         setError(contextualError)
         setData(null)
         setIsLoading(false)
-
-        if (isPermissionError) {
-           console.warn(`Firestore (useDoc) [DENIED]: 権限不足または未ログインです。 Path: ${memoizedDocRef.path}`);
-           return;
-        }
 
         errorEmitter.emit('permission-error', contextualError);
       }
