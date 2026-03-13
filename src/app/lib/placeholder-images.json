@@ -1,29 +1,16 @@
-
 {
   "placeholderImages": [
     {
-      "id": "article-default",
-      "description": "記事のデフォルト画像",
-      "imageUrl": "https://picsum.photos/seed/newspaper-static-1/800/450",
-      "imageHint": "news report"
-    },
-    {
-      "id": "note-default",
-      "description": "note記事のデフォルト画像",
-      "imageUrl": "https://picsum.photos/seed/note-static-1/800/450",
-      "imageHint": "blog writing"
-    },
-    {
-      "id": "hero-default",
-      "description": "ヒーローエリアのデフォルト画像",
-      "imageUrl": "https://picsum.photos/seed/campus-static-1/1200/600",
+      "id": "hero-static-1",
+      "description": "北海学園大学のキャンパス風景",
+      "imageUrl": "https://picsum.photos/seed/newspaper-static-1/1200/600",
       "imageHint": "university campus"
     },
     {
-      "id": "president-default",
-      "description": "会長のデフォルト顔写真",
-      "imageUrl": "https://picsum.photos/seed/portrait-static-1/200/200",
-      "imageHint": "professional portrait"
+      "id": "hero-static-2",
+      "description": "新聞会の編集会議の様子",
+      "imageUrl": "https://picsum.photos/seed/newspaper-static-2/1200/600",
+      "imageHint": "newsroom meeting"
     }
   ]
 }

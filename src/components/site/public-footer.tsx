@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -20,7 +19,7 @@ export function PublicFooter() {
               <h1 className="text-xl font-bold text-white leading-tight">Hokkai Gakuen News 1</h1>
             </Link>
             <p className="text-sm leading-relaxed text-slate-400">
-              北海学園大学一部新聞会は、学内のニュースや学生生活に密着した情報を発信する公認サークルです。真実を伝え、学生同士の繋がりを深めることを使命としています。
+              北海学園大学一部新聞会は、学内のニュースや学生生活に密着した情報を発信する公認サークルです。
             </p>
             <div className="flex gap-4">
               <SocialIcon icon={Twitter} />
@@ -38,13 +37,12 @@ export function PublicFooter() {
             <ul className="space-y-3 text-sm font-medium">
               <FooterLink href="/">ホーム</FooterLink>
               <FooterLink href="/articles">最新ニュース</FooterLink>
-              <FooterLink href="/articles?cat=Campus">学内行事</FooterLink>
-              <FooterLink href="/articles?cat=Sports">体育会情報</FooterLink>
-              <FooterLink href="/note">note連動記事</FooterLink>
+              <FooterLink href="/about">新聞会について</FooterLink>
+              <FooterLink href="/contact">お問い合わせ</FooterLink>
             </ul>
           </div>
 
-          {/* 新聞会について */}
+          {/* 活動紹介 */}
           <div>
             <h4 className="text-white font-bold mb-6 flex items-center gap-2">
               <span className="w-1 h-4 bg-primary rounded-full"></span>
@@ -52,10 +50,8 @@ export function PublicFooter() {
             </h4>
             <ul className="space-y-3 text-sm font-medium">
               <FooterLink href="/about">組織概要</FooterLink>
-              <FooterLink href="/about#history">沿革</FooterLink>
               <FooterLink href="/about#join">入会案内</FooterLink>
-              <FooterLink href="/contact">プレスリリース送付</FooterLink>
-              <FooterLink href="/contact#ad">広告掲載について</FooterLink>
+              <FooterLink href="/admin">管理者入口</FooterLink>
             </ul>
           </div>
 
@@ -79,11 +75,10 @@ export function PublicFooter() {
         </div>
 
         <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-medium text-slate-500">
-          <p>© {currentYear} Hokkai Gakuen News 1 (HGU 1st Newspaper Club). All rights reserved.</p>
+          <p>© {currentYear} Hokkai Gakuen News 1. All rights reserved.</p>
           <div className="flex gap-6">
             <Link href="/privacy" className="hover:text-primary transition-colors">プライバシーポリシー</Link>
             <Link href="/terms" className="hover:text-primary transition-colors">利用規約</Link>
-            <Link href="/admin" className="hover:text-white transition-colors">管理者入口</Link>
           </div>
         </div>
       </div>

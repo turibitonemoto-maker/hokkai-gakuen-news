@@ -46,7 +46,7 @@ function ArticleCard({ article }: { article: any }) {
             alt={article.title}
             fill
             className="object-cover group-hover:scale-110 transition-transform duration-500"
-            unoptimized={isNote} // noteの画像は外部CDNのためunoptimizedを推奨
+            unoptimized={isNote}
           />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center text-slate-200 gap-2">

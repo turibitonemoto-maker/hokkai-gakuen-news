@@ -1,20 +1,21 @@
-
 'use client';
 
 import Link from 'next/link';
 import { Newspaper, Menu, Search, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
 export function PublicHeader() {
   const [isScrolled, setIsScrolled] = useState(false);
 
-  if (typeof window !== 'undefined') {
-    window.addEventListener('scroll', () => {
+  useEffect(() => {
+    const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
-    });
-  }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <header 
@@ -47,9 +48,9 @@ export function PublicHeader() {
               <Search className="h-5 w-5" />
             </Button>
             <Link href="/admin">
-              <Button variant="outline" size="sm" className="hidden sm:flex gap-2 items-center border-primary/20 hover:bg-primary/5 text-primary">
+              <Button variant="outline" size="sm" className="hidden sm:flex gap-2 items-center border-primary/20 hover:bg-primary/5 text-primary font-bold">
                 <User className="h-4 w-4" />
-                管理者ログイン
+                管理者
               </Button>
             </Link>
             <Button variant="ghost" size="icon" className="md:hidden">
