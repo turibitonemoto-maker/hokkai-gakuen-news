@@ -79,7 +79,7 @@ export function AdManager() {
           toast({ variant: "destructive", title: "アクセス拒否", description: "頭を冷やしてください。" });
         }, 800);
       } else {
-        toast({ variant: "destructive", title: "不一致", description: `あと ${3 - newCount} 回でロックされます。` });
+        toast({ variant: "destructive", title: "不一致", description: "パスワードが正しくありません。" });
       }
     }
   };

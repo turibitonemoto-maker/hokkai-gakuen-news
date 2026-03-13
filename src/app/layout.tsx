@@ -1,10 +1,8 @@
-
 import type { Metadata } from 'next';
 import './globals.css';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Toaster } from "@/components/ui/toaster";
 
-// 管理サイトのため、検索エンジンにインデックスされないようメタタグを設定
 export const metadata: Metadata = {
   title: '北海学園新聞会 | コンテンツ管理システム',
   description: '北海学園大学一部新聞会の公式コンテンツ管理システムです。',
@@ -13,13 +11,8 @@ export const metadata: Metadata = {
     follow: false,
   },
   icons: {
-    icon: [
-      { url: '/favicon.ico', sizes: '32x32' },
-      { url: '/favicon.ico', sizes: 'any' },
-    ],
-    apple: [
-      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
-    ],
+    icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
   },
 };
 
