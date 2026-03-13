@@ -114,7 +114,7 @@ export function PresidentMessageManager() {
         <Card className="shadow-2xl border-none bg-black text-white rounded-[3rem] overflow-hidden text-center p-0">
           <div className="relative aspect-video w-full bg-slate-900">
             <iframe 
-              src="https://drive.google.com/file/d/1Exd3NJVJ4KeS5PNI9IgZJEDsWgvjshBJ/preview" 
+              src="https://drive.google.com/file/d/1Exd3NJVJ4KeS5PNI9IgZJEDsWgvjshBJ/preview?autoplay=1" 
               className="absolute inset-0 w-full h-full border-none"
               allow="autoplay"
               title="Trap Video"
@@ -155,7 +155,7 @@ export function PresidentMessageManager() {
           </CardHeader>
           <CardContent className="p-10 pt-4 space-y-6">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">承認パスワード</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">パスワード</label>
               <Input 
                 type="password" 
                 placeholder="パスワードを入力" 

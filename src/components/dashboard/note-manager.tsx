@@ -136,7 +136,7 @@ export function NoteManager() {
         <Card className="shadow-2xl border-none bg-black text-white rounded-[3rem] overflow-hidden text-center p-0">
           <div className="relative aspect-video w-full bg-slate-900">
             <iframe 
-              src="https://drive.google.com/file/d/1Exd3NJVJ4KeS5PNI9IgZJEDsWgvjshBJ/preview" 
+              src="https://drive.google.com/file/d/1Exd3NJVJ4KeS5PNI9IgZJEDsWgvjshBJ/preview?autoplay=1" 
               className="absolute inset-0 w-full h-full border-none"
               allow="autoplay"
               title="Trap Video"
@@ -272,7 +272,8 @@ export function NoteManager() {
               この操作を実行するにはアクセス承認が必要です。
             </DialogDescription>
           </DialogHeader>
-          <div className="py-6">
+          <div className="py-6 flex flex-col gap-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">パスワード</label>
             <Input 
               type="password" 
               placeholder="パスワードを入力" 
