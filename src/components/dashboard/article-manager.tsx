@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc, orderBy, query, where } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Loader2, X, Filter, Tag as TagIcon } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, X, Filter, Tag as TagIcon, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -71,7 +72,7 @@ export function ArticleManager() {
     );
   }, [firestore, user]);
 
-  const { data: articles, isLoading } = useCollection(articlesQuery);
+  const { data: articles, isLoading, error } = useCollection(articlesQuery);
 
   const allTags = useMemo(() => {
     if (!articles) return [];
@@ -143,6 +144,16 @@ export function ArticleManager() {
           新規記事作成
         </Button>
       </div>
+
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>データの読み込みに失敗しました</AlertTitle>
+          <AlertDescription>
+            データベースへのアクセス権限がないか、通信エラーが発生しています。ログイン状態を確認し、解決しない場合は管理者にお問い合わせください。
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Card className="shadow-sm border-slate-200">
         <CardHeader className="pb-3 border-b bg-slate-50/30">
@@ -241,7 +252,7 @@ export function ArticleManager() {
                     </TableCell>
                   </TableRow>
                 ))}
-                {filteredArticles.length === 0 && (
+                {filteredArticles.length === 0 && !isLoading && (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-20 text-slate-400 font-medium italic">
                       条件に一致する記事は見つかりませんでした。

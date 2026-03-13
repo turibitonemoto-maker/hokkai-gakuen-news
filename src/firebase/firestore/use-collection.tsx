@@ -50,7 +50,7 @@ export function useCollection<T = any>(
   const [data, setData] = useState<StateDataType>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
-  const [retryCount, setRetryCount] = useState(0); // 認証ラグ対策の再試行カウンター
+  const [retryCount, setRetryCount] = useState(0); 
   
   const { user, isUserLoading } = useUser();
 
@@ -75,7 +75,7 @@ export function useCollection<T = any>(
         setData(results);
         setError(null);
         setIsLoading(false);
-        setRetryCount(0); // 成功したらリセット
+        setRetryCount(0);
       },
       async (serverError: FirestoreError) => {
         const path: string =
@@ -93,27 +93,25 @@ export function useCollection<T = any>(
           errorMessage.includes('insufficient') ||
           errorMessage.includes('denied');
 
-        // 【最重要】認証同期ラグ（フライング）対策
-        // ログイン状態であれば、一時的な権限エラーは致命的なエラーとして扱わず1秒後に再試行する
+        // 認証同期ラグ対策
         if (isPermissionError && user && retryCount < 3) {
-          console.warn(`Firestore (useCollection) [RETRYING]: 権限同期待ち (${retryCount + 1}/3). Path: ${path}`);
+          console.warn(`Firestore (useCollection) [WAITING]: 権限反映待ち... (${retryCount + 1}/3). Path: ${path}`);
           setTimeout(() => setRetryCount(prev => prev + 1), 1000);
           return;
         }
 
-        // 解決不能なエラー、または未ログイン時のエラーのみ通知
         const contextualError = new FirestorePermissionError({
           operation: 'list',
           path,
         });
 
+        // 重要: アプリをクラッシュさせないよう、グローバルへの通知をスキップし、
+        // ローカルなエラー状態のみを更新する
         setError(contextualError);
         setData(null);
         setIsLoading(false);
         
-        if (!user || retryCount >= 3) {
-          errorEmitter.emit('permission-error', contextualError);
-        }
+        console.error(`Firestore access denied: ${path}. User logged in: ${!!user}`);
       }
     );
 

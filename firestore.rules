@@ -3,33 +3,34 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // 全ドキュメントへの基本権限（ログイン必須）
-    // 再適用タイムスタンプ: 2024-05-24T15:00:00Z
+    // 基本ルール: ログイン済みユーザーは全ドキュメントの読み書きが可能
+    // タイムスタンプ更新で再デプロイをトリガー: 2024-05-24T16:00:00Z
     match /{document=**} {
       allow read, write: if request.auth != null;
     }
 
-    // 公開データの閲覧許可（未ログインでもOK）
-    // コレクションのリスト（一覧）と各ドキュメントの取得の両方を明示的に許可
+    // 公開データの閲覧許可設定
+    // 明示的にコレクションとドキュメントの両方の読み取りを許可する
+    
+    match /articles/{articleId} {
+      allow read: if true;
+    }
     match /articles {
-      allow read: if true;
-      match /{allPaths=**} {
-        allow read: if true;
-      }
+      allow list: if true;
     }
     
+    match /ads/{adId} {
+      allow read: if true;
+    }
     match /ads {
-      allow read: if true;
-      match /{allPaths=**} {
-        allow read: if true;
-      }
+      allow list: if true;
     }
     
-    match /settings {
+    match /settings/{settingId} {
       allow read: if true;
-      match /{allPaths=**} {
-        allow read: if true;
-      }
+    }
+    match /settings {
+      allow list: if true;
     }
   }
 }
