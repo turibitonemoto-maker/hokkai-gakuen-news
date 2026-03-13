@@ -6,14 +6,14 @@ import { Toaster } from "@/components/ui/toaster";
 export const metadata: Metadata = {
   title: '北海学園新聞会 | 管制システム',
   description: '北海学園新聞会の公式コンテンツ管理システムです。',
-  robots: {
-    index: false,
-    follow: false,
-  },
   icons: {
     icon: '/icon.png',
     shortcut: '/icon.png',
     apple: '/icon.png',
+  },
+  robots: {
+    index: false,
+    follow: false,
   },
 };
 
