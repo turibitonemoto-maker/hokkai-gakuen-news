@@ -1,8 +1,13 @@
 
-"use client";
+'use client';
 
-import { InquiryManager } from "@/components/dashboard/inquiry-manager";
+import { redirect } from 'next/navigation';
 
+/**
+ * お問い合わせ管理は廃止されました（外部SNSへ移行）。
+ * アクセスされた場合はダッシュボードへリダイレクトします。
+ */
 export default function InquiriesAdminPage() {
-  return <InquiryManager />;
+  redirect('/admin');
+  return null;
 }

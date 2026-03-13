@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -12,7 +13,6 @@ import {
   ChevronRight,
   Database,
   UserCheck,
-  Inbox,
   Settings,
   AlertCircle
 } from "lucide-react";
@@ -25,10 +25,8 @@ import { useCollection, useDoc, useFirestore, useMemoFirebase, useUser } from "@
 import { collection, query, orderBy, limit, doc } from "firebase/firestore";
 import Link from "next/link";
 
-/**
- * 管理者ダッシュボード（管制塔）
- * 重要なステータスを即座に把握し、アクションへ繋げます。
- */
+const PUBLIC_SITE_URL = "https://6000-firebase-studio-1771906628521.cluster-osvg2nzmmzhzqqjio6oojllbg4.cloudworkstations.dev/";
+
 export default function AdminDashboard() {
   const [currentTime, setCurrentTime] = useState<string | null>(null);
   const firestore = useFirestore();
@@ -42,39 +40,27 @@ export default function AdminDashboard() {
     return () => clearInterval(timer);
   }, []);
 
-  // 1. 全記事
   const articlesQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return collection(firestore, "articles");
   }, [firestore, user]);
 
-  // 2. お問い合わせ
-  const inquiriesQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return collection(firestore, "inquiries");
-  }, [firestore, user]);
-
-  // 3. note同期ログ
   const syncLogDocRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return doc(firestore, "settings", "note-sync");
   }, [firestore, user]);
 
-  // 4. 最新のアクティビティ
   const recentActivityQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    // updatedAtでの並べ替えを試みる。インデックスがない場合はエラーが発生し、案内が表示される
     return query(collection(firestore, "articles"), orderBy("updatedAt", "desc"), limit(6));
   }, [firestore, user]);
   
-  // 5. メンテナンスモード状態
   const maintenanceDocRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return doc(firestore, "settings", "maintenance");
   }, [firestore, user]);
 
   const { data: articles, isLoading: isArticlesLoading } = useCollection(articlesQuery);
-  const { data: inquiries, isLoading: isInquiriesLoading } = useCollection(inquiriesQuery);
   const { data: recentArticles, isLoading: isActivityLoading, error: activityError } = useCollection(recentActivityQuery);
   const { data: syncLog } = useDoc(syncLogDocRef);
   const { data: maintenanceConfig } = useDoc(maintenanceDocRef);
@@ -83,12 +69,10 @@ export default function AdminDashboard() {
     total: articles?.length || 0,
     note: articles?.filter(a => a.articleType === "Note").length || 0,
     published: articles?.filter(a => a.isPublished).length || 0,
-    unreadInquiries: inquiries?.filter(i => !i.isRead).length || 0,
   };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      {/* 1. 最上部ステータスバー（メンテナンス & 権限） */}
       <div className="flex flex-col md:flex-row justify-between items-start gap-4">
         <div className="flex flex-col gap-1">
           <h3 className="text-2xl font-bold text-slate-800">管制塔ダッシュボード</h3>
@@ -100,45 +84,36 @@ export default function AdminDashboard() {
         <div className="flex flex-wrap gap-2">
           <Badge variant="outline" className="bg-white border-blue-200 text-blue-700 px-3 py-1 flex gap-2 items-center shadow-sm">
             <UserCheck className="h-3 w-3" />
-            ログイン: {user?.email} (管理者権限あり)
+            管理者: {user?.email}
           </Badge>
           
           {maintenanceConfig?.isMaintenanceMode ? (
             <Badge variant="destructive" className="px-3 py-1 flex gap-2 items-center animate-pulse shadow-md">
               <ShieldAlert className="h-3 w-3" />
-              公開サイト: メンテナンス中（停止）
+              表示サイト: メンテナンス中
             </Badge>
           ) : (
             <Badge variant="outline" className="bg-green-50 border-green-200 text-green-700 px-3 py-1 flex gap-2 items-center shadow-sm">
               <Globe className="h-3 w-3" />
-              公開サイト: 正常稼働中
+              表示サイト: 公開中
             </Badge>
           )}
         </div>
       </div>
 
-      {/* 2. クイックスタッツ */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <QuickStatCard 
           title="DB登録記事数" 
           value={isArticlesLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : stats.total} 
-          delta={`公開: ${stats.published} / 下書き: ${stats.total - stats.published}`} 
+          delta={`公開中: ${stats.published}`} 
           icon={Database} 
           color="blue"
           href="/admin/articles"
         />
         <QuickStatCard 
-          title="未読メッセージ" 
-          value={isInquiriesLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : stats.unreadInquiries} 
-          delta="お問い合わせ対応待ち" 
-          icon={Inbox} 
-          color="orange"
-          href="/admin/inquiries"
-        />
-        <QuickStatCard 
-          title="note採用記事" 
+          title="note連携記事" 
           value={stats.note} 
-          delta="外部メディア連動状況" 
+          delta="外部メディア管理数" 
           icon={Share2} 
           color="purple"
           href="/admin/note"
@@ -146,7 +121,7 @@ export default function AdminDashboard() {
         <QuickStatCard 
           title="最終note同期" 
           value={syncLog?.lastSyncAt ? new Date(syncLog.lastSyncAt).toLocaleTimeString("ja-JP", { hour: '2-digit', minute: '2-digit' }) : "--:--"} 
-          delta={syncLog?.lastSyncAt ? new Date(syncLog.lastSyncAt).toLocaleDateString("ja-JP") : "同期履歴なし"} 
+          delta={syncLog?.lastSyncAt ? new Date(syncLog.lastSyncAt).toLocaleDateString("ja-JP") : "履歴なし"} 
           icon={Clock} 
           color="green"
           href="/admin/note"
@@ -154,28 +129,21 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* 3. アクティビティ & インデックス警告 */}
         <Card className="lg:col-span-2 shadow-sm border-slate-200 overflow-hidden">
           <CardHeader className="bg-white border-b border-slate-50">
             <CardTitle className="text-base font-bold flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-primary" />
-              最新の更新・公開ステータス
+              最新のアクティビティ
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            {/* インデックスエラーの診断案内 */}
             {activityError && (
-              <div className="p-6 bg-red-50 text-red-800 border-b border-red-100 animate-in slide-in-from-top-4 duration-500">
+              <div className="p-6 bg-red-50 text-red-800 border-b border-red-100">
                 <div className="flex items-start gap-3">
                   <AlertCircle className="h-5 w-5 mt-0.5 shrink-0" />
-                  <div className="space-y-3">
-                    <p className="font-bold leading-tight">Firestoreインデックスの作成が必要です</p>
-                    <p className="text-xs leading-relaxed opacity-80">
-                      並べ替え（updatedAt順）を実行するにはインデックスの準備が必要です。以下のシステムエラー内容に含まれるURLをクリックして作成してください：
-                    </p>
-                    <div className="bg-white/60 p-3 rounded-lg border border-red-200 font-mono text-[10px] break-all max-h-32 overflow-auto shadow-inner">
-                      {activityError.message}
-                    </div>
+                  <div>
+                    <p className="font-bold text-sm">インデックスの作成が必要です</p>
+                    <p className="text-[10px] mt-1 opacity-80 break-all">{activityError.message}</p>
                   </div>
                 </div>
               </div>
@@ -189,81 +157,57 @@ export default function AdminDashboard() {
                   <div key={article.id} className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between">
                     <div className="flex flex-col">
                       <div className="flex items-center gap-2">
-                        {article.articleType === "Note" ? (
-                          <Badge className="bg-purple-600 text-white border-none text-[8px] h-4 px-1 shadow-sm">note記事</Badge>
-                        ) : (
-                          <Badge className="bg-primary text-white border-none text-[8px] h-4 px-1 shadow-sm">学内記事</Badge>
-                        )}
-                        <span className="text-sm font-bold text-slate-700 truncate max-w-[200px] md:max-w-xs">{article.title}</span>
+                        <Badge className={article.articleType === "Note" ? "bg-purple-600 h-4 px-1 text-[8px]" : "bg-primary h-4 px-1 text-[8px]"}>
+                          {article.articleType === "Note" ? "note" : "学内"}
+                        </Badge>
+                        <span className="text-sm font-bold text-slate-700 truncate max-w-[200px]">{article.title}</span>
                       </div>
-                      <span className="text-[10px] text-slate-400 mt-1 ml-14">
-                        最終更新: {new Date(article.updatedAt || "").toLocaleString("ja-JP")}
+                      <span className="text-[10px] text-slate-400 mt-1">
+                        更新: {new Date(article.updatedAt || "").toLocaleString("ja-JP")}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={article.isPublished ? "default" : "outline"} className={cn(
-                        "scale-75 origin-right font-bold whitespace-nowrap",
-                        article.isPublished ? "bg-green-100 text-green-700 border-green-200" : "text-slate-400"
-                      )}>
-                        {article.isPublished ? "公開中" : "非公開"}
-                      </Badge>
-                    </div>
+                    <Badge variant={article.isPublished ? "default" : "outline"} className={article.isPublished ? "bg-green-100 text-green-700 border-green-200 text-[10px]" : "text-slate-400 text-[10px]"}>
+                      {article.isPublished ? "公開中" : "下書き"}
+                    </Badge>
                   </div>
                 )
               )) : (
-                <div className="p-12 text-center text-slate-400 text-sm italic">
-                  記事が1件もありません。
-                </div>
+                <div className="p-12 text-center text-slate-400 text-sm italic">記事がありません。</div>
               )}
             </div>
           </CardContent>
         </Card>
 
-        {/* 4. クイックアクション */}
         <Card className="shadow-sm border-slate-200">
           <CardHeader>
-            <CardTitle className="text-base font-bold">システム制御</CardTitle>
+            <CardTitle className="text-base font-bold">クイック操作</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <Link href="/admin/articles">
               <Button className="w-full justify-start gap-3 h-12 shadow-sm font-bold text-sm">
                 <FileText className="h-5 w-5" />
-                学内記事を新規作成
+                <span>記事の新規作成</span>
               </Button>
             </Link>
             <Link href="/admin/note">
               <Button variant="outline" className="w-full justify-start gap-3 h-12 border-purple-200 text-purple-700 hover:bg-purple-50 font-bold text-sm">
                 <Share2 className="h-5 w-5" />
-                noteから記事を採用
-              </Button>
-            </Link>
-            <Link href="/admin/inquiries">
-              <Button variant="outline" className="w-full justify-start gap-3 h-12 border-orange-200 text-orange-700 hover:bg-orange-50 font-bold text-sm relative">
-                <Inbox className="h-5 w-5" />
-                お問い合わせを確認
-                {stats.unreadInquiries > 0 && (
-                  <Badge className="absolute top-2 right-2 bg-orange-600 animate-bounce h-5 w-5 p-0 flex items-center justify-center rounded-full border-2 border-white">
-                    {stats.unreadInquiries}
-                  </Badge>
-                )}
+                <span>note管理</span>
               </Button>
             </Link>
             <Link href="/admin/maintenance">
               <Button variant="outline" className="w-full justify-start gap-3 h-12 border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-sm">
                 <Settings className="h-5 w-5" />
-                メンテナンス・設定
+                <span>システム設定</span>
               </Button>
             </Link>
             <Separator className="my-2" />
-            <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 text-center">公開サイト（別サイト）連動</p>
-              <a href="https://hokkai-newspaper-frontend.vercel.app/" target="_blank" rel="noopener noreferrer">
-                <Button variant="secondary" className="w-full justify-center gap-2 font-bold h-10 shadow-sm">
-                  <Globe className="h-4 w-4" />
-                  現在の公開画面を開く
-                </Button>
-              </a>
-            </div>
+            <a href={PUBLIC_SITE_URL} target="_blank" rel="noopener noreferrer">
+              <Button variant="secondary" className="w-full justify-center gap-2 font-bold h-10 shadow-sm">
+                <Globe className="h-4 w-4" />
+                <span>表示サイトを開く</span>
+              </Button>
+            </a>
           </CardContent>
         </Card>
       </div>
@@ -276,7 +220,6 @@ function QuickStatCard({ title, value, delta, icon: Icon, color, href }: any) {
     blue: "bg-blue-50 text-blue-600 border-blue-100",
     green: "bg-green-50 text-green-600 border-green-100",
     purple: "bg-purple-50 text-purple-600 border-purple-100",
-    orange: "bg-orange-50 text-orange-600 border-orange-100",
   };
 
   return (

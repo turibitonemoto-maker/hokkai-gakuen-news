@@ -38,20 +38,6 @@
         "updatedAt": { "type": "string", "format": "date-time" }
       }
     },
-    "Inquiry": {
-      "title": "Inquiry",
-      "description": "お問い合わせ。",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string" },
-        "email": { "type": "string", "format": "email" },
-        "subject": { "type": "string" },
-        "message": { "type": "string" },
-        "isRead": { "type": "boolean" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      }
-    },
     "MaintenanceConfig": {
       "title": "MaintenanceConfig",
       "description": "表示用サイトの制御フラグと伝令メッセージ。",
@@ -75,10 +61,6 @@
     "/ads/{adId}": {
       "schema": { "$ref": "#/backend/entities/Ad" },
       "description": "広告データ。"
-    },
-    "/inquiries/{inquiryId}": {
-      "schema": { "$ref": "#/backend/entities/Inquiry" },
-      "description": "お問い合わせ。"
     },
     "/settings/maintenance": {
       "schema": { "$ref": "#/backend/entities/MaintenanceConfig" },

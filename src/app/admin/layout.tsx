@@ -16,8 +16,7 @@ import {
   ExternalLink,
   Share2,
   Loader2,
-  Newspaper,
-  Inbox
+  Newspaper
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,10 +27,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { LoginForm } from "@/components/auth/login-form";
 
-/**
- * 管理画面の共通レイアウト
- * 認証チェックとサイドバー、ブランドロゴの表示を制御します。
- */
+const PUBLIC_SITE_URL = "https://6000-firebase-studio-1771906628521.cluster-osvg2nzmmzhzqqjio6oojllbg4.cloudworkstations.dev/";
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
@@ -47,8 +44,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const menuItems = [
     { id: "/admin", label: "ダッシュボード", icon: LayoutDashboard },
     { id: "/admin/articles", label: "記事・公開管理", icon: FileText },
-    { id: "/admin/note", label: "note選別・採用", icon: Share2 },
-    { id: "/admin/inquiries", label: "お問い合わせ", icon: Inbox },
+    { id: "/admin/note", label: "note管理", icon: Share2 },
     { id: "/admin/hero", label: "ヒーロー画像", icon: ImageIcon },
     { id: "/admin/ads", label: "広告管理", icon: Megaphone },
     { id: "/admin/president", label: "会長挨拶設定", icon: UserRound },
@@ -68,7 +64,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  // 未ログイン時の表示：サイトブランドを維持したログイン画面
   if (!user) {
     return (
       <div className="min-h-screen flex flex-col bg-[#F0F2F5]">
@@ -98,7 +93,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
-      {/* サイドバー */}
       <aside 
         className={cn(
           "bg-[#1e293b] text-slate-300 transition-all duration-300 flex flex-col fixed inset-y-0 z-50",
@@ -112,7 +106,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {isSidebarOpen && (
             <div className="overflow-hidden whitespace-nowrap">
               <h1 className="text-sm font-bold text-white leading-tight">北海学園一部新聞会</h1>
-              <p className="text-[10px] text-slate-400 font-medium">Hokkai Gakuen News 1 CMS</p>
+              <p className="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">CMS Control</p>
             </div>
           )}
         </div>
@@ -148,7 +142,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </aside>
 
-      {/* メインコンテンツエリア */}
       <div 
         className={cn(
           "flex-1 flex flex-col transition-all duration-300",
@@ -165,10 +158,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </h2>
           </div>
           <div className="flex items-center gap-3">
-            <a href="https://hokkai-newspaper-frontend.vercel.app/" target="_blank" rel="noopener noreferrer">
+            <a href={PUBLIC_SITE_URL} target="_blank" rel="noopener noreferrer">
               <Button variant="outline" size="sm" className="gap-2 border-primary/20 text-primary hover:bg-primary/5">
                 <Globe className="h-4 w-4" />
-                公開サイトを確認
+                表示サイトを確認
                 <ExternalLink className="h-3 w-3" />
               </Button>
             </a>

@@ -1,2 +1,5 @@
 
-// AI機能は無効化されました
+/**
+ * AI機能は無効化されています。
+ */
+export const isDev = false;
