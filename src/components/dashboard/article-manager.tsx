@@ -38,6 +38,8 @@ const CATEGORY_LABELS: Record<string, string> = {
  */
 const getTagColor = (tag: string, isActive: boolean) => {
   const colorMap: Record<string, string> = {
+    "学内記事": "bg-primary",
+    "note記事": "bg-purple-600",
     "学内ニュース": "bg-blue-500",
     "イベント": "bg-emerald-500",
     "インタビュー": "bg-violet-500",
@@ -74,13 +76,15 @@ export function ArticleManager() {
 
   const allTags = useMemo(() => {
     const tagsSet = new Set<string>();
+    tagsSet.add("学内記事");
+    tagsSet.add("note記事");
     Object.values(CATEGORY_LABELS).forEach(label => tagsSet.add(label));
     allArticles?.forEach(article => {
       article.tags?.forEach((tag: string) => {
         if (tag && tag.trim()) tagsSet.add(tag.trim());
       });
     });
-    return Array.from(tagsSet).sort();
+    return Array.from(tagsSet);
   }, [allArticles]);
 
   const filteredArticles = useMemo(() => {
@@ -88,7 +92,9 @@ export function ArticleManager() {
     if (selectedTags.length === 0) return allArticles;
 
     return allArticles.filter(article => {
+      const typeLabel = article.articleType === "Note" ? "note記事" : "学内記事";
       const articleTags = [
+        typeLabel,
         CATEGORY_LABELS[article.categoryId] || article.categoryId,
         ...(article.tags || [])
       ];
@@ -117,7 +123,7 @@ export function ArticleManager() {
           <div>
             <CardTitle>{currentArticle ? "記事を編集" : "新規記事の作成"}</CardTitle>
             <CardDescription>
-              {currentArticle?.articleType === "Note" ? "noteから取り込んだ記事の公開設定を編集します。" : "学内のニュースやコラムを作成・編集します。"}
+              {currentArticle?.articleType === "Note" ? "noteから採用した記事の公開設定を編集します。" : "学内のニュースやコラムを作成・編集します。"}
             </CardDescription>
           </div>
           <Button variant="ghost" onClick={() => setIsEditing(false)}>
@@ -136,7 +142,7 @@ export function ArticleManager() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">全記事・公開管理</h2>
-          <p className="text-sm text-slate-500">作成した記事やnoteから取り込んだ記事の、公開・非公開を一括管理します。</p>
+          <p className="text-sm text-slate-500">学内記事とnoteから採用した記事の、公開・非公開を一括管理します。</p>
         </div>
         <Button onClick={() => { setCurrentArticle(null); setIsEditing(true); }} className="h-11 px-6 shadow-md gap-2 font-bold">
           <Plus className="h-5 w-5" />
@@ -158,7 +164,7 @@ export function ArticleManager() {
         <CardHeader className="pb-3 border-b bg-slate-50/30">
           <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-500 uppercase tracking-widest">
             <Filter className="h-4 w-4" />
-            カテゴリー・タグ フィルター
+            タイプ・カテゴリー フィルター
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4">
@@ -203,7 +209,7 @@ export function ArticleManager() {
               <TableHeader className="bg-slate-50/50">
                 <TableRow>
                   <TableHead className="w-[100px]">状態</TableHead>
-                  <TableHead className="w-[100px]">タイプ</TableHead>
+                  <TableHead className="w-[120px]">タイプ</TableHead>
                   <TableHead>記事タイトル / カテゴリー</TableHead>
                   <TableHead>公開予定日</TableHead>
                   <TableHead className="text-right">操作</TableHead>
@@ -221,12 +227,12 @@ export function ArticleManager() {
                     </TableCell>
                     <TableCell>
                       {article.articleType === "Note" ? (
-                        <Badge variant="secondary" className="bg-purple-50 text-purple-600 border-purple-100 gap-1 px-2">
-                          <Share2 className="h-3 w-3" /> note
+                        <Badge variant="secondary" className="bg-purple-600 text-white border-transparent gap-1 px-3 py-1 shadow-sm">
+                          <Share2 className="h-3 w-3" /> note記事
                         </Badge>
                       ) : (
-                        <Badge variant="secondary" className="bg-blue-50 text-blue-600 border-blue-100 gap-1 px-2">
-                          <FileText className="h-3 w-3" /> 学内
+                        <Badge variant="secondary" className="bg-primary text-white border-transparent gap-1 px-3 py-1 shadow-sm">
+                          <FileText className="h-3 w-3" /> 学内記事
                         </Badge>
                       )}
                     </TableCell>
@@ -256,7 +262,7 @@ export function ArticleManager() {
                 {filteredArticles.length === 0 && !isLoading && (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-20 text-slate-400 font-medium italic">
-                      表示できる記事はありません。
+                      条件に一致する記事はありません。
                     </TableCell>
                   </TableRow>
                 )}
@@ -269,12 +275,12 @@ export function ArticleManager() {
       <AlertDialog open={!!articleToDelete} onOpenChange={(open) => !open && setArticleToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+            <div className="flex items-center gap-2 text-destructive mb-2">
               <Trash2 className="h-5 w-5" />
-              記事を削除しますか？
-            </AlertDialogTitle>
+              <AlertDialogTitle>記事を完全に削除しますか？</AlertDialogTitle>
+            </div>
             <AlertDialogDescription>
-              「{articleToDelete?.title}」を完全に削除します。
+              「{articleToDelete?.title}」を削除します。この操作は取り消せません。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
