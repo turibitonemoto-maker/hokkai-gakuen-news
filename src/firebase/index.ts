@@ -36,12 +36,12 @@ export function getSdks(firebaseApp: FirebaseApp) {
   };
 }
 
-// 他のAI（表示用サイト）が迷わないよう、エクスポート元を明確に分離
+// エクスポートの衝突を避けるための明確なバレル構成
 export * from './provider';
 export * from './client-provider';
 export * from './firestore/use-collection';
 export * from './firestore/use-doc';
-export * from './auth/use-user';
+export * from './auth/use-user'; // useUser はここからのみ供給
 export * from './non-blocking-updates';
 export * from './non-blocking-login';
 export * from './errors';

@@ -41,13 +41,6 @@ export interface FirebaseServicesAndUser {
   userError: Error | null;
 }
 
-// 個別フック用の返却型（auth/use-user.tsxで使用）
-export interface UserHookResult {
-  user: User | null;
-  isUserLoading: boolean;
-  userError: Error | null;
-}
-
 export const FirebaseContext = createContext<FirebaseContextState | undefined>(undefined);
 
 /**
