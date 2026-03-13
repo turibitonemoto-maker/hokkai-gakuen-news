@@ -40,11 +40,9 @@ export function useDoc<T = any>(
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
-  // 認証状態を取得
   const { user, isUserLoading } = useUser();
 
   useEffect(() => {
-    // 1. 認証チェック中、または参照がない場合は待機
     if (isUserLoading || !memoizedDocRef) {
       setData(null);
       setIsLoading(false);
@@ -67,10 +65,10 @@ export function useDoc<T = any>(
         setIsLoading(false);
       },
       async (serverError: FirestoreError) => {
-        // 【最重要】認証同期ラグ対策
-        // ログイン済みであることが確認できている場合の一時的なエラーは静かにスルーする
         const currentAuthUser = getAuth().currentUser;
-        if (serverError.code === 'permission-denied' && (user || currentAuthUser)) {
+        const isAuthLikelyPresent = !!(user || currentAuthUser);
+
+        if ((serverError.code === 'permission-denied' || serverError.message.includes('permission')) && isAuthLikelyPresent) {
           console.warn("Firestore (useDoc): Auth sync lag detected. Waiting for permission propagation...");
           return;
         }

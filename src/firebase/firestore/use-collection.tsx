@@ -54,7 +54,6 @@ export function useCollection<T = any>(
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
   
-  // 認証状態を取得
   const { user, isUserLoading } = useUser();
 
   useEffect(() => {
@@ -82,13 +81,13 @@ export function useCollection<T = any>(
       },
       async (serverError: FirestoreError) => {
         // 【最重要】認証同期ラグ（フライング）対策
-        // ログイン済み（userが存在する、またはSDKのAuthにcurrentUserがいる）にもかかわらず
-        // 権限エラーが出た場合は、同期待ちのラグと判断してエラー画面（RSOD）を出さずに静かに待機する
+        // ログイン済み（またはログイン中）であるにもかかわらず権限エラーが出た場合は、
+        // サーバー側での認証情報の浸透待ちと判断し、RSODを出さずに静かに待機する
         const currentAuthUser = getAuth().currentUser;
-        if (serverError.code === 'permission-denied' && (user || currentAuthUser)) {
+        const isAuthLikelyPresent = !!(user || currentAuthUser);
+        
+        if ((serverError.code === 'permission-denied' || serverError.message.includes('permission')) && isAuthLikelyPresent) {
           console.warn("Firestore (useCollection): Auth sync lag detected. Waiting for permission propagation...");
-          // isLoading状態を維持し、エラーをセットせずにリターン。
-          // 認証が通れば自動的に snapshot が再発火されるか、コンポーネントの再レンダリングでリトライされます。
           return;
         }
 
@@ -106,7 +105,7 @@ export function useCollection<T = any>(
         setData(null)
         setIsLoading(false)
 
-        // 致命的なエラー（本当に権限がない場合）のみグローバル通知
+        // 本当に権限がない場合（かつラグでもない場合）のみグローバル通知
         errorEmitter.emit('permission-error', contextualError);
       }
     );

@@ -11,6 +11,7 @@ service cloud.firestore {
     }
 
     // 表示サイト（公開用）の安定性のために、一部のデータは未ログインでも読めるようにしておく
+    // (万が一未ログインでアクセスされた場合のフォールバック)
     match /articles/{document=**} {
       allow read: if true;
     }
