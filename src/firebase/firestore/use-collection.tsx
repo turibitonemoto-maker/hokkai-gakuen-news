@@ -82,7 +82,7 @@ export function useCollection<T = any>(
       async (serverError: FirestoreError) => {
         // 【最重要】認証同期ラグ（フライング）対策
         // ログイン済み（またはログイン中）であるにもかかわらず権限エラーが出た場合は、
-        // サーバー側での認証情報の浸透待ちと判断し、RSODを出さずに静かに待機する
+        // サーバー側での認証情報の浸透待ちと判断し、RSOD（赤画面）を出さずに警告にとどめる
         const currentAuthUser = getAuth().currentUser;
         const isAuthLikelyPresent = !!(user || currentAuthUser);
         
