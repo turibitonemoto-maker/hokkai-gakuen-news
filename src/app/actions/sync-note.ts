@@ -1,7 +1,6 @@
 'use server';
 
 import Parser from 'rss-parser';
-import { getPlaceholderById } from '@/app/lib/placeholder-images';
 
 /**
  * @fileOverview note記事同期のためのサーバーアクション
@@ -12,14 +11,14 @@ const parser = new Parser();
 
 export async function fetchNoteArticles() {
   const NOTE_RSS_URL = "https://note.com/lucky_minnow287/rss";
-  const notePlaceholder = getPlaceholderById('note-default');
 
   try {
     const feed = await parser.parseURL(NOTE_RSS_URL);
 
     return feed.items.map((item, index) => {
-      // noteのRSSから画像URLを抽出
-      const firstImage = item.content?.match(/<img[^>]+src="([^">]+)"/)?.[1] || notePlaceholder.imageUrl;
+      // noteのRSSから画像URLを抽出（記事の先頭画像など）
+      // 画像が見つからない場合は空文字列にする
+      const firstImage = item.content?.match(/<img[^>]+src="([^">]+)"/)?.[1] || "";
 
       // リンクからnote固有のIDを抽出
       const guid = item.guid || item.link || "";
@@ -30,7 +29,7 @@ export async function fetchNoteArticles() {
       const pubDate = item.pubDate ? new Date(item.pubDate) : new Date();
       const formattedDate = pubDate.toISOString().split('T')[0];
 
-      // 本文のスニペットを取得（HTMLタグを除去して200文字程度）
+      // 本文のスニペットを取得
       const snippet = (item.contentSnippet || item.content || "")
         .replace(/<[^>]*>/g, '') // HTMLタグ除去
         .substring(0, 300);
@@ -44,7 +43,7 @@ export async function fetchNoteArticles() {
         publishDate: formattedDate,
         mainImageUrl: firstImage,
         isPublished: false,
-        content: snippet, // 同期時に初期本文としてセット
+        content: snippet,
         tags: ["note"]
       };
     });

@@ -1,12 +1,10 @@
-
 'use client';
 
 import Link from 'next/link';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Share2, ArrowRight } from 'lucide-react';
+import { Calendar, Share2, ArrowRight, ImageOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getPlaceholderById } from '@/app/lib/placeholder-images';
 
 const CATEGORY_LABELS: Record<string, string> = {
   Campus: "学内ニュース",
@@ -37,18 +35,24 @@ export function ArticleGrid({ articles }: { articles: any[] }) {
 
 function ArticleCard({ article }: { article: any }) {
   const isNote = article.articleType === 'Note';
-  const placeholder = getPlaceholderById(isNote ? 'note-default' : 'article-default');
+  const hasImage = !!article.mainImageUrl;
 
   return (
     <div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100 flex flex-col h-full">
-      <div className="relative h-52 overflow-hidden">
-        <Image
-          src={article.mainImageUrl || placeholder.imageUrl}
-          alt={article.title}
-          fill
-          className="object-cover group-hover:scale-110 transition-transform duration-500"
-          data-ai-hint={placeholder.imageHint}
-        />
+      <div className="relative h-52 overflow-hidden bg-slate-100">
+        {hasImage ? (
+          <Image
+            src={article.mainImageUrl}
+            alt={article.title}
+            fill
+            className="object-cover group-hover:scale-110 transition-transform duration-500"
+          />
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 gap-2">
+            <ImageOff className="h-10 w-10 opacity-20" />
+            <span className="text-[10px] font-bold uppercase tracking-widest opacity-30">No Image</span>
+          </div>
+        )}
         <div className="absolute top-4 left-4 flex gap-2">
           <Badge className={cn(
             "font-bold px-3 py-1 shadow-md",

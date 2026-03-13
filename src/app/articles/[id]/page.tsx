@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
@@ -8,7 +7,7 @@ import { PublicHeader } from '@/components/site/public-header';
 import { PublicFooter } from '@/components/site/public-footer';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Tag, ArrowLeft, Loader2, Share2, MapPin } from 'lucide-react';
+import { Calendar, Tag, ArrowLeft, Loader2, Share2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 

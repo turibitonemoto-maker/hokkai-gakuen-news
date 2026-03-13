@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -9,7 +8,8 @@ import {
   Loader2, 
   ExternalLink, 
   PlusCircle, 
-  CheckCircle2
+  CheckCircle2,
+  ImageOff
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -31,7 +31,6 @@ export function NoteManager() {
   const { user } = useUser();
   const { toast } = useToast();
 
-  // Firestoreにある取り込み済みの記事IDを確認するために取得
   const noteArticlesQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return collection(firestore, "articles");
@@ -44,7 +43,6 @@ export function NoteManager() {
     return new Set(allArticles.filter(a => a.articleType === "Note").map(a => a.id));
   }, [allArticles]);
 
-  // 初期表示時に自動で最新記事をチェック
   const handleSync = async () => {
     setIsSyncing(true);
     try {
@@ -65,7 +63,6 @@ export function NoteManager() {
     if (!firestore) return;
     const docRef = doc(firestore, "articles", article.id);
     
-    // 下書き状態で保存
     setDocumentNonBlocking(docRef, {
       ...article,
       isPublished: false,
@@ -74,7 +71,7 @@ export function NoteManager() {
 
     toast({ 
       title: "採用しました", 
-      description: `「${article.title}」を下書きとして追加しました。「記事管理」から公開してください。` 
+      description: `「${article.title}」を下書きとして追加しました。` 
     });
   };
 
@@ -82,7 +79,7 @@ export function NoteManager() {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div>
         <h2 className="text-2xl font-bold text-slate-800">note記事の選別・採用</h2>
-        <p className="text-sm text-slate-500">外部メディア（note）の最新記事を確認し、公式サイトに掲載するものを「下書き」として取り込みます。</p>
+        <p className="text-sm text-slate-500">外部メディア（note）の最新記事を確認し、掲載するものを「下書き」として取り込みます。</p>
       </div>
 
       <Card className="shadow-sm border-slate-200">
@@ -92,7 +89,7 @@ export function NoteManager() {
             note記事の取り込み候補
           </CardTitle>
           <CardDescription>
-            ここから「採用」を選択した記事だけが、公式サイトの管理対象（下書き）になります。
+            noteで公開されている最新記事の一覧です。
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
@@ -114,8 +111,8 @@ export function NoteManager() {
                     <TableRow key={article.id} className="group hover:bg-slate-50/50 transition-colors">
                       <TableCell>
                         <div className="flex gap-4 items-center py-2">
-                          {article.mainImageUrl && (
-                            <div className="relative h-14 w-24 rounded-lg overflow-hidden flex-shrink-0 border bg-slate-100">
+                          <div className="relative h-14 w-24 rounded-lg overflow-hidden flex-shrink-0 border bg-slate-100 flex items-center justify-center">
+                            {article.mainImageUrl ? (
                               <Image 
                                 src={article.mainImageUrl} 
                                 alt="" 
@@ -123,8 +120,10 @@ export function NoteManager() {
                                 className="object-cover" 
                                 sizes="96px"
                               />
-                            </div>
-                          )}
+                            ) : (
+                              <ImageOff className="h-5 w-5 text-slate-300" />
+                            )}
+                          </div>
                           <div className="flex flex-col min-w-0">
                             <span className="font-bold text-slate-800 truncate text-sm">{article.title}</span>
                             <a href={article.noteUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-purple-500 hover:underline flex items-center gap-1 mt-1">
@@ -163,7 +162,7 @@ export function NoteManager() {
       
       <div className="bg-slate-50 p-6 rounded-2xl border border-dashed border-slate-200 text-center">
         <p className="text-sm text-slate-500 font-medium">
-          ※採用済みの記事の公開・非公開の切り替えや、タイトル・本文の編集は
+          ※採用済みの記事の編集や公開設定は
           <Link href="/admin/articles" className="text-primary font-bold hover:underline mx-1">
             記事管理画面
           </Link>
