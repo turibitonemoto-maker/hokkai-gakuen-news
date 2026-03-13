@@ -17,7 +17,6 @@ import { Loader2, Save, Globe, ShieldCheck, ShieldAlert, Lock } from "lucide-rea
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import Image from "next/image";
 
 const PUBLIC_SITE_URL = "https://6000-firebase-studio-1771906628521.cluster-osvg2nzmmzhzqqjio6oojllbg4.cloudworkstations.dev/";
 
@@ -158,7 +157,7 @@ export function MaintenanceManager() {
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">承認パスワード</label>
               <Input 
                 type="password" 
-                placeholder="●●●●●●" 
+                placeholder="パスワードを入力" 
                 className="text-center h-14 text-lg font-bold rounded-2xl border-slate-200 shadow-sm"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

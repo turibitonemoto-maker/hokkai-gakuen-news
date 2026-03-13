@@ -158,7 +158,7 @@ export function PresidentMessageManager() {
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">承認パスワード</label>
               <Input 
                 type="password" 
-                placeholder="●●●●●●" 
+                placeholder="パスワードを入力" 
                 className="text-center h-14 text-lg font-bold rounded-2xl border-slate-200 shadow-sm"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

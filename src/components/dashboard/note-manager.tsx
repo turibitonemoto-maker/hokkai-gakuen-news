@@ -275,7 +275,7 @@ export function NoteManager() {
           <div className="py-6">
             <Input 
               type="password" 
-              placeholder="●●●●●●" 
+              placeholder="パスワードを入力" 
               className="text-center h-14 text-lg font-bold rounded-2xl border-slate-200 shadow-sm"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
