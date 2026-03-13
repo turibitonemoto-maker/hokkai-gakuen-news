@@ -174,7 +174,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="text-slate-500 rounded-full hover:bg-slate-100">
               <Menu className="h-5 w-5" />
             </Button>
-            <h2 className="text-xl font-black text-slate-800 tracking-tight">
+            <h2 className="text-xl font-black text-slate-800 tracking-tight flex items-center gap-3">
+              <Image 
+                src="/icon.png" 
+                alt="" 
+                width={24} 
+                height={24} 
+                className="rounded shadow-sm"
+              />
               {activeLabel}
             </h2>
           </div>
