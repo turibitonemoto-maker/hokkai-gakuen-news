@@ -9,7 +9,6 @@ import {
   FirestoreError,
   DocumentSnapshot,
 } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { useUser } from '@/firebase';
@@ -65,7 +64,6 @@ export function useDoc<T = any>(
       },
       async (serverError: FirestoreError) => {
         // 【最重要】認証同期ラグ（フライング）対策
-        // 権限エラー(permission-denied)が発生した場合はアプリを止めずに警告のみとします。
         if (serverError.code === 'permission-denied') {
           console.warn(`Firestore (useDoc) [HANDLED]: 権限エラーまたは同期ラグを検知しました。再試行を待機しています... Path: ${memoizedDocRef.path}`);
           setError(serverError);
@@ -76,11 +74,11 @@ export function useDoc<T = any>(
         const contextualError = new FirestorePermissionError({
           operation: 'get',
           path: memoizedDocRef.path,
-        })
+        });
 
-        setError(contextualError)
-        setData(null)
-        setIsLoading(false)
+        setError(contextualError);
+        setData(null);
+        setIsLoading(false);
 
         errorEmitter.emit('permission-error', contextualError);
       }
