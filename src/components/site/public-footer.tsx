@@ -1,8 +1,8 @@
-
-'use client';
+"use client";
 
 import Link from 'next/link';
-import { Newspaper, Twitter, Instagram, Mail, MapPin, Phone } from 'lucide-react';
+import { Twitter, Instagram, Mail, MapPin } from 'lucide-react';
+import Image from 'next/image';
 
 export function PublicFooter() {
   const currentYear = new Date().getFullYear();
@@ -13,8 +13,8 @@ export function PublicFooter() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
           <div className="space-y-6">
             <Link href="/" className="flex items-center gap-3">
-              <div className="bg-primary p-2 rounded-xl text-white">
-                <Newspaper className="h-6 w-6" />
+              <div className="bg-white p-1 rounded-xl shadow-md border">
+                <Image src="/favicon.ico" alt="北海学園新聞会" width={32} height={32} className="rounded-lg" />
               </div>
               <h1 className="text-xl font-bold text-white leading-tight">北海学園新聞会</h1>
             </Link>
@@ -52,7 +52,6 @@ export function PublicFooter() {
               リンク
             </h4>
             <ul className="space-y-3 text-sm font-medium">
-              <li><Link href="/about#join" className="hover:text-primary transition-colors">入会案内</Link></li>
               <li><Link href="/admin" className="hover:text-primary transition-colors">管理者入口</Link></li>
             </ul>
           </div>

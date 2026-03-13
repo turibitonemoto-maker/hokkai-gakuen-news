@@ -71,7 +71,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="bg-white p-1 rounded-xl shadow-md border">
-                <Image src="/favicon.ico" alt="Logo" width={32} height={32} className="rounded-lg" />
+                <Image src="/favicon.ico" alt="北海学園新聞会" width={32} height={32} className="rounded-lg" />
               </div>
               <div>
                 <h1 className="text-xl font-bold text-slate-800 leading-tight">北海学園新聞会</h1>
@@ -101,7 +101,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       >
         <div className="p-6 flex items-center gap-3 border-b border-slate-700/50">
           <div className="bg-white p-1 rounded-lg shrink-0 shadow-lg">
-            <Image src="/favicon.ico" alt="Logo" width={24} height={24} className="rounded-md" />
+            <Image src="/favicon.ico" alt="北海学園新聞会" width={24} height={24} className="rounded-md" />
           </div>
           {isSidebarOpen && (
             <div className="overflow-hidden whitespace-nowrap">

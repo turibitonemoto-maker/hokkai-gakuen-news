@@ -1,11 +1,11 @@
-
-'use client';
+"use client";
 
 import Link from 'next/link';
 import { Newspaper, Menu, Search, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 export function PublicHeader() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -28,8 +28,8 @@ export function PublicHeader() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="bg-primary p-2 rounded-xl text-white shadow-lg group-hover:scale-105 transition-transform">
-              <Newspaper className="h-6 w-6" />
+            <div className="bg-white p-1 rounded-xl shadow-md border group-hover:scale-105 transition-transform">
+              <Image src="/favicon.ico" alt="北海学園新聞会" width={32} height={32} className="rounded-lg" />
             </div>
             <div>
               <h1 className="text-xl font-bold text-slate-800 leading-tight">北海学園新聞会</h1>
@@ -41,7 +41,6 @@ export function PublicHeader() {
             <NavLink href="/">ホーム</NavLink>
             <NavLink href="/articles">記事一覧</NavLink>
             <NavLink href="/about">新聞会について</NavLink>
-            <NavLink href="/contact">お問い合わせ</NavLink>
           </nav>
 
           <div className="flex items-center gap-2">

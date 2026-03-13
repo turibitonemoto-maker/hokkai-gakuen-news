@@ -4,8 +4,8 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: '北海学園新聞会 | コンテンツ管理システム',
-  description: '北海学園大学一部新聞会の公式コンテンツ管理システムです。',
+  title: '北海学園新聞会 | 管制システム',
+  description: '北海学園新聞会の公式コンテンツ管理システムです。',
   robots: {
     index: false,
     follow: false,
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   icons: {
     icon: '/favicon.ico',
     shortcut: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
+    apple: '/favicon.ico',
   },
 };
 

@@ -15,7 +15,8 @@ import {
   Settings,
   AlertCircle,
   User,
-  ShieldCheck
+  ShieldCheck,
+  Lock
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +31,7 @@ const PUBLIC_SITE_URL = "/";
 
 export default function AdminDashboard() {
   const [currentTime, setCurrentTime] = useState<string | null>(null);
+  const [isFakeLoading, setIsFakeLoading] = useState(false);
   const firestore = useFirestore();
   const { user } = useUser();
 
@@ -91,12 +93,12 @@ export default function AdminDashboard() {
           {maintenanceConfig?.isMaintenanceMode ? (
             <Badge variant="destructive" className="px-3 py-1 flex gap-2 items-center animate-pulse shadow-md">
               <ShieldAlert className="h-3 w-3" />
-              表示サイト: 停止中
+              サイト: 停止中
             </Badge>
           ) : (
             <Badge variant="outline" className="bg-green-50 border-green-200 text-green-700 px-3 py-1 flex gap-2 items-center shadow-sm">
               <ShieldCheck className="h-3 w-3" />
-              表示サイト: 公開中
+              サイト: 公開中
             </Badge>
           )}
         </div>
