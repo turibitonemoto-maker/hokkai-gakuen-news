@@ -13,10 +13,9 @@ export function initializeFirebase() {
   if (!getApps().length) {
     let firebaseApp;
     try {
-      // 自動初期化（Firebase Consoleでの設定に基づく）を試行
-      firebaseApp = initializeApp();
+      firebaseApp = initializeApp(firebaseConfig);
     } catch (e) {
-      // 失敗した場合は config.ts の定義を使用
+      console.error("Firebase initialization failed", e);
       firebaseApp = initializeApp(firebaseConfig);
     }
     return getSdks(firebaseApp);
@@ -36,13 +35,12 @@ export function getSdks(firebaseApp: FirebaseApp) {
   };
 }
 
-// エクスポートの衝突を避けるための明確なバレル構成
-// useUser は ./auth/use-user からのみエクスポートされます
+// バレルエクスポートの整理（重複を排除）
 export * from './provider';
 export * from './client-provider';
 export * from './firestore/use-collection';
 export * from './firestore/use-doc';
-export * from './auth/use-user';
+export * from './auth/use-user'; // ここからのみ useUser を提供
 export * from './non-blocking-updates';
 export * from './non-blocking-login';
 export * from './errors';

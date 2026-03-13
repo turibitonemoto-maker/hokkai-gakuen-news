@@ -50,7 +50,7 @@ export function MaintenanceManager() {
       form.reset({
         isMaintenanceMode: config.isMaintenanceMode ?? false,
         maintenanceMessage: config.maintenanceMessage ?? "現在、システムメンテナンスのためサイトを一時停止しております。",
-        systemStatusMessage: config.systemStatusMessage ?? "システム正常稼働中：伝統の復興を開始します",
+        systemStatusMessage: config.systemStatusMessage ?? "システム正常稼働中：伝統의復興を開始します",
       });
     }
   }, [config, form]);

@@ -13,14 +13,12 @@ interface FirebaseProviderProps {
   auth: Auth;
 }
 
-// ユーザー認証の内部状態
 interface UserAuthState {
   user: User | null;
   isUserLoading: boolean;
   userError: Error | null;
 }
 
-// Firebase Context の全体状態
 export interface FirebaseContextState {
   areServicesAvailable: boolean;
   firebaseApp: FirebaseApp | null;
@@ -31,7 +29,6 @@ export interface FirebaseContextState {
   userError: Error | null;
 }
 
-// 共通サービスの返却型
 export interface FirebaseServicesAndUser {
   firebaseApp: FirebaseApp;
   firestore: Firestore;
@@ -45,6 +42,7 @@ export const FirebaseContext = createContext<FirebaseContextState | undefined>(u
 
 /**
  * FirebaseProvider: 各サービスと認証状態を一括管理し、配下へ提供します。
+ * 注意: useUser はここから直接エクスポートせず、auth/use-user.tsx を経由させます。
  */
 export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   children,
@@ -97,9 +95,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   );
 };
 
-/**
- * 基本的なFirebaseサービスとユーザー状態を取得するフック。
- */
 export const useFirebase = (): FirebaseServicesAndUser => {
   const context = useContext(FirebaseContext);
   if (context === undefined) {
