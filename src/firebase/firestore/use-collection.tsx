@@ -87,7 +87,7 @@ export function useCollection<T = any>(
         const isAuthLikelyPresent = !!(user || currentAuthUser);
         
         if ((serverError.code === 'permission-denied' || serverError.message.includes('permission')) && isAuthLikelyPresent) {
-          console.warn("Firestore (useCollection): Auth sync lag detected. Waiting for permission propagation...");
+          console.warn("Firestore (useCollection): 認証同期ラグを検知しました。権限の浸透を待機しています...");
           return;
         }
 
@@ -114,7 +114,7 @@ export function useCollection<T = any>(
   }, [memoizedTargetRefOrQuery, user, isUserLoading]);
 
   if(memoizedTargetRefOrQuery && !memoizedTargetRefOrQuery.__memo) {
-    throw new Error(memoizedTargetRefOrQuery + ' was not properly memoized using useMemoFirebase');
+    throw new Error(memoizedTargetRefOrQuery + ' は useMemoFirebase でメモ化されていません');
   }
   return { data, isLoading, error };
 }

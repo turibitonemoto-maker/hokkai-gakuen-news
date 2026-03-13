@@ -65,11 +65,12 @@ export function useDoc<T = any>(
         setIsLoading(false);
       },
       async (serverError: FirestoreError) => {
+        // 【最重要】認証同期ラグ（フライング）対策
         const currentAuthUser = getAuth().currentUser;
         const isAuthLikelyPresent = !!(user || currentAuthUser);
 
         if ((serverError.code === 'permission-denied' || serverError.message.includes('permission')) && isAuthLikelyPresent) {
-          console.warn("Firestore (useDoc): Auth sync lag detected. Waiting for permission propagation...");
+          console.warn("Firestore (useDoc): 認証同期ラグを検知しました。権限の浸透を待機しています...");
           return;
         }
 
