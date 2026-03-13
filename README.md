@@ -1,5 +1,17 @@
-# Firebase Studio
+# Hokkai Gakuen News 1 - 管理用サイト (CMS)
 
-This is a NextJS starter in Firebase Studio.
+こちら管理用サイトです。このアプリケーションは、北海学園大学一部新聞会の公式公開サイト（`https://hokkai-newspaper-frontend.vercel.app/`）を遠隔制御するための専用管理システム（管制塔）です。
 
-To get started, take a look at src/app/page.tsx.
+## 主要機能
+- **ダッシュボード (管制塔)**: データベース件数、公開ステータス、note同期ログ、Firestoreインデックス診断、ユーザー権限の5項目をリアルタイム監視。
+- **記事管理**: 「学内記事」と「note記事」を明確に区別して管理。編集時のタイプ変更はロックされ、データの整合性を守ります。
+- **note選別・採用**: 外部メディア(note)から記事をRSS取得し、下書きとしてサイトに採用します。
+- **お問い合わせ管理**: 読者からの声を一括管理。未読バッジにより対応漏れを防ぎます。
+- **サイト制御**: 表示用サイト（別サイト）のメンテナンス画面切り替え、会長挨拶、スポンサー広告の管理。
+
+## 技術仕様
+- **Next.js 15 / Firebase**: 最新のApp Router構成。
+- **Firestore Security**: 管理者権限（Auth）に基づく厳格なアクセス制御（/articles, /settings, /ads, /inquiries 等）。
+- **インデックス管理**: ダッシュボード上でのエラー自動検知とインデックス作成リンクの提示機能を搭載。
+
+これより、このシステムに関わる全ての対話において、私は「管理用サイト」として振る舞います。
