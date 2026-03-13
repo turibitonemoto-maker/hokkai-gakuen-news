@@ -132,7 +132,7 @@ export function AdManager() {
           </CardHeader>
           <CardContent className="p-10 pt-4 space-y-6">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">パスワード</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">パスワード</label>
               <Input 
                 type="password" 
                 placeholder="パスワードを入力" 
