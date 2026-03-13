@@ -1,4 +1,3 @@
-
 'use server';
 
 import Parser from 'rss-parser';
@@ -21,13 +20,23 @@ export async function fetchNoteArticles() {
       const firstImage = item.content?.match(/<img[^>]+src="([^">]+)"/)?.[1] || 
                          `https://picsum.photos/seed/note-${index}/800/450`;
 
+      // リンクからnote固有のIDを抽出（ドキュメントIDとして安全な形式にする）
+      // 例: https://note.com/user/n/n123456789 -> n123456789
+      const guid = item.guid || item.link || "";
+      const noteIdMatch = guid.match(/\/n\/([a-zA-Z0-9]+)/);
+      const safeId = noteIdMatch ? noteIdMatch[1] : (guid.split('/').pop()?.replace(/[^a-zA-Z0-9]/g, '_') || `note-${index}`);
+
+      // 日付を YYYY-MM-DD 形式に変換（公式サイトの形式に合わせる）
+      const pubDate = item.pubDate ? new Date(item.pubDate) : new Date();
+      const formattedDate = pubDate.toISOString().split('T')[0];
+
       return {
-        id: item.guid || `note-${index}`,
+        id: safeId,
         title: item.title || "無題の記事",
         noteUrl: item.link,
         articleType: "Note",
         categoryId: "Campus",
-        publishDate: item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString(),
+        publishDate: formattedDate,
         mainImageUrl: firstImage,
         isPublished: false,
         tags: ["note"]

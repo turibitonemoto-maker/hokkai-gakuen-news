@@ -82,7 +82,7 @@ export function useCollection<T = any>(
             : (memoizedTargetRefOrQuery as unknown as InternalQuery)._query.path.canonicalString()
 
         // 【最重要】認証同期ラグ（フライング）対策
-        // ログイン状態であれば、一時的な権限エラーはエラーとして扱わず待機する
+        // ログイン状態であれば、一時的な権限エラーは致命的なエラーとして扱わず待機する
         const errorCode = serverError.code?.toLowerCase();
         const errorMessage = serverError.message?.toLowerCase() || '';
         
@@ -93,11 +93,11 @@ export function useCollection<T = any>(
           errorMessage.includes('insufficient') ||
           errorMessage.includes('denied');
 
+        // ログイン済み、または一時的な権限不足の場合は、エラーを投げずに静かに待つ
         if (isPermissionError || user) {
           console.warn(`Firestore (useCollection) [WAITING]: 権限同期を待機中... Path: ${path}`, serverError);
           setError(serverError);
           setIsLoading(false);
-          // エラー画面を表示させないために、ここで return する
           return;
         }
 
@@ -110,7 +110,7 @@ export function useCollection<T = any>(
         setData(null);
         setIsLoading(false);
         
-        // 致命的なエラーのみ通知
+        // 未ログイン状態かつ解決不能なエラーのみ通知
         errorEmitter.emit('permission-error', contextualError);
       }
     );

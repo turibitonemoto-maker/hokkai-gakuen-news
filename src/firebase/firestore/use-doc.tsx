@@ -77,7 +77,6 @@ export function useDoc<T = any>(
           console.warn(`Firestore (useDoc) [WAITING]: 権限同期を待機中... Path: ${memoizedDocRef.path}`, serverError);
           setError(serverError);
           setIsLoading(false);
-          // エラー画面を表示させないために、ここで return する
           return;
         }
 
