@@ -5,7 +5,7 @@ import { useState, useMemo } from "react";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc, orderBy, query, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Loader2, X, Filter, Tag as TagIcon, AlertCircle, Share2, FileText } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, X, Filter, Tag as TagIcon, AlertCircle, Share2, FileText, Eye } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -114,7 +114,6 @@ export function ArticleManager() {
     if (!firestore) return;
     const docRef = doc(firestore, "articles", article.id);
     
-    // 非同期でステータスを更新
     updateDocumentNonBlocking(docRef, { 
       isPublished: !article.isPublished,
       updatedAt: serverTimestamp() 
@@ -122,7 +121,7 @@ export function ArticleManager() {
 
     toast({ 
       title: !article.isPublished ? "公開しました" : "非公開にしました", 
-      description: `「${article.title}」の公開設定を切り替えました。表示サイト側に反映されます。` 
+      description: `「${article.title}」の公開設定を切り替えました。` 
     });
   };
 
@@ -160,7 +159,7 @@ export function ArticleManager() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">全記事・公開管理</h2>
-          <p className="text-sm text-slate-500">学内記事とnoteから採用した記事の、公開・非公開を一括管理します。</p>
+          <p className="text-sm text-slate-500">記事ごとの閲覧数を確認し、公開・非公開を一括管理します。</p>
         </div>
         <Button onClick={() => { setCurrentArticle(null); setIsEditing(true); }} className="h-11 px-6 shadow-md gap-2 font-bold">
           <Plus className="h-5 w-5" />
@@ -172,9 +171,7 @@ export function ArticleManager() {
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>データの読み込みに失敗しました</AlertTitle>
-          <AlertDescription>
-            データベースへのアクセス権限がないか、通信エラーが発生しています。
-          </AlertDescription>
+          <AlertDescription>データベースへのアクセス権限がないか、通信エラーが発生しています。</AlertDescription>
         </Alert>
       )}
 
@@ -205,12 +202,7 @@ export function ArticleManager() {
               );
             })}
             {selectedTags.length > 0 && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setSelectedTags([])} 
-                className="text-xs text-slate-400 font-bold hover:text-slate-600 h-auto p-2 ml-2"
-              >
+              <Button variant="ghost" size="sm" onClick={() => setSelectedTags([])} className="text-xs text-slate-400 font-bold hover:text-slate-600 h-auto p-2 ml-2">
                 フィルター解除
               </Button>
             )}
@@ -229,7 +221,8 @@ export function ArticleManager() {
                   <TableHead className="w-[180px]">公開状態</TableHead>
                   <TableHead className="w-[120px]">タイプ</TableHead>
                   <TableHead>記事タイトル / カテゴリー</TableHead>
-                  <TableHead>公開予定日</TableHead>
+                  <TableHead>公開日</TableHead>
+                  <TableHead className="w-[100px]">閲覧数</TableHead>
                   <TableHead className="text-right">操作</TableHead>
                 </TableRow>
               </TableHeader>
@@ -244,7 +237,7 @@ export function ArticleManager() {
                           className="data-[state=checked]:bg-green-500"
                         />
                         {article.isPublished ? (
-                          <Badge className="bg-green-100 text-green-700 hover:bg-green-200 border-green-200 shadow-none font-bold">公開中</Badge>
+                          <Badge className="bg-green-100 text-green-700 border-green-200 shadow-none font-bold">公開中</Badge>
                         ) : (
                           <Badge variant="outline" className="text-slate-400 border-slate-200 bg-slate-50 font-bold">下書き</Badge>
                         )}
@@ -252,11 +245,11 @@ export function ArticleManager() {
                     </TableCell>
                     <TableCell>
                       {article.articleType === "Note" ? (
-                        <Badge variant="secondary" className="bg-purple-600 text-white border-transparent gap-1 px-3 py-1 shadow-sm">
+                        <Badge variant="secondary" className="bg-purple-600 text-white border-transparent gap-1 px-3 py-1 shadow-sm font-bold">
                           <Share2 className="h-3 w-3" /> note
                         </Badge>
                       ) : (
-                        <Badge variant="secondary" className="bg-primary text-white border-transparent gap-1 px-3 py-1 shadow-sm">
+                        <Badge variant="secondary" className="bg-primary text-white border-transparent gap-1 px-3 py-1 shadow-sm font-bold">
                           <FileText className="h-3 w-3" /> 学内
                         </Badge>
                       )}
@@ -272,6 +265,12 @@ export function ArticleManager() {
                     <TableCell className="text-sm font-medium text-slate-500">
                       {new Date(article.publishDate).toLocaleDateString("ja-JP")}
                     </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1.5 text-slate-600 font-bold">
+                        <Eye className="h-3.5 w-3.5 text-slate-400" />
+                        <span className="text-sm">{(article.viewCount || 0).toLocaleString()}</span>
+                      </div>
+                    </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Button variant="ghost" size="icon" onClick={() => { setCurrentArticle(article); setIsEditing(true); }}>
@@ -286,7 +285,7 @@ export function ArticleManager() {
                 ))}
                 {filteredArticles.length === 0 && !isLoading && (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-20 text-slate-400 font-medium italic">
+                    <TableCell colSpan={6} className="text-center py-20 text-slate-400 font-medium italic">
                       条件に一致する記事はありません。
                     </TableCell>
                   </TableRow>

@@ -1,23 +1,16 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Loader2, ExternalLink, AlertTriangle, Pencil, BarChart3, Users, TrendingUp, ArrowLeft, Calendar, Clock } from "lucide-react";
+import { Plus, Trash2, Loader2, ExternalLink, AlertTriangle, Pencil, Users, ArrowLeft, Calendar, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { AdForm } from "./ad-form";
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Cell } from "recharts";
-import {
-  ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,13 +22,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-
-const chartConfig = {
-  clickCount: {
-    label: "閲覧数",
-    color: "hsl(var(--primary))",
-  },
-} satisfies ChartConfig;
 
 export function AdManager() {
   const [isAdding, setIsAdding] = useState(false);
@@ -52,20 +38,6 @@ export function AdManager() {
   }, [firestore, user]);
 
   const { data: ads, isLoading } = useCollection(adsQuery);
-
-  const totalClicks = useMemo(() => {
-    if (!ads) return 0;
-    return ads.reduce((sum, ad) => sum + (ad.clickCount || 0), 0);
-  }, [ads]);
-
-  const chartData = useMemo(() => {
-    if (!ads) return [];
-    return ads.map(ad => ({
-      name: ad.title || "無題",
-      clickCount: ad.clickCount || 0,
-      id: ad.id
-    })).sort((a, b) => b.clickCount - a.clickCount).slice(0, 5);
-  }, [ads]);
 
   const confirmDelete = () => {
     if (!adToDelete || !firestore) return;
@@ -116,8 +88,8 @@ export function AdManager() {
             <Card className="shadow-sm border-slate-200">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-primary" />
-                  パフォーマンス
+                  <Users className="h-5 w-5 text-primary" />
+                  閲覧統計
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -195,8 +167,8 @@ export function AdManager() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800">広告パフォーマンス管理</h2>
-          <p className="text-sm text-slate-500">バナーをクリックして詳細設定や統計を確認します。</p>
+          <h2 className="text-2xl font-bold text-slate-800">スポンサー広告管理</h2>
+          <p className="text-sm text-slate-500">バナーをクリックして詳細設定や閲覧数を確認します。</p>
         </div>
         <Button onClick={() => setIsAdding(true)} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
@@ -205,75 +177,44 @@ export function AdManager() {
       </div>
 
       {ads && ads.length > 0 ? (
-        <>
-          {/* サマリー統計：広告がある場合のみ表示 */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in duration-500">
-            <Card className="md:col-span-2 shadow-sm border-slate-200">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5 text-primary" />
-                  閲覧数トップ5
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="h-[200px]">
-                <ChartContainer config={chartConfig}>
-                  <BarChart data={chartData} layout="vertical" margin={{ left: 10 }}>
-                    <XAxis type="number" hide />
-                    <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} width={80} style={{ fontSize: '10px' }} />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="clickCount" fill="var(--color-clickCount)" radius={[0, 4, 4, 0]} barSize={16} />
-                  </BarChart>
-                </ChartContainer>
-              </CardContent>
-            </Card>
-            <Card className="flex flex-col justify-center items-center text-center p-4">
-              <Users className="h-8 w-8 text-primary mb-2" />
-              <h3 className="text-slate-500 text-xs font-medium">総閲覧数</h3>
-              <p className="text-3xl font-bold text-primary">{totalClicks.toLocaleString()}</p>
-            </Card>
-          </div>
-
-          {/* 広告一覧 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {ads.map((ad) => (
-              <Card 
-                key={ad.id} 
-                className="overflow-hidden group cursor-pointer border-slate-200 shadow-sm hover:shadow-md hover:border-primary/50 transition-all"
-                onClick={() => setSelectedAd(ad)}
-              >
-                <div className="relative h-32 bg-slate-100 border-b">
-                  <Image 
-                    src={ad.imageUrl} 
-                    alt={ad.title || "広告バナー"} 
-                    fill 
-                    className="object-contain p-2"
-                    unoptimized
-                  />
-                  <div className="absolute top-2 right-2 flex gap-1">
-                    <Badge variant="secondary" className="bg-white/90 shadow-sm">
-                      <Users className="h-3 w-3 mr-1" /> {ad.clickCount || 0}
-                    </Badge>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-500">
+          {ads.map((ad) => (
+            <Card 
+              key={ad.id} 
+              className="overflow-hidden group cursor-pointer border-slate-200 shadow-sm hover:shadow-md hover:border-primary/50 transition-all"
+              onClick={() => setSelectedAd(ad)}
+            >
+              <div className="relative h-32 bg-slate-100 border-b">
+                <Image 
+                  src={ad.imageUrl} 
+                  alt={ad.title || "広告バナー"} 
+                  fill 
+                  className="object-contain p-2"
+                  unoptimized
+                />
+                <div className="absolute top-2 right-2 flex gap-1">
+                  <Badge variant="secondary" className="bg-white/90 shadow-sm font-bold">
+                    <Users className="h-3 w-3 mr-1" /> {(ad.clickCount || 0).toLocaleString()}
+                  </Badge>
+                </div>
+              </div>
+              <CardContent className="p-4">
+                <div className="flex justify-between items-start">
+                  <div className="truncate">
+                    <p className="font-bold truncate text-slate-800">{ad.title || "無題の広告"}</p>
+                    <p className="text-[10px] text-slate-500 truncate flex items-center mt-1">
+                      <ExternalLink className="h-2.5 w-2.5 mr-1" /> {ad.linkUrl}
+                    </p>
+                  </div>
+                  <div className="bg-primary/10 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Pencil className="h-3 w-3 text-primary" />
                   </div>
                 </div>
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-start">
-                    <div className="truncate">
-                      <p className="font-semibold truncate text-slate-800">{ad.title || "無題の広告"}</p>
-                      <p className="text-[10px] text-slate-500 truncate flex items-center mt-1">
-                        <ExternalLink className="h-2.5 w-2.5 mr-1" /> {ad.linkUrl}
-                      </p>
-                    </div>
-                    <div className="bg-primary/10 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Pencil className="h-3 w-3 text-primary" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       ) : (
-        /* 広告がゼロの時のクリーンな表示 */
         <div className="py-20 text-center border-2 border-dashed rounded-xl text-slate-400 bg-white">
           <p className="font-bold">登録されている広告はありません</p>
           <p className="text-xs mt-1">「広告を追加」ボタンから新しいスポンサーリンクを登録してください。</p>

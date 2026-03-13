@@ -16,6 +16,7 @@
         "publishDate": { "type": "string", "format": "date" },
         "mainImageUrl": { "type": "string", "format": "uri" },
         "isPublished": { "type": "boolean" },
+        "viewCount": { "type": "number", "description": "閲覧数" },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
