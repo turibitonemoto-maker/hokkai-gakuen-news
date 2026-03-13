@@ -75,30 +75,30 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="w-full max-w-md shadow-2xl border-none bg-white/95 backdrop-blur-sm animate-in fade-in zoom-in duration-300">
-      <CardHeader className="space-y-1 pb-6 text-center">
-        <div className="flex justify-center mb-4">
-          <div className="bg-white p-2 rounded-2xl shadow-lg border">
+    <Card className="w-full max-w-md shadow-2xl border-none bg-white/95 backdrop-blur-sm animate-in fade-in zoom-in duration-300 rounded-[2rem] overflow-hidden">
+      <CardHeader className="space-y-1 pb-6 text-center pt-10">
+        <div className="flex justify-center mb-6">
+          <div className="bg-white p-2 rounded-2xl shadow-xl border-2 border-slate-50">
             <Image 
               src="/icon.png" 
               alt="北海学園新聞会" 
-              width={64} 
-              height={64} 
+              width={72} 
+              height={72} 
               className="rounded-xl"
               priority
             />
           </div>
         </div>
-        <CardTitle className="text-2xl font-bold text-primary tracking-tight">
+        <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">
           北海学園新聞会
         </CardTitle>
-        <CardDescription className="text-muted-foreground font-medium">
+        <CardDescription className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">
           コンテンツ管理システム
         </CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-4 pb-8">
+      <CardContent className="grid gap-4 px-8 pb-10">
         {serverError && (
-          <Alert variant="destructive" className="mb-4 bg-destructive/5 border-destructive/20 text-destructive">
+          <Alert variant="destructive" className="mb-4 bg-destructive/5 border-destructive/20 text-destructive rounded-xl">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription className="text-xs font-bold">
               {serverError}
@@ -107,24 +107,24 @@ export function LoginForm() {
         )}
         
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
             <FormField
               control={form.control}
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs font-bold text-slate-600">メールアドレス</FormLabel>
+                  <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">メールアドレス</FormLabel>
                   <FormControl>
                     <div className="relative group">
-                      <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" />
                       <Input
                         placeholder=""
-                        className="pl-10 h-11 border-slate-200 focus:border-primary focus:ring-primary transition-all duration-200"
+                        className="pl-12 h-14 rounded-2xl border-slate-200 focus:border-primary focus:ring-primary transition-all duration-200 font-medium"
                         {...field}
                       />
                     </div>
                   </FormControl>
-                  <FormMessage className="text-[10px]" />
+                  <FormMessage className="text-[10px] font-bold" />
                 </FormItem>
               )}
             />
@@ -133,31 +133,31 @@ export function LoginForm() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs font-bold text-slate-600">パスワード</FormLabel>
+                  <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">パスワード</FormLabel>
                   <FormControl>
                     <div className="relative group">
-                      <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" />
                       <Input
                         type="password"
                         placeholder=""
-                        className="pl-10 h-11 border-slate-200 focus:border-primary focus:ring-primary transition-all duration-200"
+                        className="pl-12 h-14 rounded-2xl border-slate-200 focus:border-primary focus:ring-primary transition-all duration-200 font-medium"
                         {...field}
                       />
                     </div>
                   </FormControl>
-                  <FormMessage className="text-[10px]" />
+                  <FormMessage className="text-[10px] font-bold" />
                 </FormItem>
               )}
             />
 
             <Button
               type="submit"
-              className="w-full h-11 bg-primary hover:bg-primary/90 text-white font-bold shadow-md transition-all duration-200 mt-2"
+              className="w-full h-14 bg-primary hover:bg-primary/90 text-white font-black text-lg rounded-2xl shadow-xl shadow-primary/10 transition-all duration-200 mt-4 active:scale-95"
               disabled={isLoading}
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   認証中...
                 </>
               ) : (

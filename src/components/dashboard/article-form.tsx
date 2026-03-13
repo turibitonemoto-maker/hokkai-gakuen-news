@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -87,8 +86,8 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <div className="space-y-6">
-          <div className="flex items-center gap-2 text-primary font-bold border-b pb-2">
-            <Layout className="h-5 w-5" />
+          <div className="flex items-center gap-2 text-primary font-black border-b pb-2 uppercase tracking-widest text-xs">
+            <Layout className="h-4 w-4" />
             <h3>記事の基本情報</h3>
           </div>
           
@@ -98,12 +97,12 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
               name="articleType"
               render={({ field }) => (
                 <FormItem className="md:col-span-2">
-                  <FormLabel className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
+                  <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 ml-1">
                     記事タイプ
                   </FormLabel>
                   {article?.id ? (
                     <div className={cn(
-                      "flex items-center gap-3 px-4 py-3 rounded-lg border font-bold text-sm",
+                      "flex items-center gap-3 px-5 py-4 rounded-2xl border font-black text-sm shadow-sm",
                       field.value === "Note" 
                         ? "bg-purple-50 border-purple-200 text-purple-700" 
                         : "bg-blue-50 border-blue-200 text-primary"
@@ -127,12 +126,12 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                       defaultValue={field.value} 
                       className="w-full"
                     >
-                      <TabsList className="grid w-full grid-cols-2 h-12">
-                        <TabsTrigger value="Standard" className="flex items-center gap-2 font-bold data-[state=active]:bg-primary data-[state=active]:text-white">
+                      <TabsList className="grid w-full grid-cols-2 h-14 bg-slate-100 p-1.5 rounded-2xl shadow-inner">
+                        <TabsTrigger value="Standard" className="flex items-center gap-2 font-black rounded-xl transition-all data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg">
                           <FileText className="h-4 w-4" />
                           学内記事
                         </TabsTrigger>
-                        <TabsTrigger value="Note" className="flex items-center gap-2 font-bold data-[state=active]:bg-purple-600 data-[state=active]:text-white">
+                        <TabsTrigger value="Note" className="flex items-center gap-2 font-black rounded-xl transition-all data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
                           <Share2 className="h-4 w-4" />
                           note記事
                         </TabsTrigger>
@@ -148,9 +147,9 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
               name="title"
               render={({ field }) => (
                 <FormItem className="md:col-span-2">
-                  <FormLabel>タイトル</FormLabel>
+                  <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">タイトル</FormLabel>
                   <FormControl>
-                    <Input placeholder="記事のタイトルを入力" className="h-11 font-bold text-lg" {...field} />
+                    <Input placeholder="" className="h-12 md:h-14 font-black text-lg md:text-xl rounded-2xl border-slate-200 shadow-sm" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -162,14 +161,14 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
               name="categoryId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>カテゴリー</FormLabel>
+                  <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">カテゴリー</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="カテゴリーを選択" />
+                      <SelectTrigger className="h-12 md:h-14 rounded-2xl font-bold border-slate-200">
+                        <SelectValue placeholder="選択してください" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent className="rounded-2xl">
                       <SelectItem value="Campus">学内ニュース</SelectItem>
                       <SelectItem value="Event">イベント</SelectItem>
                       <SelectItem value="Interview">インタビュー</SelectItem>
@@ -188,9 +187,9 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
               name="publishDate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>公開日（表示用）</FormLabel>
+                  <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">公開日</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <Input type="date" className="h-12 md:h-14 rounded-2xl font-bold border-slate-200" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -202,12 +201,12 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
               name="tagsInput"
               render={({ field }) => (
                 <FormItem className="md:col-span-2">
-                  <FormLabel className="flex items-center gap-2">
-                    <Tag className="h-4 w-4" />
+                  <FormLabel className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                    <Tag className="h-3 w-3" />
                     タグ（カンマ区切り）
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="例: 新入生, サークル, 特集" {...field} />
+                    <Input placeholder="例: 新入生, サークル, 特集" className="h-12 md:h-14 rounded-2xl font-bold border-slate-200 shadow-sm" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -219,11 +218,11 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
               name="mainImageUrl"
               render={({ field }) => (
                 <FormItem className="md:col-span-2">
-                  <FormLabel>メイン画像URL</FormLabel>
+                  <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">画像URL</FormLabel>
                   <FormControl>
-                    <Input placeholder="https://example.com/image.jpg" {...field} />
+                    <Input placeholder="" className="h-12 md:h-14 rounded-2xl font-bold border-slate-200 shadow-sm" {...field} />
                   </FormControl>
-                  <FormDescription>画像がない場合は空白でも構いません。</FormDescription>
+                  <FormDescription className="text-[9px] font-bold">空欄でも構いません。</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -234,12 +233,12 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                 control={form.control}
                 name="noteUrl"
                 render={({ field }) => (
-                  <FormItem className="md:col-span-2 bg-purple-50 p-4 rounded-lg border border-purple-100">
-                    <FormLabel className="text-purple-700 font-bold flex items-center gap-2">
-                      <Share2 className="h-4 w-4" /> note原文へのリンクURL
+                  <FormItem className="md:col-span-2 bg-purple-50 p-5 rounded-[2rem] border border-purple-100 shadow-inner">
+                    <FormLabel className="text-purple-700 font-black flex items-center gap-2 uppercase tracking-widest text-[10px] mb-2">
+                      <Share2 className="h-4 w-4" /> note原文リンク
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="https://note.com/..." className="bg-white border-purple-200" {...field} />
+                      <Input placeholder="" className="bg-white border-purple-200 h-12 md:h-14 rounded-2xl font-bold" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -250,8 +249,8 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
         </div>
 
         <div className="space-y-6">
-          <div className="flex items-center gap-2 text-primary font-bold border-b pb-2">
-            <AlignLeft className="h-5 w-5" />
+          <div className="flex items-center gap-2 text-primary font-black border-b pb-2 uppercase tracking-widest text-xs">
+            <AlignLeft className="h-4 w-4" />
             <h3>本文・紹介文</h3>
           </div>
 
@@ -260,25 +259,20 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
             name="content"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>
-                  {isNote ? "note記事（編集不可）" : "学内記事の本文"}
+                <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                  {isNote ? "紹介文（編集不可）" : "本文"}
                 </FormLabel>
                 <FormControl>
                   <Textarea 
-                    placeholder={isNote ? "note記事の内容" : "記事の本文を入力してください..."} 
-                    className="min-h-[400px] text-base leading-relaxed p-6 shadow-inner bg-slate-50 focus:bg-white transition-colors" 
+                    placeholder={isNote ? "noteから取得した概要" : "記事の内容を入力してください..."} 
+                    className="min-h-[400px] text-lg leading-relaxed p-6 md:p-10 rounded-[2rem] border-slate-200 bg-slate-50 focus:bg-white transition-colors shadow-inner" 
                     readOnly={isNote}
                     {...field} 
                   />
                 </FormControl>
                 {isNote && (
-                  <FormDescription className="text-purple-600 font-bold">
-                    ※ note記事の本文は note.com で編集してください。
-                  </FormDescription>
-                )}
-                {!isNote && (
-                  <FormDescription>
-                    改行はそのまま反映されます。HTMLタグは使用できません。
+                  <FormDescription className="text-purple-600 font-black text-[10px] bg-purple-50 px-3 py-1 rounded-full w-fit mt-2">
+                    ※ 本文は note.com で編集してください
                   </FormDescription>
                 )}
                 <FormMessage />
@@ -290,17 +284,18 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
             control={form.control}
             name="isPublished"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-xl border border-primary/20 p-6 bg-primary/5 shadow-sm">
-                <div className="space-y-0.5">
-                  <FormLabel className="text-base font-bold text-primary">公式サイトに公開する</FormLabel>
-                  <FormDescription>
-                    オンにすると公式サイトのリストに表示されます。
+              <FormItem className="flex flex-row items-center justify-between rounded-[2rem] border border-primary/20 p-6 md:p-8 bg-primary/5 shadow-md">
+                <div className="space-y-1">
+                  <FormLabel className="text-lg font-black text-primary">公式サイトに公開</FormLabel>
+                  <FormDescription className="text-xs font-bold opacity-60">
+                    オンにすると即座に公開されます。
                   </FormDescription>
                 </div>
                 <FormControl>
                   <Switch
                     checked={field.value}
                     onCheckedChange={field.onChange}
+                    className="scale-125 md:scale-150"
                   />
                 </FormControl>
               </FormItem>
@@ -308,10 +303,10 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
           />
         </div>
 
-        <div className="flex justify-end gap-4 pt-6 border-t sticky bottom-0 bg-white/80 backdrop-blur-md pb-4 z-10">
-          <Button type="button" variant="outline" onClick={onSuccess} className="w-32">キャンセル</Button>
+        <div className="flex flex-col-reverse md:flex-row justify-end gap-3 pt-6 border-t sticky bottom-0 bg-white/95 backdrop-blur-md pb-6 z-10">
+          <Button type="button" variant="outline" onClick={onSuccess} className="w-full md:w-32 h-12 rounded-xl font-bold">キャンセル</Button>
           <Button type="submit" className={cn(
-            "w-48 shadow-lg font-bold",
+            "w-full md:w-48 h-12 shadow-xl font-black rounded-xl text-lg",
             isNote ? "bg-purple-600 hover:bg-purple-700" : ""
           )}>
             {article?.id ? "変更を保存" : "記事を登録"}
