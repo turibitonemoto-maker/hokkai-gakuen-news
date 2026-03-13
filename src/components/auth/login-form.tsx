@@ -85,7 +85,7 @@ export function LoginForm() {
           </div>
         </div>
         <CardTitle className="text-2xl font-bold text-primary tracking-tight">
-          Hokkai Gakuen News 1
+          北海学園新聞会
         </CardTitle>
         <CardDescription className="text-muted-foreground font-medium">
           コンテンツ管理システム

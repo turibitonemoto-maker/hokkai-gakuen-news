@@ -16,7 +16,7 @@ export function PublicFooter() {
               <div className="bg-primary p-2 rounded-xl text-white">
                 <Newspaper className="h-6 w-6" />
               </div>
-              <h1 className="text-xl font-bold text-white leading-tight">Hokkai Gakuen News 1</h1>
+              <h1 className="text-xl font-bold text-white leading-tight">北海学園新聞会</h1>
             </Link>
             <p className="text-sm leading-relaxed text-slate-400">
               北海学園大学一部新聞会は、学内のニュースや学生生活に密着した情報を発信する公認サークルです。
@@ -72,7 +72,7 @@ export function PublicFooter() {
         </div>
 
         <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-medium text-slate-500">
-          <p>© {currentYear} Hokkai Gakuen News 1. All rights reserved.</p>
+          <p>© {currentYear} 北海学園新聞会. All rights reserved.</p>
         </div>
       </div>
     </footer>

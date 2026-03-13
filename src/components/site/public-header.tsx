@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -31,7 +32,7 @@ export function PublicHeader() {
               <Newspaper className="h-6 w-6" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-800 leading-tight">Hokkai Gakuen News 1</h1>
+              <h1 className="text-xl font-bold text-slate-800 leading-tight">北海学園新聞会</h1>
               <p className="text-[10px] text-slate-500 font-medium tracking-widest uppercase">北海学園大学一部新聞会</p>
             </div>
           </Link>

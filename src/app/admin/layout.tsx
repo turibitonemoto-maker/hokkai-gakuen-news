@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -74,7 +75,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <Newspaper className="h-6 w-6" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-slate-800 leading-tight">Hokkai Gakuen News 1</h1>
+                <h1 className="text-xl font-bold text-slate-800 leading-tight">北海学園新聞会</h1>
                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest font-headline">北海学園大学一部新聞会</p>
               </div>
             </div>
@@ -105,7 +106,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
           {isSidebarOpen && (
             <div className="overflow-hidden whitespace-nowrap">
-              <h1 className="text-sm font-black text-white leading-tight">北海学園一部新聞会</h1>
+              <h1 className="text-sm font-black text-white leading-tight">北海学園新聞会</h1>
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">CMS Control</p>
             </div>
           )}

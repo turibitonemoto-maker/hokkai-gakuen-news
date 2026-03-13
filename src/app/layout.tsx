@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
@@ -5,8 +6,8 @@ import { Toaster } from "@/components/ui/toaster";
 
 // 管理サイトのため、検索エンジンにインデックスされないようメタタグを設定
 export const metadata: Metadata = {
-  title: 'Hokkai Gakuen News 1 | コンテンツ管理システム',
-  description: '北海学園大学一部新聞会の公式コンテンツ管理システム (Hokkai Gakuen News 1) です。',
+  title: '北海学園新聞会 | コンテンツ管理システム',
+  description: '北海学園大学一部新聞会の公式コンテンツ管理システム (北海学園新聞会) です。',
   robots: {
     index: false,
     follow: false,
