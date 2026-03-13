@@ -48,7 +48,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { id: "/admin/note", label: "note管理", icon: Share2 },
     { id: "/admin/hero", label: "ヒーロー画像", icon: ImageIcon },
     { id: "/admin/ads", label: "広告管理", icon: Megaphone, isProtected: true },
-    { id: "/admin/president", label: "会長挨拶設定", icon: UserRound, isProtected: true },
+    { id: "/admin/president", label: "会長挨拶", icon: UserRound, isProtected: true },
     { id: "/admin/maintenance", label: "メンテナンス管理", icon: ShieldAlert, isProtected: true },
   ];
 
@@ -164,9 +164,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <h2 className="text-xl font-black text-slate-800 tracking-tight">
               {activeLabel}
               {menuItems.find(i => i.id === pathname)?.isProtected && (
-                <Badge variant="secondary" className="ml-3 font-bold bg-slate-100 text-slate-500 border-none px-2 py-0.5 text-[10px]">
-                  🔒 伝統保護エリア
-                </Badge>
+                <Lock className="h-4 w-4 ml-3 text-slate-400" />
               )}
             </h2>
           </div>
