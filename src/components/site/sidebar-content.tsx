@@ -11,11 +11,20 @@ import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { increment } from 'firebase/firestore';
 import { getPlaceholderById } from '@/app/lib/placeholder-images';
 
+/**
+ * サイドバーコンテンツ
+ * 会長挨拶と広告エリアを表示します。
+ * 広告がない場合は、セクション自体を非表示にします。
+ */
 export function SidebarContent({ ads }: { ads: any[] }) {
   const firestore = useFirestore();
-  const presidentRef = useMemoFirebase(() => doc(firestore, 'settings', 'president-message'), [firestore]);
+  const presidentRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return doc(firestore, 'settings', 'president-message');
+  }, [firestore]);
+  
   const { data: president } = useDoc(presidentRef);
-  const presidentPlaceholder = getPlaceholderById('president-default');
+  const presidentPlaceholder = getPlaceholderById('hero-static-1'); // 代替画像
 
   const handleAdClick = (ad: any) => {
     if (!firestore) return;
@@ -39,10 +48,10 @@ export function SidebarContent({ ads }: { ads: any[] }) {
               <div className="relative h-24 w-24 rounded-2xl overflow-hidden shadow-md mb-4 border-2 border-white">
                 <Image
                   src={president.authorImageUrl || presidentPlaceholder.imageUrl}
-                  alt={president.authorName}
+                  alt={president.authorName || "会長"}
                   fill
                   className="object-cover"
-                  data-ai-hint={presidentPlaceholder.imageHint}
+                  data-ai-hint="person portrait"
                 />
               </div>
               <h4 className="font-bold text-slate-800 text-lg">{president.authorName}</h4>
@@ -58,43 +67,41 @@ export function SidebarContent({ ads }: { ads: any[] }) {
         </Card>
       )}
 
-      {/* 広告エリア */}
-      <section className="space-y-4">
-        <div className="flex items-center gap-2 mb-4">
-          <TrendingUp className="h-4 w-4 text-accent" />
-          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">スポンサー</h3>
-        </div>
-        <div className="space-y-4">
-          {ads.map((ad) => (
-            <a 
-              key={ad.id} 
-              href={ad.linkUrl} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              onClick={() => handleAdClick(ad)}
-              className="block group"
-            >
-              <div className="relative h-28 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-slate-200">
-                <Image
-                  src={ad.imageUrl}
-                  alt={ad.title}
-                  fill
-                  className="object-contain p-2 bg-white group-hover:scale-105 transition-transform"
-                />
-                <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 transition-colors flex items-center justify-center">
-                  <ExternalLink className="h-6 w-6 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+      {/* 広告エリア：広告が存在する場合のみセクション全体を表示 */}
+      {ads && ads.length > 0 && (
+        <section className="space-y-4">
+          <div className="flex items-center gap-2 mb-4">
+            <TrendingUp className="h-4 w-4 text-accent" />
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">スポンサー</h3>
+          </div>
+          <div className="space-y-4">
+            {ads.map((ad) => (
+              <a 
+                key={ad.id} 
+                href={ad.linkUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                onClick={() => handleAdClick(ad)}
+                className="block group"
+              >
+                <div className="relative h-28 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-slate-200">
+                  <Image
+                    src={ad.imageUrl}
+                    alt={ad.title || "広告バナー"}
+                    fill
+                    className="object-contain p-2 bg-white group-hover:scale-105 transition-transform"
+                    unoptimized
+                  />
+                  <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 transition-colors flex items-center justify-center">
+                    <ExternalLink className="h-6 w-6 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
                 </div>
-              </div>
-              <p className="text-[10px] font-bold text-slate-400 mt-2 text-center truncate">{ad.title}</p>
-            </a>
-          ))}
-          {ads.length === 0 && (
-            <div className="h-28 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center">
-              <p className="text-[10px] text-slate-300 font-bold uppercase">No Ads</p>
-            </div>
-          )}
-        </div>
-      </section>
+                <p className="text-[10px] font-bold text-slate-400 mt-2 text-center truncate">{ad.title}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
