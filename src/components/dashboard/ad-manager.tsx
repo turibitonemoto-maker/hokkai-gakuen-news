@@ -78,15 +78,6 @@ export function AdManager() {
     }
   };
 
-  const confirmDelete = () => {
-    if (!adToDelete || !firestore) return;
-    const docRef = doc(firestore, "ads", adToDelete.id);
-    deleteDocumentNonBlocking(docRef);
-    setAdToDelete(null);
-    setSelectedAd(null);
-    toast({ title: "削除完了", description: "広告を削除しました。" });
-  };
-
   if (lockoutTime && lockoutTime > Date.now()) {
     return (
       <div className="max-w-4xl mx-auto mt-10 animate-in fade-in zoom-in duration-500">
