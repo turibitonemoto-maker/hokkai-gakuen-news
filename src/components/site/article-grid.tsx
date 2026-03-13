@@ -35,20 +35,21 @@ export function ArticleGrid({ articles }: { articles: any[] }) {
 
 function ArticleCard({ article }: { article: any }) {
   const isNote = article.articleType === 'Note';
-  const hasImage = !!article.mainImageUrl;
+  const hasImage = !!article.mainImageUrl && article.mainImageUrl.trim() !== "";
 
   return (
     <div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100 flex flex-col h-full">
-      <div className="relative h-52 overflow-hidden bg-slate-100">
+      <div className="relative h-52 overflow-hidden bg-slate-50">
         {hasImage ? (
           <Image
             src={article.mainImageUrl}
             alt={article.title}
             fill
             className="object-cover group-hover:scale-110 transition-transform duration-500"
+            unoptimized={isNote} // noteの画像は外部CDNのためunoptimizedを推奨
           />
         ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 gap-2">
+          <div className="w-full h-full flex flex-col items-center justify-center text-slate-200 gap-2">
             <ImageOff className="h-10 w-10 opacity-20" />
             <span className="text-[10px] font-bold uppercase tracking-widest opacity-30">No Image</span>
           </div>
