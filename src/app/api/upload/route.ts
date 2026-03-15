@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     // APIキーの存在確認（最終防衛ライン）
     if (!process.env.CLOUDINARY_API_SECRET) {
       return NextResponse.json({ 
-        error: "CLOUDINARY_API_SECRET is missing in .env.local" 
+        error: "CLOUDINARY_API_SECRET is missing in .env.local. サーバーを再起動してください。" 
       }, { status: 500 });
     }
 
