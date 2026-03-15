@@ -1,16 +1,18 @@
-
 "use client";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useFirestore } from "@/firebase";
+import { useFirestore, useFirebase } from "@/firebase";
 import { collection, doc, serverTimestamp } from "firebase/firestore";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
+import { useState, useRef } from "react";
+import { Loader2, Upload } from "lucide-react";
 
 const adSchema = z.object({
   title: z.string().min(1, "広告名を入力してください"),
@@ -29,7 +31,11 @@ interface AdFormProps {
 }
 
 export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const firestore = useFirestore();
+  const { firebaseApp } = useFirebase();
   const { toast } = useToast();
   
   const form = useForm<AdFormValues>({
@@ -43,13 +49,32 @@ export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
     },
   });
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !firebaseApp) return;
+
+    setIsUploading(true);
+    try {
+      const storage = getStorage(firebaseApp);
+      const storageRef = ref(storage, `ads/${Date.now()}_${file.name}`);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+      form.setValue("imageUrl", url);
+      toast({ title: "バナーをアップロードしました" });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "失敗", description: error.message });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   function onSubmit(values: AdFormValues) {
     if (!firestore) return;
 
     if (ad?.id) {
       const docRef = doc(firestore, "ads", ad.id);
       setDocumentNonBlocking(docRef, { ...values, updatedAt: serverTimestamp() }, { merge: true });
-      toast({ title: "更新しました", description: "広告情報を更新しました。" });
+      toast({ title: "更新完了" });
     } else {
       const colRef = collection(firestore, "ads");
       addDocumentNonBlocking(colRef, { 
@@ -57,7 +82,7 @@ export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
         clickCount: 0,
         createdAt: serverTimestamp() 
       });
-      toast({ title: "追加しました", description: "新しい広告を登録しました。" });
+      toast({ title: "追加完了" });
     }
     onSuccess();
   }
@@ -84,11 +109,23 @@ export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
           name="imageUrl"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>バナー画像URL</FormLabel>
-              <FormControl>
-                <Input placeholder="https://example.com/banner.jpg" {...field} />
-              </FormControl>
-              <FormDescription>横長（3:1程度）の画像を推奨します。</FormDescription>
+              <FormLabel>バナー画像</FormLabel>
+              <div className="flex gap-2">
+                <FormControl>
+                  <Input placeholder="URLが自動設定されます" {...field} />
+                </FormControl>
+                <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className="gap-2 font-bold"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                >
+                  {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  アップロード
+                </Button>
+              </div>
               <FormMessage />
             </FormItem>
           )}
@@ -101,7 +138,7 @@ export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
             <FormItem>
               <FormLabel>遷移先URL</FormLabel>
               <FormControl>
-                <Input placeholder="https://coop.hokkai.ac.jp/..." {...field} />
+                <Input placeholder="https://..." {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -132,7 +169,6 @@ export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
                 <FormControl>
                   <Input type="datetime-local" {...field} />
                 </FormControl>
-                <FormDescription>無期限の場合は空欄にしてください。</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -140,8 +176,8 @@ export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
         </div>
 
         <div className="flex justify-end gap-3 pt-4 border-t">
-          <Button type="button" variant="outline" onClick={onCancel}>キャンセル</Button>
-          <Button type="submit">{ad ? "変更を保存" : "追加する"}</Button>
+          <Button type="button" variant="outline" onClick={onCancel} className="rounded-xl">キャンセル</Button>
+          <Button type="submit" className="rounded-xl font-black">{ad ? "保存" : "登録"}</Button>
         </div>
       </form>
     </Form>

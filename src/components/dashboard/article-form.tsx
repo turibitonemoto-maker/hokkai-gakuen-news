@@ -12,13 +12,13 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { FileText, Share2, Tag, ImageIcon, Type, Heading1, Heading2, List, Link as LinkIcon, Bold, Italic, Loader2 } from "lucide-react";
+import { FileText, Share2, Tag, ImageIcon, Type, Heading1, Heading2, List, Link as LinkIcon, Bold, Italic, Loader2, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import ImageExtension from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 const articleSchema = z.object({
@@ -46,6 +46,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
   const { firebaseApp } = useFirebase();
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
+  const mainImageInputRef = useRef<HTMLInputElement>(null);
   
   const form = useForm<ArticleFormValues>({
     resolver: zodResolver(articleSchema),
@@ -89,43 +90,49 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     },
   });
 
-  const handleImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const uploadFile = async (file: File, path: string) => {
+    if (!firebaseApp) return null;
+    const storage = getStorage(firebaseApp);
+    const storageRef = ref(storage, `${path}/${Date.now()}_${file.name}`);
+    await uploadBytes(storageRef, file);
+    return await getDownloadURL(storageRef);
+  };
+
+  const handleMainImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !editor || !firebaseApp) return;
+    if (!file) return;
 
     setIsUploading(true);
     try {
-      const storage = getStorage(firebaseApp);
-      // asia-northeast1 (東京) の指定などはバケット名に含まれる
-      const storageRef = ref(storage, `articles/${Date.now()}_${file.name}`);
-      
-      await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(storageRef);
-      
-      editor.chain().focus().setImage({ src: url }).run();
-      toast({ title: "画像を挿入しました", description: "Firebase Storageへのアップロードが完了しました。" });
-    } catch (error: any) {
-      console.error("Upload failed:", error);
-      let errorMessage = "Firebase Storageへのアクセスに失敗しました。";
-      
-      if (error.code === 'storage/unauthorized') {
-        errorMessage = "権限がありません。StorageのRulesを確認してください。";
-      } else if (error.code === 'storage/retry-limit-exceeded') {
-        errorMessage = "ネットワークエラーが発生しました。インターネット接続を確認してください。";
-      } else if (error.message.includes("not found")) {
-        errorMessage = "ストレージバケットが見つかりません。FirebaseコンソールでStorageを有効化してください。";
+      const url = await uploadFile(file, 'articles/hero');
+      if (url) {
+        form.setValue("mainImageUrl", url);
+        toast({ title: "表紙画像をアップロードしました" });
       }
-      
-      toast({ 
-        variant: "destructive", 
-        title: "アップロードエラー", 
-        description: errorMessage 
-      });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "アップロード失敗", description: error.message });
     } finally {
       setIsUploading(false);
-      if (e.target) e.target.value = '';
     }
-  }, [editor, firebaseApp, toast]);
+  };
+
+  const handleEditorImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !editor) return;
+
+    setIsUploading(true);
+    try {
+      const url = await uploadFile(file, 'articles/content');
+      if (url) {
+        editor.chain().focus().setImage({ src: url }).run();
+        toast({ title: "画像を挿入しました" });
+      }
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "挿入失敗", description: error.message });
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   function onSubmit(values: ArticleFormValues) {
     if (!firestore) return;
@@ -145,11 +152,11 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     if (article?.id) {
       const docRef = doc(firestore, "articles", article.id);
       setDocumentNonBlocking(docRef, data, { merge: true });
-      toast({ title: "更新しました", description: "記事の変更を保存しました。" });
+      toast({ title: "更新しました" });
     } else {
       const colRef = collection(firestore, "articles");
       addDocumentNonBlocking(colRef, { ...data, createdAt: serverTimestamp() });
-      toast({ title: "作成しました", description: "新しい記事を公開管理に追加しました。" });
+      toast({ title: "作成しました" });
     }
     onSuccess();
   }
@@ -240,17 +247,14 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
           <div className="flex items-center justify-between gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50 pb-2">
             <div className="flex items-center gap-2">
               <Type className="h-3 w-3" />
-              本文執筆 (note風エディタ)
+              本文執筆
             </div>
             <div className="flex items-center gap-1">
               <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('bold') && "bg-slate-100")} onClick={() => editor?.chain().focus().toggleBold().run()}><Bold className="h-4 w-4" /></Button>
-              <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('italic') && "bg-slate-100")} onClick={() => editor?.chain().focus().toggleItalic().run()}><Italic className="h-4 w-4" /></Button>
-              <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('heading', { level: 1 }) && "bg-slate-100")} onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}><Heading1 className="h-4 w-4" /></Button>
               <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('heading', { level: 2 }) && "bg-slate-100")} onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}><Heading2 className="h-4 w-4" /></Button>
-              <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('bulletList') && "bg-slate-100")} onClick={() => editor?.chain().focus().toggleBulletList().run()}><List className="h-4 w-4" /></Button>
               <div className="relative">
-                <input type="file" accept="image/*" className="hidden" id="tiptap-image-upload" onChange={handleImageUpload}/>
-                <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => document.getElementById('tiptap-image-upload')?.click()} disabled={isUploading}>
+                <input type="file" accept="image/*" className="hidden" id="editor-image-upload" onChange={handleEditorImageUpload}/>
+                <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => document.getElementById('editor-image-upload')?.click()} disabled={isUploading}>
                   {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
                 </Button>
               </div>
@@ -267,8 +271,25 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
             name="mainImageUrl"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 ml-1"><ImageIcon className="h-3 w-3" /> 表紙画像URL</FormLabel>
-                <FormControl><Input placeholder="" className="h-12 rounded-xl border-slate-100 bg-slate-50/30" {...field} /></FormControl>
+                <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 ml-1">
+                  <ImageIcon className="h-3 w-3" /> 表紙画像
+                </FormLabel>
+                <div className="flex gap-2">
+                  <FormControl>
+                    <Input placeholder="URLが自動設定されます" className="h-12 rounded-xl border-slate-100 bg-slate-50/30 flex-1" {...field} />
+                  </FormControl>
+                  <input type="file" accept="image/*" className="hidden" ref={mainImageInputRef} onChange={handleMainImageUpload} />
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="h-12 px-4 rounded-xl gap-2 font-bold"
+                    onClick={() => mainImageInputRef.current?.click()}
+                    disabled={isUploading}
+                  >
+                    {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    アップロード
+                  </Button>
+                </div>
                 <FormMessage />
               </FormItem>
             )}
@@ -277,7 +298,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
             control={form.control}
             name="isPublished"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-3xl border-2 border-primary/10 p-8 bg-primary/5 transition-all hover:border-primary/20">
+              <FormItem className="flex flex-row items-center justify-between rounded-3xl border-2 border-primary/10 p-8 bg-primary/5">
                 <div className="space-y-1">
                   <FormLabel className="text-xl font-black text-primary">公式サイトに公開</FormLabel>
                 </div>
@@ -289,7 +310,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
 
         <div className="flex flex-col-reverse md:flex-row justify-end gap-3 pt-10 border-t bg-white/95 backdrop-blur-md sticky bottom-0 pb-6 z-20">
           <Button type="button" variant="outline" onClick={onSuccess} className="w-full md:w-32 h-14 rounded-2xl font-bold">破棄</Button>
-          <Button type="submit" className="w-full md:w-48 h-14 shadow-2xl font-black rounded-2xl text-lg bg-primary hover:bg-primary/90 transform hover:scale-[1.02] transition-all">
+          <Button type="submit" className="w-full md:w-48 h-14 shadow-2xl font-black rounded-2xl text-lg bg-primary hover:bg-primary/90">
             {article?.id ? "変更を公開" : "記事を創出"}
           </Button>
         </div>
