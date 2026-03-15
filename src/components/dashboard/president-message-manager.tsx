@@ -1,6 +1,11 @@
 
 "use client";
 
+/**
+ * @fileOverview 会長挨拶管理コンポーネント
+ * 「聖典（Sacred Scripture）」に基づき、DocID: 'president_greeting', Field: 'content' を厳守して保存します。
+ */
+
 import { useDoc, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
@@ -117,7 +122,7 @@ export function PresidentMessageManager() {
     setIsSaving(true);
     try {
       const htmlContent = editor.getHTML();
-      // 使用フィールド名を 'content' に固定し、setDocで強制上書き（聖典の遵守）
+      // 「聖典」に基づきフィールド名を 'content' に固定し、強制上書き
       await setDoc(docRef, {
         authorName: values.authorName,
         authorImageUrl: values.authorImageUrl,
@@ -125,7 +130,7 @@ export function PresidentMessageManager() {
         updatedAt: serverTimestamp(),
       }, { merge: true });
 
-      toast({ title: "更新しました", description: "会長挨拶を記事と同じ形式で保存しました。" });
+      toast({ title: "更新しました", description: "会長挨拶を content フィールドへ保存しました。" });
     } catch (error: any) {
       console.error("Save failed:", error);
       toast({ variant: "destructive", title: "保存エラー", description: "更新に失敗しました。" });
