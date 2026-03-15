@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -287,42 +288,49 @@ export function AdManager() {
 
       {ads && ads.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-700">
-          {ads.map((ad) => (
-            <Card 
-              key={ad.id} 
-              className="overflow-hidden group cursor-pointer border-slate-200 shadow-sm hover:shadow-xl hover:border-primary/50 transition-all rounded-3xl bg-white"
-              onClick={() => setSelectedAd(ad)}
-            >
-              <div className="relative h-40 bg-slate-50 border-b overflow-hidden">
-                <Image 
-                  src={ad.imageUrl} 
-                  alt={ad.title || "広告バナー"} 
-                  fill 
-                  className="object-contain p-4 transition-transform group-hover:scale-105"
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  unoptimized
-                />
-                <div className="absolute top-4 right-4 flex gap-1">
-                  <Badge variant="secondary" className="bg-white/95 backdrop-blur-md shadow-md font-black px-3 py-1 rounded-full border-none">
-                    <Users className="h-3 w-3 mr-1.5 text-primary" /> {(ad.clickCount || 0).toLocaleString()}
-                  </Badge>
-                </div>
-              </div>
-              <CardContent className="p-6">
-                <div className="flex justify-between items-start">
-                  <div className="truncate">
-                    <p className="font-black text-slate-800 truncate text-lg group-hover:text-primary transition-colors">{ad.title || "無題の広告"}</p>
-                    <p className="text-[11px] font-bold text-slate-400 truncate flex items-center mt-1.5">
-                      <ExternalLink className="h-3 w-3 mr-1.5 text-slate-300" /> {ad.linkUrl}
-                    </p>
-                  </div>
-                  <div className="bg-primary/10 p-2.5 rounded-full opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0 shadow-sm">
-                    <Pencil className="h-4 w-4 text-primary" />
+          {ads.map((ad) => {
+            const transform = ad.imageTransform || { scale: 1, x: 0, y: 0 };
+            return (
+              <Card 
+                key={ad.id} 
+                className="overflow-hidden group cursor-pointer border-slate-200 shadow-sm hover:shadow-xl hover:border-primary/50 transition-all rounded-3xl bg-white"
+                onClick={() => setSelectedAd(ad)}
+              >
+                <div className="relative h-40 bg-slate-50 border-b overflow-hidden">
+                  <Image 
+                    src={ad.imageUrl} 
+                    alt={ad.title || "広告バナー"} 
+                    fill 
+                    className="object-cover transition-transform group-hover:scale-105"
+                    style={{
+                      transform: `scale(${transform.scale}) translate(${transform.x}%, ${transform.y}%)`,
+                      willChange: 'transform'
+                    }}
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    unoptimized
+                  />
+                  <div className="absolute top-4 right-4 flex gap-1">
+                    <Badge variant="secondary" className="bg-white/95 backdrop-blur-md shadow-md font-black px-3 py-1 rounded-full border-none">
+                      <Users className="h-3 w-3 mr-1.5 text-primary" /> {(ad.clickCount || 0).toLocaleString()}
+                    </Badge>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+                <CardContent className="p-6">
+                  <div className="flex justify-between items-start">
+                    <div className="truncate">
+                      <p className="font-black text-slate-800 truncate text-lg group-hover:text-primary transition-colors">{ad.title || "無題の広告"}</p>
+                      <p className="text-[11px] font-bold text-slate-400 truncate flex items-center mt-1.5">
+                        <ExternalLink className="h-3 w-3 mr-1.5 text-slate-300" /> {ad.linkUrl}
+                      </p>
+                    </div>
+                    <div className="bg-primary/10 p-2.5 rounded-full opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0 shadow-sm">
+                      <Pencil className="h-4 w-4 text-primary" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       ) : (
         <div className="py-24 text-center border-4 border-dashed rounded-[3rem] text-slate-300 bg-white/50 backdrop-blur-sm">

@@ -97,31 +97,38 @@ export function SidebarContent({ ads }: { ads: any[] }) {
             <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Sponsors</h3>
           </div>
           <div className="space-y-4">
-            {activeAds.map((ad) => (
-              <a 
-                key={ad.id} 
-                href={ad.linkUrl} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                onClick={() => handleAdClick(ad)}
-                className="block group"
-              >
-                <div className="relative h-28 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-slate-100 bg-white">
-                  <Image
-                    src={ad.imageUrl}
-                    alt={ad.title || "広告バナー"}
-                    fill
-                    className="object-contain p-4 group-hover:scale-105 transition-transform"
-                    unoptimized
-                    sizes="(max-width: 768px) 100vw, 300px"
-                  />
-                  <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 transition-colors flex items-center justify-center">
-                    <ExternalLink className="h-6 w-6 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+            {activeAds.map((ad) => {
+              const transform = ad.imageTransform || { scale: 1, x: 0, y: 0 };
+              return (
+                <a 
+                  key={ad.id} 
+                  href={ad.linkUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  onClick={() => handleAdClick(ad)}
+                  className="block group"
+                >
+                  <div className="relative h-28 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-slate-100 bg-white">
+                    <Image
+                      src={ad.imageUrl}
+                      alt={ad.title || "広告バナー"}
+                      fill
+                      className="object-cover transition-transform"
+                      style={{
+                        transform: `scale(${transform.scale}) translate(${transform.x}%, ${transform.y}%)`,
+                        willChange: 'transform'
+                      }}
+                      unoptimized
+                      sizes="(max-width: 768px) 100vw, 300px"
+                    />
+                    <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 transition-colors flex items-center justify-center">
+                      <ExternalLink className="h-6 w-6 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
                   </div>
-                </div>
-                <p className="text-[10px] font-black text-slate-400 mt-2 text-center truncate uppercase tracking-tighter">{ad.title}</p>
-              </a>
-            ))}
+                  <p className="text-[10px] font-black text-slate-400 mt-2 text-center truncate uppercase tracking-tighter">{ad.title}</p>
+                </a>
+              );
+            })}
           </div>
         </section>
       )}

@@ -39,6 +39,14 @@
         "id": { "type": "string" },
         "title": { "type": "string" },
         "imageUrl": { "type": "string", "format": "uri" },
+        "imageTransform": {
+          "type": "object",
+          "properties": {
+            "scale": { "type": "number" },
+            "x": { "type": "number" },
+            "y": { "type": "number" }
+          }
+        },
         "linkUrl": { "type": "string", "format": "uri" },
         "clickCount": { "type": "number" },
         "startDate": { "type": "string" },
