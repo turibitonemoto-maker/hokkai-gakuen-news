@@ -33,9 +33,9 @@ const articleSchema = z.object({
   publishDate: z.string(),
   mainImageUrl: z.string().optional().or(z.literal("")),
   mainImageTransform: z.object({
-    scale: z.number().default(1),
-    x: z.number().default(0),
-    y: z.number().default(0),
+    scale: z.number().default(1), // 1.0 = 100%
+    x: z.number().default(0),     // 0 = center
+    y: z.number().default(0),     // 0 = center
   }).default({ scale: 1, x: 0, y: 0 }),
   isPublished: z.boolean().default(false),
 });
@@ -304,15 +304,17 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
-                        <label className="text-[10px] font-bold text-slate-500">倍率調整 (Scale)</label>
-                        <span className="text-[10px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded">{((transform.scale - 1) * 100).toFixed(0)}%</span>
+                        <label className="text-[10px] font-bold text-slate-500">倍率 (基点: 0%)</label>
+                        <span className="text-[10px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded">
+                          {((transform.scale - 1) * 100).toFixed(0)}%
+                        </span>
                       </div>
                       <Slider 
-                        min={0.1} 
-                        max={3.0} 
-                        step={0.01} 
-                        value={[transform.scale]} 
-                        onValueChange={([val]) => form.setValue("mainImageTransform.scale", val)} 
+                        min={-90} 
+                        max={200} 
+                        step={1} 
+                        value={[(transform.scale - 1) * 100]} 
+                        onValueChange={([val]) => form.setValue("mainImageTransform.scale", 1 + val / 100)} 
                       />
                       <div className="flex justify-between text-[8px] font-bold text-slate-300 uppercase tracking-widest">
                         <span>縮小</span>
@@ -324,14 +326,14 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
                         <label className="text-[10px] font-bold text-slate-500 flex items-center gap-1">
-                          <MoveHorizontal className="h-3 w-3" /> 水平移動 (X-Axis)
+                          <MoveHorizontal className="h-3 w-3" /> 水平移動 (基点: 0)
                         </label>
                         <span className="text-[10px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded">{transform.x.toFixed(0)}%</span>
                       </div>
                       <Slider 
                         min={-100} 
                         max={100} 
-                        step={0.1} 
+                        step={1} 
                         value={[transform.x]} 
                         onValueChange={([val]) => form.setValue("mainImageTransform.x", val)} 
                       />
@@ -340,14 +342,14 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
                         <label className="text-[10px] font-bold text-slate-500 flex items-center gap-1">
-                          <MoveVertical className="h-3 w-3" /> 垂直移動 (Y-Axis)
+                          <MoveVertical className="h-3 w-3" /> 垂直移動 (基点: 0)
                         </label>
                         <span className="text-[10px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded">{transform.y.toFixed(0)}%</span>
                       </div>
                       <Slider 
                         min={-100} 
                         max={100} 
-                        step={0.1} 
+                        step={1} 
                         value={[transform.y]} 
                         onValueChange={([val]) => form.setValue("mainImageTransform.y", val)} 
                       />
@@ -370,7 +372,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                         className="object-cover"
                         style={{
                           transform: `scale(${transform.scale}) translate(${transform.x}%, ${transform.y}%)`,
-                          transition: 'transform 0.2s cubic-bezier(0.2, 0, 0, 1)',
+                          transition: 'transform 0.1s linear',
                           willChange: 'transform'
                         }}
                         unoptimized
