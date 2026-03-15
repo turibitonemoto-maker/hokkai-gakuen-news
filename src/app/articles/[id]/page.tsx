@@ -77,7 +77,7 @@ export default function ArticleDetailPage() {
   }
 
   const embedPdfUrl = getDriveEmbedUrl(article.pdfUrl || "");
-  const transform = article.mainImageTransform || { scale: 1, x: 50, y: 50 };
+  const transform = article.mainImageTransform || { scale: 1, x: 0, y: 0 };
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-body">
@@ -100,8 +100,8 @@ export default function ArticleDetailPage() {
                   fill 
                   className="object-cover"
                   style={{
-                    objectPosition: `${transform.x}% ${transform.y}%`,
-                    transform: `scale(${transform.scale})`,
+                    transform: `scale(${transform.scale}) translate(${transform.x}%, ${transform.y}%)`,
+                    willChange: 'transform'
                   }}
                   priority
                   unoptimized
