@@ -16,7 +16,6 @@ import {
   AlertCircle,
   User,
   ShieldCheck,
-  Lock,
   Megaphone
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,7 +27,7 @@ import { useCollection, useDoc, useFirestore, useMemoFirebase, useUser } from "@
 import { collection, query, orderBy, limit, doc } from "firebase/firestore";
 import Link from "next/link";
 
-const PUBLIC_SITE_URL = "/";
+const PUBLIC_SITE_URL = "/articles";
 
 export default function AdminDashboard() {
   const [currentTime, setCurrentTime] = useState<string | null>(null);
@@ -71,7 +70,7 @@ export default function AdminDashboard() {
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row justify-between items-start gap-4">
         <div className="flex flex-col gap-1">
-          <h3 className="text-3xl font-black text-slate-800 tracking-tight">管制塔ダッシュボード</h3>
+          <h3 className="text-3xl font-black text-slate-800 tracking-tight">ダッシュバード</h3>
           <p className="text-slate-500 text-sm font-medium flex items-center gap-2">
             <Clock className="h-4 w-4" /> {currentTime || "読み込み中..."}
           </p>

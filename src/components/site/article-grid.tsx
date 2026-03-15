@@ -5,7 +5,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, ArrowRight, ImageOff } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 const CATEGORY_LABELS: Record<string, string> = {
   Campus: "キャンパス",

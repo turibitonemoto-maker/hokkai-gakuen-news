@@ -24,16 +24,13 @@ const CATEGORY_LABELS: Record<string, string> = {
   Viewer: "紙面ビューアー",
 };
 
-// Googleドライブのリンクをプレビュー用に変換し、UIを最小化する
 function getDriveEmbedUrl(url: string) {
   if (!url) return null;
   if (!url.includes('drive.google.com')) return url;
   
-  // ファイルIDの抽出
   const fileIdMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
   if (!fileIdMatch) return url;
   
-  // /preview 形式へ強制変換
   return `https://drive.google.com/file/d/${fileIdMatch[1]}/preview`;
 }
 
@@ -54,7 +51,6 @@ export default function ArticleDetailPage() {
     if (article?.content) {
       setSanitizedHtml(DOMPurify.sanitize(article.content));
       
-      // 閲覧数のカウントアップ（非同期）
       if (articleRef) {
         updateDoc(articleRef, { viewCount: increment(1) }).catch(() => {});
       }
@@ -142,7 +138,6 @@ export default function ArticleDetailPage() {
               dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
             />
 
-            {/* ステルス・デジタル紙面ビューアー */}
             {embedPdfUrl && (
               <div className="mt-16 space-y-6">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-4">

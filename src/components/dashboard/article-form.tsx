@@ -12,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { FileText, ImageIcon, Type, Heading2, Loader2, Upload, FileType, ShieldCheck, MessageSquareText, Bold, Italic, List } from "lucide-react";
+import { FileText, ImageIcon, Type, Heading2, Loader2, Upload, FileType, MessageSquareText, Bold, Italic, List } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
