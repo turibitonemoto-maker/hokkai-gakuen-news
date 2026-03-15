@@ -7,7 +7,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { PublicHeader } from '@/components/site/public-header';
 import { PublicFooter } from '@/components/site/public-footer';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Tag, ChevronLeft, ImageOff, Share2, FileType, Shield } from 'lucide-react';
+import { Calendar, Tag, ChevronLeft, ImageOff, Share2, FileType, Shield, MessageSquareText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -80,16 +80,26 @@ export default function ArticleDetailPage() {
 
         <article className="bg-white rounded-[2.5rem] md:rounded-[4rem] shadow-2xl overflow-hidden border border-slate-100 mb-12">
           {article.mainImageUrl ? (
-            <div className="relative h-[300px] md:h-[500px] w-full bg-slate-100">
-              <Image 
-                src={article.mainImageUrl} 
-                alt={article.title} 
-                fill 
-                className="object-cover"
-                priority
-                unoptimized
-                sizes="100vw"
-              />
+            <div className="w-full">
+              <div className="relative aspect-video w-full bg-slate-100">
+                <Image 
+                  src={article.mainImageUrl} 
+                  alt={article.title} 
+                  fill 
+                  className="object-cover"
+                  priority
+                  unoptimized
+                  sizes="100vw"
+                />
+              </div>
+              {article.imageCaption && (
+                <div className="px-8 md:px-16 py-4 bg-slate-50 border-b flex items-start gap-3">
+                  <MessageSquareText className="h-4 w-4 text-slate-400 mt-1 shrink-0" />
+                  <p className="text-xs md:text-sm text-slate-500 italic font-medium leading-relaxed">
+                    {article.imageCaption}
+                  </p>
+                </div>
+              )}
             </div>
           ) : (
              <div className="relative h-[200px] w-full bg-slate-50 flex flex-col items-center justify-center text-slate-200 gap-2 border-b">
@@ -149,7 +159,6 @@ export default function ArticleDetailPage() {
                       title="Newspaper View"
                     ></iframe>
                   </div>
-                  {/* 右クリックやドラッグを抑制するための透明な保護レイヤー（必要に応じて有効化） */}
                   <div className="absolute inset-x-0 top-0 h-12 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex items-center justify-center">
                     <span className="text-[8px] font-black text-slate-400 bg-white/80 px-4 py-1 rounded-full shadow-sm">
                       北海学園大学一部新聞会 著作権保護コンテンツ

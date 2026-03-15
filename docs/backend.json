@@ -10,6 +10,7 @@
         "title": { "type": "string" },
         "articleType": { "type": "string", "enum": ["Standard", "Note"] },
         "content": { "type": "string" },
+        "imageCaption": { "type": "string", "description": "メイン画像の説明文（キャプション）" },
         "pdfUrl": { "type": "string", "format": "uri", "description": "新聞紙面のPDF（Googleドライブ等）のURL" },
         "noteUrl": { "type": "string", "format": "uri" },
         "categoryId": { "type": "string" },

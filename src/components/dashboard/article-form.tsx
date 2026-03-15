@@ -12,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { FileText, ImageIcon, Type, Heading2, Loader2, Upload, FileType, ShieldCheck, AlertCircle } from "lucide-react";
+import { FileText, ImageIcon, Type, Heading2, Loader2, Upload, FileType, ShieldCheck, MessageSquareText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -26,6 +26,7 @@ const articleSchema = z.object({
   title: z.string().min(1, "タイトルを入力してください"),
   articleType: z.enum(["Standard", "Note"]),
   content: z.string().min(1, "本文を入力してください"),
+  imageCaption: z.string().optional().or(z.literal("")),
   pdfUrl: z.string().optional().or(z.literal("")),
   noteUrl: z.string().url("有効なURLを入力してください").optional().or(z.literal("")),
   categoryId: z.enum(["Campus", "Event", "Interview", "Sports", "Column", "Opinion"]),
@@ -54,6 +55,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       title: article?.title || "",
       articleType: article?.articleType || "Standard",
       content: article?.content || "",
+      imageCaption: article?.imageCaption || "",
       pdfUrl: article?.pdfUrl || "",
       noteUrl: article?.noteUrl || "",
       categoryId: article?.categoryId || "Campus",
@@ -272,34 +274,53 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-slate-50/50 p-8 rounded-[2.5rem] border border-slate-100">
-          <FormField
-            control={form.control}
-            name="mainImageUrl"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 ml-1">
-                  <ImageIcon className="h-3 w-3" /> 表紙画像 (Base64)
-                </FormLabel>
-                <div className="flex gap-2">
+        <div className="bg-slate-50/50 p-8 rounded-[2.5rem] border border-slate-100 space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <FormField
+              control={form.control}
+              name="mainImageUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 ml-1">
+                    <ImageIcon className="h-3 w-3" /> 表紙画像 (Base64)
+                  </FormLabel>
+                  <div className="flex gap-2">
+                    <FormControl>
+                      <Input placeholder="ファイルを選択してください" className="h-12 rounded-xl border-slate-100 bg-white flex-1" {...field} readOnly />
+                    </FormControl>
+                    <input type="file" accept="image/*" className="hidden" ref={mainImageInputRef} onChange={handleMainImageUpload} />
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="h-12 px-6 rounded-xl gap-2 font-bold bg-white"
+                      onClick={() => mainImageInputRef.current?.click()}
+                      disabled={isProcessing}
+                    >
+                      {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                      選択
+                    </Button>
+                  </div>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="imageCaption"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 ml-1">
+                    <MessageSquareText className="h-3 w-3" /> 画像説明（キャプション）
+                  </FormLabel>
                   <FormControl>
-                    <Input placeholder="ファイルを選択してください" className="h-12 rounded-xl border-slate-100 bg-white flex-1" {...field} readOnly />
+                    <Input placeholder="例：北海学園大学正門付近での撮影" className="h-12 rounded-xl border-slate-100 bg-white" {...field} />
                   </FormControl>
-                  <input type="file" accept="image/*" className="hidden" ref={mainImageInputRef} onChange={handleMainImageUpload} />
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    className="h-12 px-6 rounded-xl gap-2 font-bold bg-white"
-                    onClick={() => mainImageInputRef.current?.click()}
-                    disabled={isProcessing}
-                  >
-                    {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                    選択
-                  </Button>
-                </div>
-              </FormItem>
-            )}
-          />
+                  <FormDescription className="text-[9px] font-bold">写真の下に控えめに表示されます。</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          
           <FormField
             control={form.control}
             name="isPublished"
