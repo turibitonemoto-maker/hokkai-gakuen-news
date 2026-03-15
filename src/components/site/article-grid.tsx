@@ -15,6 +15,12 @@ const CATEGORY_LABELS: Record<string, string> = {
   Opinion: "オピニオン",
 };
 
+// HTMLタグを除去して純粋なテキストのみを抽出するユーティリティ
+function stripHtmlTags(html: string) {
+  if (!html) return "";
+  return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ');
+}
+
 export function ArticleGrid({ articles }: { articles: any[] }) {
   if (articles.length === 0) {
     return (
@@ -36,6 +42,7 @@ export function ArticleGrid({ articles }: { articles: any[] }) {
 function ArticleCard({ article }: { article: any }) {
   const isNote = article.articleType === 'Note';
   const hasImage = !!article.mainImageUrl && article.mainImageUrl.trim() !== "";
+  const textSnippet = stripHtmlTags(article.content || "");
 
   return (
     <div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100 flex flex-col h-full">
@@ -82,9 +89,8 @@ function ArticleCard({ article }: { article: any }) {
           {article.title}
         </h3>
 
-        {/* 修正：whitespace-pre-wrap を追加して改行を維持 */}
-        <p className="text-sm text-slate-500 line-clamp-3 mb-6 leading-relaxed whitespace-pre-wrap">
-          {article.content || "この記事の概要は現在準備中です。"}
+        <p className="text-sm text-slate-500 line-clamp-3 mb-6 leading-relaxed">
+          {textSnippet || "この記事の概要は現在準備中です。"}
         </p>
 
         <div className="mt-auto">

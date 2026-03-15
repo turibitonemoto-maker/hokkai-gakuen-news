@@ -1,7 +1,7 @@
 "use client";
 
 import { useDoc, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { doc, serverTimestamp } from "firebase/firestore";
+import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -9,11 +9,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Save, User as UserIcon, Lock, Bold, Italic, Heading2, List, Type } from "lucide-react";
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { cn } from "@/lib/utils";
@@ -21,7 +19,7 @@ import { cn } from "@/lib/utils";
 const presidentMessageSchema = z.object({
   authorName: z.string().min(1, "会長の氏名を入力してください"),
   authorImageUrl: z.string().url("有効なURLを入力してください").optional().or(z.literal("")),
-  content: z.string().min(1, "挨拶の本文を入力してください"),
+  content: z.string().optional(),
 });
 
 type PresidentMessageValues = z.infer<typeof presidentMessageSchema>;
@@ -32,6 +30,7 @@ export function PresidentMessageManager() {
   const [failCount, setFailCount] = useState(0);
   const [lockoutTime, setLockoutTime] = useState<number | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
@@ -56,9 +55,6 @@ export function PresidentMessageManager() {
     extensions: [StarterKit],
     content: "",
     immediatelyRender: false,
-    onUpdate: ({ editor }) => {
-      form.setValue("content", editor.getHTML());
-    },
     editorProps: {
       attributes: {
         class: 'prose prose-slate max-w-none focus:outline-none min-h-[300px] p-8',
@@ -67,13 +63,13 @@ export function PresidentMessageManager() {
   });
 
   useEffect(() => {
-    if (messageData) {
+    if (messageData && editor) {
       form.reset({
         authorName: messageData.authorName || "",
         authorImageUrl: messageData.authorImageUrl || "",
         content: messageData.content || "",
       });
-      if (editor && messageData.content) {
+      if (messageData.content && editor.getHTML() !== messageData.content) {
         editor.commands.setContent(messageData.content);
       }
     }
@@ -116,13 +112,32 @@ export function PresidentMessageManager() {
     }
   };
 
-  function onSubmit(values: PresidentMessageValues) {
-    if (!firestore || !docRef) return;
-    setDocumentNonBlocking(docRef, {
-      ...values,
-      updatedAt: serverTimestamp(),
-    }, { merge: true });
-    toast({ title: "更新しました", description: "会長挨拶の内容を保存しました。" });
+  async function onSubmit(values: PresidentMessageValues) {
+    if (!firestore || !docRef || !editor) return;
+
+    setIsSaving(true);
+    try {
+      // エディタから直接HTMLを取得して保存（確実性を高める）
+      const htmlContent = editor.getHTML();
+      
+      await setDoc(docRef, {
+        authorName: values.authorName,
+        authorImageUrl: values.authorImageUrl,
+        content: htmlContent,
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
+
+      toast({ title: "更新しました", description: "会長挨拶の内容を保存しました。" });
+    } catch (error: any) {
+      console.error("Save failed:", error);
+      toast({ 
+        variant: "destructive", 
+        title: "保存エラー", 
+        description: "Firestoreへの書き込みに失敗しました。" 
+      });
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   if (isVerifying) {
@@ -202,26 +217,30 @@ export function PresidentMessageManager() {
                     <FormMessage />
                   </FormItem>
                 )} />
-                <FormField control={form.control} name="content" render={() => (
-                  <FormItem className="md:col-span-2">
-                    <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 mb-2">
-                      <Type className="h-3 w-3" /> 挨拶本文 (リッチエディタ)
-                    </FormLabel>
-                    <div className="flex items-center gap-1 border-b pb-2 mb-2">
-                      <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('bold') && "bg-slate-100")} onClick={() => editor?.chain().focus().toggleBold().run()}><Bold className="h-4 w-4" /></Button>
-                      <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('italic') && "bg-slate-100")} onClick={() => editor?.chain().focus().toggleItalic().run()}><Italic className="h-4 w-4" /></Button>
-                      <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('heading') && "bg-slate-100")} onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}><Heading2 className="h-4 w-4" /></Button>
-                      <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('bulletList') && "bg-slate-100")} onClick={() => editor?.chain().focus().toggleBulletList().run()}><List className="h-4 w-4" /></Button>
-                    </div>
-                    <div className="min-h-[300px] bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden shadow-inner">
-                      <EditorContent editor={editor} />
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )} />
+                <div className="md:col-span-2">
+                  <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 mb-2">
+                    <Type className="h-3 w-3" /> 挨拶本文 (リッチエディタ)
+                  </FormLabel>
+                  <div className="flex items-center gap-1 border-b pb-2 mb-2">
+                    <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('bold') && "bg-slate-100")} onClick={() => editor?.chain().focus().toggleBold().run()}><Bold className="h-4 w-4" /></Button>
+                    <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('italic') && "bg-slate-100")} onClick={() => editor?.chain().focus().toggleItalic().run()}><Italic className="h-4 w-4" /></Button>
+                    <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('heading') && "bg-slate-100")} onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}><Heading2 className="h-4 w-4" /></Button>
+                    <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('bulletList') && "bg-slate-100")} onClick={() => editor?.chain().focus().toggleBulletList().run()}><List className="h-4 w-4" /></Button>
+                  </div>
+                  <div className="min-h-[300px] bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden shadow-inner">
+                    <EditorContent editor={editor} />
+                  </div>
+                </div>
               </div>
               <div className="flex justify-end pt-8 border-t border-slate-100">
-                <Button type="submit" className="flex items-center gap-3 px-12 h-14 font-black rounded-2xl shadow-xl shadow-primary/10 hover:scale-105 transition-transform"><Save className="h-5 w-5" />保存して更新する</Button>
+                <Button 
+                  type="submit" 
+                  disabled={isSaving}
+                  className="flex items-center gap-3 px-12 h-14 font-black rounded-2xl shadow-xl shadow-primary/10 hover:scale-105 transition-transform"
+                >
+                  {isSaving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
+                  保存して更新する
+                </Button>
               </div>
             </form>
           </Form>

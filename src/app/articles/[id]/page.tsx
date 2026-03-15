@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { PublicHeader } from '@/components/site/public-header';
 import { PublicFooter } from '@/components/site/public-footer';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Tag, ChevronLeft, Printer, ImageOff, Share2 } from 'lucide-react';
+import { Calendar, Tag, ChevronLeft, ImageOff, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -28,7 +28,6 @@ export default function ArticleDetailPage() {
 
   useEffect(() => {
     if (article?.content) {
-      // HTMLをサニタイズ
       setSanitizedHtml(DOMPurify.sanitize(article.content));
     }
   }, [article]);
@@ -116,11 +115,10 @@ export default function ArticleDetailPage() {
               </div>
             </div>
 
-            {/* 修正：日本人が読みやすい密度（1.5倍程度の行間）へ調整。whitespace-pre-wrapはHTMLパースを乱すため削除 */}
             <div 
               className="prose prose-slate max-w-none 
                          text-slate-700 text-lg md:text-xl
-                         prose-p:my-4 prose-p:leading-7
+                         prose-p:my-4 prose-p:leading-relaxed
                          prose-headings:font-black prose-headings:tracking-tighter prose-headings:mt-8 prose-headings:mb-4
                          prose-img:rounded-2xl prose-img:shadow-xl prose-img:my-8
                          prose-a:text-primary prose-a:font-black prose-a:no-underline hover:prose-a:underline"
