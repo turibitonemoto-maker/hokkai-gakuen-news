@@ -117,10 +117,11 @@ export function PresidentMessageManager() {
     setIsSaving(true);
     try {
       const htmlContent = editor.getHTML();
+      // 使用フィールド名を 'content' に固定し、setDocで強制上書き（聖典の遵守）
       await setDoc(docRef, {
         authorName: values.authorName,
         authorImageUrl: values.authorImageUrl,
-        content: htmlContent, // Sacred Scripture: Field must be 'content'
+        content: htmlContent, 
         updatedAt: serverTimestamp(),
       }, { merge: true });
 

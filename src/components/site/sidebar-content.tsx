@@ -17,7 +17,7 @@ export function SidebarContent({ ads }: { ads: any[] }) {
 
   const presidentRef = useMemoFirebase(() => {
     if (!firestore) return null;
-    return doc(firestore, 'settings', 'president_greeting'); // Sacred Scripture: president_greeting
+    return doc(firestore, 'settings', 'president_greeting'); // 聖典に従い president_greeting に固定
   }, [firestore]);
   
   const { data: president } = useDoc(presidentRef);

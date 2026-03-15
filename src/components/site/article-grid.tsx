@@ -16,10 +16,9 @@ const CATEGORY_LABELS: Record<string, string> = {
   Opinion: "オピニオン",
 };
 
-// HTMLタグを安全に除去してスニペットを生成する
+// HTMLタグを安全に除去して純粋なテキストスニペットを生成する（浄化処理）
 function stripHtmlTags(html: string) {
   if (!html) return "";
-  // タグを削除し、連続する空白や改行を1つにする。これによりエディタのタグが漏れるのを防ぐ
   return html
     .replace(/<[^>]*>/g, ' ')
     .replace(/\s+/g, ' ')
