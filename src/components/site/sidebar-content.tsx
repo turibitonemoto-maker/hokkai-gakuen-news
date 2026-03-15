@@ -7,16 +7,25 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { User, MessageCircle, ExternalLink, TrendingUp } from 'lucide-react';
 import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { increment } from 'firebase/firestore';
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
+import DOMPurify from 'dompurify';
 
 export function SidebarContent({ ads }: { ads: any[] }) {
   const firestore = useFirestore();
+  const [sanitizedMessage, setSanitizedMessage] = useState<string>('');
+
   const presidentRef = useMemoFirebase(() => {
     if (!firestore) return null;
     return doc(firestore, 'settings', 'president-message');
   }, [firestore]);
   
   const { data: president } = useDoc(presidentRef);
+
+  useEffect(() => {
+    if (president?.content) {
+      setSanitizedMessage(DOMPurify.sanitize(president.content));
+    }
+  }, [president]);
 
   const activeAds = useMemo(() => {
     if (!ads) return [];
@@ -63,13 +72,14 @@ export function SidebarContent({ ads }: { ads: any[] }) {
                 )}
               </div>
               <h4 className="font-bold text-slate-800 text-lg">{president.authorName}</h4>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">会長 / 会長職</p>
+              <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">会長 / 代表職</p>
             </div>
             <div className="relative">
               <MessageCircle className="absolute -top-2 -left-2 h-6 w-6 text-primary/10" />
-              <p className="text-sm text-slate-600 leading-relaxed italic text-center px-4">
-                「{president.content?.slice(0, 120)}...」
-              </p>
+              <div 
+                className="text-sm text-slate-600 leading-relaxed text-center px-4 line-clamp-6 prose-sm prose-slate"
+                dangerouslySetInnerHTML={{ __html: sanitizedMessage }}
+              />
             </div>
           </CardContent>
         </Card>

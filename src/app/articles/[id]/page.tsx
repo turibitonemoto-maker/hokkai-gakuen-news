@@ -28,8 +28,7 @@ export default function ArticleDetailPage() {
 
   useEffect(() => {
     if (article?.content) {
-      // HTMLエディタからの入力（HTML）をサニタイズ
-      // 注: whitespace-pre-wrap は HTML の構造を壊し二重改行を招くため使用しません。
+      // HTMLをサニタイズ
       setSanitizedHtml(DOMPurify.sanitize(article.content));
     }
   }, [article]);
@@ -115,14 +114,9 @@ export default function ArticleDetailPage() {
                   <p className="text-base font-black text-slate-800">北海学園新聞会</p>
                 </div>
               </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="icon" className="rounded-full border-slate-200 hover:bg-slate-50 h-12 w-12" onClick={() => window.print()}>
-                  <Printer className="h-5 w-5 text-slate-400" />
-                </Button>
-              </div>
             </div>
 
-            {/* 修正：行間と段落の余白を日本人が読みやすい密度に調整 */}
+            {/* 修正：日本人が読みやすい密度（1.5倍程度の行間）へ調整。whitespace-pre-wrapはHTMLパースを乱すため削除 */}
             <div 
               className="prose prose-slate max-w-none 
                          text-slate-700 text-lg md:text-xl
