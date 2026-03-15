@@ -327,9 +327,9 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                         <span className="text-[10px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded">{transform.x}%</span>
                       </div>
                       <Slider 
-                        min={0} 
-                        max={100} 
-                        step={1} 
+                        min={-100} 
+                        max={200} 
+                        step={0.1} 
                         value={[transform.x]} 
                         onValueChange={([val]) => form.setValue("mainImageTransform.x", val)} 
                       />
@@ -341,9 +341,9 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                         <span className="text-[10px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded">{transform.y}%</span>
                       </div>
                       <Slider 
-                        min={0} 
-                        max={100} 
-                        step={1} 
+                        min={-100} 
+                        max={200} 
+                        step={0.1} 
                         value={[transform.y]} 
                         onValueChange={([val]) => form.setValue("mainImageTransform.y", val)} 
                       />
