@@ -13,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -93,9 +92,6 @@ export function LoginForm() {
         <CardTitle className="text-3xl font-black text-slate-800 tracking-tight">
           北海学園新聞会
         </CardTitle>
-        <CardDescription className="text-slate-400 font-black uppercase tracking-[0.3em] text-[10px] pt-2">
-          CONTENTS CONTROL SYSTEM
-        </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-6 px-10 pb-16">
         {serverError && (
@@ -162,7 +158,7 @@ export function LoginForm() {
                   認証中
                 </>
               ) : (
-                "管制塔へ入る"
+                "ログイン"
               )}
             </Button>
           </form>

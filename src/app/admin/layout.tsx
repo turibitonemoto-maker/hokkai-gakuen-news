@@ -46,7 +46,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [isMobile]);
 
   const menuItems = [
-    { id: "/admin", label: "ダッシュボード", icon: LayoutDashboard },
+    { id: "/admin", label: "ダッシュバード", icon: LayoutDashboard },
     { id: "/admin/articles", label: "記事・公開管理", icon: FileText },
     { id: "/admin/ads", label: "広告管理", icon: Megaphone, isProtected: true },
     { id: "/admin/president", label: "会長挨拶", icon: UserRound, isProtected: true },
@@ -84,7 +84,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </div>
               <div>
                 <h1 className="text-xl font-bold text-slate-800 leading-tight">北海学園新聞会</h1>
-                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">管制センター</p>
               </div>
             </div>
           </div>
@@ -116,7 +115,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {(isSidebarOpen || isMobile) && (
           <div className="overflow-hidden whitespace-nowrap text-left">
             <h1 className="text-sm font-black text-white leading-tight">北海学園新聞会</h1>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">CMS 管制システム</p>
           </div>
         )}
       </div>
