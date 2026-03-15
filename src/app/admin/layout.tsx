@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -52,7 +51,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { id: "/admin/viewer", label: "紙面ビューアー", icon: BookOpen },
     { id: "/admin/ads", label: "広告管理", icon: Megaphone, isProtected: true },
     { id: "/admin/president", label: "会長挨拶", icon: UserRound, isProtected: true },
-    { id: "/admin/about", label: "新聞会について", icon: Info, isProtected: true },
+    { id: "/admin/about", label: "About Us", icon: Info, isProtected: true },
     { id: "/admin/maintenance", label: "システム制御", icon: ShieldAlert, isProtected: true },
   ];
 
@@ -152,7 +151,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <Link href="/viewer" target="_blank">
           <Button variant="outline" className="w-full bg-slate-800 border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700 justify-start gap-3 px-3 rounded-xl h-12">
             <Globe className="h-5 w-5" />
-            {(isSidebarOpen || isMobile) && <span className="text-sm font-bold">サイトを確認</span>}
+            {(isSidebarOpen || isMobile) && <span className="text-sm font-bold">アーカイブ確認</span>}
           </Button>
         </Link>
         <Button 

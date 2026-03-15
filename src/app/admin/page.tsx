@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -203,7 +202,7 @@ export default function AdminDashboard() {
             <Link href="/admin/about">
               <Button variant="outline" className="w-full justify-start gap-3 h-12 border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-sm rounded-xl">
                 <Info className="h-5 w-5" />
-                <span>新聞会について編集</span>
+                <span>About Us 編集</span>
               </Button>
             </Link>
             <Link href="/admin/maintenance">

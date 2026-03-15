@@ -1,11 +1,10 @@
-
 "use client";
 
 import { useDoc, useFirestore, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { PublicHeader } from "@/components/site/public-header";
 import { PublicFooter } from "@/components/site/public-footer";
-import { Loader2, Info, ShieldAlert } from "lucide-react";
+import { Loader2, ShieldAlert } from "lucide-react";
 import { useEffect, useState } from "react";
 import DOMPurify from "dompurify";
 import { Badge } from "@/components/ui/badge";
@@ -42,7 +41,7 @@ export default function AboutPage() {
         <main className="flex-1 flex flex-col items-center justify-center p-6 text-center">
           <ShieldAlert className="h-16 w-16 text-slate-200 mb-6" />
           <h2 className="text-2xl font-black text-slate-800">情報が準備中です</h2>
-          <p className="text-slate-500 mt-2 font-bold">現在、新聞会についての情報を整理しています。</p>
+          <p className="text-slate-500 mt-2 font-bold">現在、About Us の情報を整理しています。</p>
         </main>
         <PublicFooter />
       </div>
@@ -60,7 +59,7 @@ export default function AboutPage() {
               About Us
             </Badge>
             <h1 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter leading-tight">
-              {aboutData.title || "新聞会について"}
+              {aboutData.title || "北海学園大学一部新聞会とは"}
             </h1>
           </div>
         </div>

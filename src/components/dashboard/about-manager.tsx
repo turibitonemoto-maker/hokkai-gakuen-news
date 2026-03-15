@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useDoc, useFirestore, useMemoFirebase, useUser } from "@/firebase";
@@ -46,6 +45,25 @@ export function AboutManager() {
 
   const { data: aboutData, isLoading } = useDoc(docRef);
 
+  // Hoisted function to handle image insertion
+  async function handleImageInsert(file: File) {
+    if (!file.type.startsWith('image/')) return;
+    setIsProcessing(true);
+    try {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const base64 = reader.result as string;
+        editor?.chain().focus().setImage({ src: base64 }).run();
+        toast({ title: "画像を本文に埋め込みました" });
+        setIsProcessing(false);
+      };
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "失敗", description: "画像の処理に失敗しました。" });
+      setIsProcessing(false);
+    }
+  }
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -91,24 +109,6 @@ export function AboutManager() {
     },
   });
 
-  const handleImageInsert = useCallback(async (file: File) => {
-    if (!file.type.startsWith('image/')) return;
-    setIsProcessing(true);
-    try {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        const base64 = reader.result as string;
-        editor?.chain().focus().setImage({ src: base64 }).run();
-        toast({ title: "画像を本文に埋め込みました" });
-        setIsProcessing(false);
-      };
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "失敗", description: "画像の処理に失敗しました。" });
-      setIsProcessing(false);
-    }
-  }, [editor, toast]);
-
   const form = useForm<AboutValues>({
     resolver: zodResolver(aboutSchema),
     defaultValues: {
@@ -119,7 +119,7 @@ export function AboutManager() {
   useEffect(() => {
     if (aboutData) {
       form.reset({
-        title: aboutData.title || "新聞会について",
+        title: aboutData.title || "About Us",
       });
       if (editor && aboutData.content && editor.getHTML() !== aboutData.content) {
         editor.commands.setContent(aboutData.content);
@@ -177,7 +177,7 @@ export function AboutManager() {
         updatedBy: user?.email || "unknown"
       }, { merge: true });
 
-      toast({ title: "更新しました", description: "新聞会についての情報を保存しました。" });
+      toast({ title: "更新しました", description: "About Us の情報を保存しました。" });
     } catch (error: any) {
       console.error("Save failed:", error);
       toast({ variant: "destructive", title: "保存エラー", description: "更新に失敗しました。" });
@@ -222,7 +222,7 @@ export function AboutManager() {
         <Card className="shadow-2xl border-none bg-white rounded-3xl overflow-hidden">
           <CardHeader className="text-center pt-10 pb-6 bg-slate-50/50">
             <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner"><Info className="h-10 w-10 text-primary" /></div>
-            <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">新聞会について 🔒</CardTitle>
+            <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">About Us 🔒</CardTitle>
             <CardDescription className="text-sm font-bold text-slate-500 px-6 mt-2">編集には管理者認証が必要です。</CardDescription>
           </CardHeader>
           <CardContent className="p-10 pt-4 space-y-6">
@@ -244,7 +244,7 @@ export function AboutManager() {
           <Info className="h-10 w-10 text-primary" />
         </div>
         <div>
-          <h2 className="text-3xl font-black text-slate-800 tracking-tight">新聞会について 🔒</h2>
+          <h2 className="text-3xl font-black text-slate-800 tracking-tight">About Us 🔒</h2>
           <p className="text-sm font-bold text-slate-500">沿革、活動紹介、入会案内などを統制します。</p>
         </div>
       </div>
@@ -261,7 +261,7 @@ export function AboutManager() {
                   <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ページの題名</FormLabel>
                   <FormControl>
                     <Input 
-                      placeholder="例：北海学園大学一部新聞会について" 
+                      placeholder="例：About Us" 
                       className="h-auto py-4 text-3xl md:text-5xl font-black border-none bg-transparent shadow-none px-0 focus-visible:ring-0" 
                       {...field} 
                     />
