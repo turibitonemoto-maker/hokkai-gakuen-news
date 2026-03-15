@@ -19,15 +19,13 @@ export default function PaperViewerPage() {
   const firestore = useFirestore();
   const [isZoomed, setIsZoomed] = useState(false);
 
-  const docRef = id ? doc(firestore, "articles", id as string) : null;
-  const { data: article, isLoading } = useDoc(docRef);
+  const docRef = id ? doc(firestore, "papers", id as string) : null;
+  const { data: paper, isLoading } = useDoc(docRef);
 
   const displayPages = useMemo(() => {
-    if (!article) return [];
-    // paperImages がある場合はそれを優先、ない場合は mainImageUrl を配列にして返す
-    const basePages = article.paperImages || (article.mainImageUrl ? [article.mainImageUrl] : []);
-    return basePages.filter((url: string) => url && url.trim() !== "");
-  }, [article]);
+    if (!paper) return [];
+    return (paper.paperImages || []).filter((url: string) => url && url.trim() !== "");
+  }, [paper]);
 
   if (isLoading) {
     return (
@@ -37,7 +35,7 @@ export default function PaperViewerPage() {
     );
   }
 
-  if (!article || article.categoryId !== "Viewer") {
+  if (!paper) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 font-body">
         <BookOpen className="h-16 w-16 text-slate-200 mb-4" />
@@ -61,13 +59,13 @@ export default function PaperViewerPage() {
                     <ArrowLeft className="h-4 w-4 mr-1" /> アーカイブ
                   </Button>
                   <Badge className="bg-primary text-white font-black px-3 rounded-full shadow-sm border-none">
-                    第 {article.issueNumber} 号
+                    第 {paper.issueNumber} 号
                   </Badge>
                   <span className="text-slate-400 text-[10px] font-black flex items-center gap-1 uppercase tracking-widest">
-                    <Calendar className="h-3 w-3" /> {article.publishDate}
+                    <Calendar className="h-3 w-3" /> {paper.publishDate}
                   </span>
                 </div>
-                <h1 className="text-xl md:text-2xl font-black text-slate-800 tracking-tighter">{article.title}</h1>
+                <h1 className="text-xl md:text-2xl font-black text-slate-800 tracking-tighter">{paper.title}</h1>
               </div>
               <div className="flex items-center gap-3">
                 <div className="hidden md:flex items-center gap-2 text-slate-400 bg-slate-50 px-4 py-2 rounded-full border border-slate-100">
@@ -104,7 +102,7 @@ export default function PaperViewerPage() {
                   <div className="relative w-full aspect-[1/1.414] bg-slate-50">
                     <Image 
                       src={pageUrl} 
-                      alt={`${article.title} - Page ${index + 1}`} 
+                      alt={`${paper.title} - Page ${index + 1}`} 
                       fill 
                       className="object-contain" 
                       unoptimized 

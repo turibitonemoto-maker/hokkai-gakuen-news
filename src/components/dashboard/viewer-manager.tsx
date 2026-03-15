@@ -33,36 +33,34 @@ export function ViewerManager() {
   const { user } = useUser();
   const { toast } = useToast();
 
-  const articlesQuery = useMemoFirebase(() => {
+  const papersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return collection(firestore, "articles");
+    return collection(firestore, "papers");
   }, [firestore, user]);
 
-  const { data: allArticles, isLoading } = useCollection(articlesQuery);
+  const { data: allPapers, isLoading } = useCollection(papersQuery);
 
-  const viewerArticles = useMemo(() => {
-    if (!allArticles) return [];
-    return allArticles
-      .filter(a => a.categoryId === "Viewer")
-      .sort((a, b) => {
-        const dateA = a.publishDate || "";
-        const dateB = b.publishDate || "";
-        const dateCompare = dateB.localeCompare(dateA);
-        if (dateCompare !== 0) return dateCompare;
-        return (b.issueNumber || 0) - (a.issueNumber || 0);
-      });
-  }, [allArticles]);
+  const viewerPapers = useMemo(() => {
+    if (!allPapers) return [];
+    return [...allPapers].sort((a, b) => {
+      const dateA = a.publishDate || "";
+      const dateB = b.publishDate || "";
+      const dateCompare = dateB.localeCompare(dateA);
+      if (dateCompare !== 0) return dateCompare;
+      return (b.issueNumber || 0) - (a.issueNumber || 0);
+    });
+  }, [allPapers]);
 
-  const handleTogglePublish = (article: any) => {
+  const handleTogglePublish = (paper: any) => {
     if (!firestore) return;
-    const docRef = doc(firestore, "articles", article.id);
-    updateDocumentNonBlocking(docRef, { isPublished: !article.isPublished });
-    toast({ title: article.isPublished ? "非公開にしました" : "公開しました" });
+    const docRef = doc(firestore, "papers", paper.id);
+    updateDocumentNonBlocking(docRef, { isPublished: !paper.isPublished });
+    toast({ title: paper.isPublished ? "非公開にしました" : "公開しました" });
   };
 
   const confirmDelete = () => {
     if (!paperToDelete || !firestore) return;
-    deleteDocumentNonBlocking(doc(firestore, "articles", paperToDelete.id));
+    deleteDocumentNonBlocking(doc(firestore, "papers", paperToDelete.id));
     toast({ title: "削除しました" });
     setPaperToDelete(null);
   };
@@ -118,41 +116,41 @@ export function ViewerManager() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {viewerArticles.map((article) => (
-                  <TableRow key={article.id} className="group hover:bg-slate-50/80 transition-colors border-slate-50">
+                {viewerPapers.map((paper) => (
+                  <TableRow key={paper.id} className="group hover:bg-slate-50/80 transition-colors border-slate-50">
                     <TableCell className="text-center">
-                      <Switch checked={article.isPublished} onCheckedChange={() => handleTogglePublish(article)} className="scale-90" />
+                      <Switch checked={paper.isPublished} onCheckedChange={() => handleTogglePublish(paper)} className="scale-90" />
                     </TableCell>
                     <TableCell className="text-center font-black text-slate-400">
-                      第 {article.issueNumber} 号
+                      第 {paper.issueNumber} 号
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col">
-                        <span className="font-bold text-slate-800">{article.title}</span>
-                        {(article.mainImageUrl || article.paperImages?.length > 0) && <span className="text-[9px] font-black text-green-500 uppercase flex items-center gap-1 mt-1"><CheckCircle2 className="h-2 w-2" /> Thumbnail Set</span>}
+                        <span className="font-bold text-slate-800">{paper.title}</span>
+                        {(paper.mainImageUrl || paper.paperImages?.length > 0) && <span className="text-[9px] font-black text-green-500 uppercase flex items-center gap-1 mt-1"><CheckCircle2 className="h-2 w-2" /> Thumbnail Set</span>}
                       </div>
                     </TableCell>
                     <TableCell className="text-center font-bold text-slate-500 text-sm">
-                      {article.publishDate}
+                      {paper.publishDate}
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge variant="outline" className="font-black text-[10px] gap-1 px-3 py-1 bg-slate-50 border-slate-200">
-                        <ImageIcon className="h-3 w-3" /> {(article.paperImages?.length || 0)} ページ
+                        <ImageIcon className="h-3 w-3" /> {(paper.paperImages?.length || 0)} ページ
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right px-8">
                       <div className="flex justify-end gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => { setCurrentPaper(article); setIsEditing(true); }} className="rounded-full hover:bg-primary/10">
+                        <Button variant="ghost" size="icon" onClick={() => { setCurrentPaper(paper); setIsEditing(true); }} className="rounded-full hover:bg-primary/10">
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 rounded-full" onClick={() => setPaperToDelete(article)}>
+                        <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 rounded-full" onClick={() => setPaperToDelete(paper)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>
                   </TableRow>
                 ))}
-                {viewerArticles.length === 0 && (
+                {viewerPapers.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-24 text-slate-300 font-black italic">
                       登録されている紙面データがありません。

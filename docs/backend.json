@@ -3,7 +3,7 @@
   "entities": {
     "Article": {
       "title": "Article",
-      "description": "記事および紙面データ。紙面（Viewer）の場合は mainImageUrl に加え paperImages 配列に全ページのJPEGデータを保持します。",
+      "description": "ニュース記事データ。",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
@@ -11,11 +11,10 @@
         "articleType": { "type": "string", "enum": ["Standard", "Note"] },
         "content": { "type": "string" },
         "imageCaption": { "type": "string" },
-        "issueNumber": { "type": "number", "description": "第〇号" },
-        "categoryId": { "type": "string", "enum": ["Campus", "Event", "Interview", "Sports", "Column", "Opinion", "Viewer"] },
+        "categoryId": { "type": "string", "enum": ["Campus", "Event", "Interview", "Sports", "Column", "Opinion"] },
         "tags": { "type": "array", "items": { "type": "string" } },
         "publishDate": { "type": "string", "format": "date" },
-        "mainImageUrl": { "type": "string", "format": "uri", "description": "表紙のJPEG画像データ（Base64）" },
+        "mainImageUrl": { "type": "string", "format": "uri" },
         "mainImageTransform": {
           "type": "object",
           "properties": {
@@ -24,17 +23,30 @@
             "y": { "type": "number" }
           }
         },
-        "paperImages": {
-          "type": "array",
-          "items": { "type": "string", "format": "uri" },
-          "description": "全ページの画像データ配列"
-        },
         "isPublished": { "type": "boolean" },
         "viewCount": { "type": "number" },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "title", "articleType", "categoryId", "publishDate", "isPublished"]
+    },
+    "Paper": {
+      "title": "Paper",
+      "description": "紙面アーカイブデータ。JPEG(Base64)の配列を保持します。",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "issueNumber": { "type": "number" },
+        "title": { "type": "string" },
+        "publishDate": { "type": "string", "format": "date" },
+        "paperImages": { "type": "array", "items": { "type": "string" } },
+        "mainImageUrl": { "type": "string" },
+        "isPublished": { "type": "boolean" },
+        "viewCount": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["issueNumber", "publishDate", "paperImages"]
     }
   },
   "auth": {
@@ -43,7 +55,11 @@
   "firestore": {
     "/articles/{articleId}": {
       "schema": { "$ref": "#/backend/entities/Article" },
-      "description": "記事および紙面データ。"
+      "description": "ニュース記事データ。"
+    },
+    "/papers/{paperId}": {
+      "schema": { "$ref": "#/backend/entities/Paper" },
+      "description": "紙面アーカイブデータ。"
     },
     "/settings/about": {
       "schema": { "type": "object" },

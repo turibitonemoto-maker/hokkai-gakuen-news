@@ -120,18 +120,17 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
       isPublished: values.isPublished,
       mainImageUrl,
       paperImages,
-      categoryId: "Viewer",
-      articleType: "Standard",
       updatedAt: serverTimestamp(),
       updatedBy: user?.email || "unknown"
     };
 
+    // 'papers' コレクションへ物理的に書き込み
     if (paper?.id) {
-      const docRef = doc(firestore, "articles", paper.id);
+      const docRef = doc(firestore, "papers", paper.id);
       setDocumentNonBlocking(docRef, data, { merge: true });
       toast({ title: "更新完了", description: `第 ${values.issueNumber} 号を更新しました。` });
     } else {
-      const colRef = collection(firestore, "articles");
+      const colRef = collection(firestore, "papers");
       addDocumentNonBlocking(colRef, { ...data, createdAt: serverTimestamp(), viewCount: 0 });
       toast({ title: "登録完了", description: `第 ${values.issueNumber} 号をアーカイブに登録しました。` });
     }

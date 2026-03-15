@@ -17,34 +17,33 @@ export default function ViewerListPage() {
   const viewerQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(
-      collection(firestore, "articles"),
-      where("categoryId", "==", "Viewer"),
+      collection(firestore, "papers"),
       where("isPublished", "==", true)
     );
   }, [firestore]);
 
-  const { data: articles, isLoading } = useCollection(viewerQuery);
+  const { data: papers, isLoading } = useCollection(viewerQuery);
 
-  const groupedArticles = useMemo(() => {
-    if (!articles) return {};
+  const groupedPapers = useMemo(() => {
+    if (!papers) return {};
     
-    const sorted = [...articles].sort((a, b) => {
+    const sorted = [...papers].sort((a, b) => {
       const dateCompare = b.publishDate.localeCompare(a.publishDate);
       if (dateCompare !== 0) return dateCompare;
       return (b.issueNumber || 0) - (a.issueNumber || 0);
     });
 
-    const groups: Record<string, typeof articles> = {};
-    sorted.forEach(article => {
-      const date = article.publishDate;
+    const groups: Record<string, typeof papers> = {};
+    sorted.forEach(paper => {
+      const date = paper.publishDate;
       if (!groups[date]) groups[date] = [];
-      groups[date].push(article);
+      groups[date].push(paper);
     });
     
     return groups;
-  }, [articles]);
+  }, [papers]);
 
-  const dates = useMemo(() => Object.keys(groupedArticles).sort((a, b) => b.localeCompare(a)), [groupedArticles]);
+  const dates = useMemo(() => Object.keys(groupedPapers).sort((a, b) => b.localeCompare(a)), [groupedPapers]);
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -80,16 +79,16 @@ export default function ViewerListPage() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                  {groupedArticles[date].map((article) => {
-                    const thumbnail = article.mainImageUrl || (article.paperImages && article.paperImages[0]);
+                  {groupedPapers[date].map((paper) => {
+                    const thumbnail = paper.mainImageUrl || (paper.paperImages && paper.paperImages[0]);
                     return (
-                      <Link key={article.id} href={`/viewer/${article.id}`} className="group">
+                      <Link key={paper.id} href={`/viewer/${paper.id}`} className="group">
                         <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-500 overflow-hidden flex flex-col h-full transform hover:scale-[1.02]">
                           <div className="relative aspect-[3/4] bg-slate-100 overflow-hidden">
                             {thumbnail ? (
                               <Image 
                                 src={thumbnail} 
-                                alt={article.title} 
+                                alt={paper.title} 
                                 fill 
                                 className="object-cover transition-transform duration-1000 group-hover:scale-110" 
                                 unoptimized 
@@ -99,16 +98,16 @@ export default function ViewerListPage() {
                             )}
                             <div className="absolute top-6 left-6">
                               <Badge className="bg-primary/90 backdrop-blur-md text-white font-black px-4 py-1.5 shadow-xl border-none rounded-full text-xs">
-                                第 {article.issueNumber} 号
+                                第 {paper.issueNumber} 号
                               </Badge>
                             </div>
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-500" />
                           </div>
                           <div className="p-8 flex-1 flex flex-col bg-white">
-                            <h4 className="font-black text-slate-800 line-clamp-2 mb-6 group-hover:text-primary transition-colors tracking-tighter text-lg leading-tight">{article.title}</h4>
+                            <h4 className="font-black text-slate-800 line-clamp-2 mb-6 group-hover:text-primary transition-colors tracking-tighter text-lg leading-tight">{paper.title}</h4>
                             <div className="mt-auto flex items-center justify-between">
                               <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest flex items-center gap-1.5">
-                                <BookOpen className="h-3 w-3" /> {article.paperImages?.length || 0} Pages
+                                <BookOpen className="h-3 w-3" /> {paper.paperImages?.length || 0} Pages
                               </span>
                               <div className="text-primary opacity-0 group-hover:opacity-100 transition-opacity transform translate-x-4 group-hover:translate-x-0 duration-300">
                                 <ArrowRight className="h-5 w-5" />

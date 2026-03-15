@@ -4,25 +4,19 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // 基本ルール: ログイン済みユーザーは全ドキュメントの読み書きが可能
     match /{document=**} {
       allow read, write: if request.auth != null;
     }
 
-    // 公開データへのパブリックアクセス
     match /articles/{articleId} {
       allow read: if true;
     }
     
-    match /ads/{adId} {
+    match /papers/{paperId} {
       allow read: if true;
     }
     
     match /settings/{settingId} {
-      allow read: if true;
-    }
-
-    match /hero-images/{imageId} {
       allow read: if true;
     }
   }
