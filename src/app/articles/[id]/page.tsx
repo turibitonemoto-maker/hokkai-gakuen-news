@@ -2,7 +2,7 @@
 'use client';
 
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { doc, updateDoc, increment } from 'firebase/firestore';
 import { useParams, useRouter } from 'next/navigation';
 import { PublicHeader } from '@/components/site/public-header';
 import { PublicFooter } from '@/components/site/public-footer';
@@ -43,8 +43,13 @@ export default function ArticleDetailPage() {
   useEffect(() => {
     if (article?.content) {
       setSanitizedHtml(DOMPurify.sanitize(article.content));
+      
+      // 閲覧数のカウントアップ（非同期）
+      if (articleRef) {
+        updateDoc(articleRef, { viewCount: increment(1) }).catch(() => {});
+      }
     }
-  }, [article]);
+  }, [article, articleRef]);
 
   if (isLoading) {
     return (
@@ -123,12 +128,7 @@ export default function ArticleDetailPage() {
             </h1>
 
             <div 
-              className="prose prose-slate max-w-none 
-                         text-slate-700 text-lg
-                         prose-p:leading-7 prose-p:my-4
-                         prose-headings:font-black prose-headings:tracking-tighter
-                         prose-img:rounded-2xl prose-img:shadow-xl prose-img:my-8
-                         prose-a:text-primary prose-a:font-black"
+              className="article-content"
               dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
             />
 

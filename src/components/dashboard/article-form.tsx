@@ -12,13 +12,13 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { FileText, ImageIcon, Type, Heading2, Loader2, Upload, FileType, ShieldCheck, MessageSquareText } from "lucide-react";
+import { FileText, ImageIcon, Type, Heading2, Loader2, Upload, FileType, ShieldCheck, MessageSquareText, Bold, Italic, List } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import ImageExtension from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -68,7 +68,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       StarterKit,
       ImageExtension.configure({
         HTMLAttributes: {
-          class: 'rounded-2xl shadow-lg my-8 mx-auto max-w-full h-auto',
+          class: 'rounded-2xl shadow-xl my-8 mx-auto max-w-full h-auto',
         },
       }),
       LinkExtension.configure({
@@ -85,7 +85,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-slate max-w-none focus:outline-none min-h-[600px] p-8 md:p-12 prose-p:leading-7 prose-p:my-4',
+        class: 'ProseMirror outline-none min-h-[600px] p-8 md:p-12',
       },
     },
   });
@@ -142,7 +142,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       toast({ title: "記事を更新しました" });
     } else {
       const colRef = collection(firestore, "articles");
-      addDocumentNonBlocking(colRef, { ...data, createdAt: serverTimestamp() });
+      addDocumentNonBlocking(colRef, { ...data, createdAt: serverTimestamp(), viewCount: 0 });
       toast({ title: "記事を作成しました" });
     }
     onSuccess();
@@ -221,14 +221,9 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                 <FormControl>
                   <Input placeholder="https://drive.google.com/file/d/..." className="h-12 rounded-xl border-slate-200 bg-white" {...field} />
                 </FormControl>
-                {field.value && field.value.includes("drive.google.com") && (
-                  <Alert className="mt-4 bg-blue-50 border-blue-100 text-blue-700 rounded-2xl">
-                    <ShieldCheck className="h-4 w-4" />
-                    <AlertDescription className="text-[10px] font-bold leading-relaxed">
-                      【重要】ドライブの設定で「複製禁止」設定を必ず行ってください。
-                    </AlertDescription>
-                  </Alert>
-                )}
+                <FormDescription className="text-[10px] font-bold mt-2">
+                  共有リンクをそのまま貼り付けてください。自動でビューアー形式へ変換されます。
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -240,18 +235,21 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
               <Type className="h-3 w-3" /> 本文執筆（人力入魂）
             </span>
-            <div className="flex items-center gap-1">
-              <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}><Heading2 className="h-4 w-4" /></Button>
+            <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl">
+              <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", editor?.isActive('bold') && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleBold().run()}><Bold className="h-4 w-4" /></Button>
+              <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", editor?.isActive('italic') && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleItalic().run()}><Italic className="h-4 w-4" /></Button>
+              <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", editor?.isActive('heading', { level: 2 }) && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}><Heading2 className="h-4 w-4" /></Button>
+              <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", editor?.isActive('bulletList') && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleBulletList().run()}><List className="h-4 w-4" /></Button>
               <div className="relative">
                 <input type="file" accept="image/*" className="hidden" id="editor-image-upload" onChange={handleEditorImageUpload}/>
-                <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => document.getElementById('editor-image-upload')?.click()} disabled={isProcessing}>
+                <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => document.getElementById('editor-image-upload')?.click()} disabled={isProcessing}>
                   {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
                 </Button>
               </div>
             </div>
           </div>
-          <div className="min-h-[600px] bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm">
-            <EditorContent editor={editor} className="outline-none" />
+          <div className="min-h-[600px] bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-inner">
+            <EditorContent editor={editor} />
           </div>
         </div>
 

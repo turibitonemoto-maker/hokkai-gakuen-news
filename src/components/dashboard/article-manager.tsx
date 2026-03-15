@@ -5,7 +5,7 @@ import { useState, useMemo } from "react";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc, orderBy, query, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Loader2, X, Filter, Tag as TagIcon, AlertCircle, FileText, Eye } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, X, Filter, Tag as TagIcon, AlertCircle, FileText, Eye, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -121,7 +121,7 @@ export function ArticleManager() {
     if (!articleToDelete || !firestore) return;
     const docRef = doc(firestore, "articles", articleToDelete.id);
     deleteDocumentNonBlocking(docRef);
-    toast({ title: "削除しました", description: `「${articleToDelete.title}」を削除しました。` });
+    toast({ title: "削除しました", description: `「${articleToDelete.title}」をデータベースから完全に抹消しました。` });
     setArticleToDelete(null);
   };
 
@@ -151,27 +151,32 @@ export function ArticleManager() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">記事・公開管理</h2>
-          <p className="text-sm font-bold text-slate-500 mt-1">全ての記事を自社DBで一括管理します。</p>
+          <p className="text-sm font-bold text-slate-500 mt-1">オリジナル記事をリアルタイムに管理・監視します。</p>
         </div>
-        <Button onClick={() => { setCurrentArticle(null); setIsEditing(true); }} className="w-full md:w-auto h-12 px-6 shadow-lg gap-2 font-black rounded-2xl">
-          <Plus className="h-5 w-5" />
-          新規記事作成
-        </Button>
+        <div className="flex gap-2 w-full md:w-auto">
+          <Button variant="outline" size="icon" onClick={() => window.location.reload()} className="rounded-xl h-12 w-12 border-slate-200">
+            <RefreshCw className="h-5 w-5 text-slate-400" />
+          </Button>
+          <Button onClick={() => { setCurrentArticle(null); setIsEditing(true); }} className="flex-1 md:flex-none h-12 px-6 shadow-lg gap-2 font-black rounded-2xl">
+            <Plus className="h-5 w-5" />
+            新規記事作成
+          </Button>
+        </div>
       </div>
 
       {error && (
         <Alert variant="destructive" className="rounded-2xl">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>データの読み込みに失敗しました</AlertTitle>
-          <AlertDescription>データベースへのアクセス権限がないか、通信エラーが発生しています。</AlertDescription>
+          <AlertTitle>同期エラー</AlertTitle>
+          <AlertDescription>データの取得に失敗しました。ページを再読み込みしてください。</AlertDescription>
         </Alert>
       )}
 
-      <Card className="shadow-sm border-slate-200 rounded-2xl overflow-hidden">
+      <Card className="shadow-sm border-slate-200 rounded-2xl overflow-hidden bg-white">
         <CardHeader className="pb-3 border-b bg-slate-50/30">
           <CardTitle className="text-xs font-black flex items-center gap-2 text-slate-500 uppercase tracking-widest">
             <Filter className="h-4 w-4" />
-            フィルター
+            カテゴリーフィルター
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4">
@@ -189,20 +194,19 @@ export function ArticleManager() {
                 >
                   <TagIcon className={cn("h-3 w-3", isActive ? "text-white" : "text-slate-400")} />
                   {tag}
-                  {isActive && <X className="h-3 w-3 ml-1 opacity-80" />}
                 </button>
               );
             })}
             {selectedTags.length > 0 && (
-              <Button variant="ghost" size="sm" onClick={() => setSelectedTags([])} className="text-xs text-slate-400 font-bold hover:text-slate-600 h-auto p-2 ml-2">
-                解除
+              <Button variant="ghost" size="sm" onClick={() => setSelectedTags([])} className="text-xs text-slate-400 font-bold hover:text-slate-600 h-auto p-2">
+                リセット
               </Button>
             )}
           </div>
         </CardContent>
       </Card>
 
-      <Card className="shadow-sm overflow-hidden border-slate-200 rounded-2xl">
+      <Card className="shadow-sm overflow-hidden border-slate-200 rounded-2xl bg-white">
         <div className="overflow-x-auto">
           <CardContent className="p-0">
             {isLoading ? (
@@ -212,15 +216,15 @@ export function ArticleManager() {
                 <TableHeader className="bg-slate-50/50">
                   <TableRow>
                     <TableHead className="w-[180px] font-black text-xs uppercase tracking-widest">公開状態</TableHead>
-                    <TableHead className="min-w-[300px] font-black text-xs uppercase tracking-widest">タイトル / カテゴリー</TableHead>
+                    <TableHead className="min-w-[300px] font-black text-xs uppercase tracking-widest">タイトル</TableHead>
                     <TableHead className="min-w-[120px] font-black text-xs uppercase tracking-widest">公開日</TableHead>
-                    <TableHead className="w-[100px] font-black text-xs uppercase tracking-widest">閲覧数</TableHead>
+                    <TableHead className="w-[100px] font-black text-xs uppercase tracking-widest text-center">PV</TableHead>
                     <TableHead className="text-right font-black text-xs uppercase tracking-widest">操作</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredArticles.map((article) => (
-                    <TableRow key={article.id} className="group hover:bg-slate-50/80 transition-colors">
+                    <TableRow key={article.id} className="group hover:bg-slate-50/80 transition-colors border-slate-50">
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Switch 
@@ -229,15 +233,15 @@ export function ArticleManager() {
                             className="data-[state=checked]:bg-green-500 scale-90 md:scale-100"
                           />
                           {article.isPublished ? (
-                            <Badge className="bg-green-100 text-green-700 border-green-200 shadow-none font-bold text-[10px]">公開中</Badge>
+                            <Badge className="bg-green-100 text-green-700 border-green-200 shadow-none font-black text-[10px]">公開中</Badge>
                           ) : (
-                            <Badge variant="outline" className="text-slate-400 border-slate-200 bg-slate-50 font-bold text-[10px]">下書き</Badge>
+                            <Badge variant="outline" className="text-slate-400 border-slate-200 bg-slate-50 font-black text-[10px]">下書き</Badge>
                           )}
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col min-w-0">
-                          <span className="font-bold text-slate-800 leading-tight group-hover:text-primary transition-colors text-sm md:text-base">{article.title}</span>
+                          <span className="font-bold text-slate-800 leading-tight group-hover:text-primary transition-colors text-sm md:text-base line-clamp-1">{article.title}</span>
                           <span className="text-[9px] font-black text-primary mt-1 uppercase tracking-widest">
                             {CATEGORY_LABELS[article.categoryId] || article.categoryId}
                           </span>
@@ -246,15 +250,15 @@ export function ArticleManager() {
                       <TableCell className="text-sm font-bold text-slate-500">
                         {new Date(article.publishDate).toLocaleDateString("ja-JP")}
                       </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1.5 text-slate-600 font-bold">
-                          <Eye className="h-3.5 w-3.5 text-slate-400" />
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center gap-1.5 text-slate-400 font-bold">
+                          <Eye className="h-3.5 w-3.5" />
                           <span className="text-xs">{(article.viewCount || 0).toLocaleString()}</span>
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => { setCurrentArticle(article); setIsEditing(true); }} className="rounded-full">
+                          <Button variant="ghost" size="icon" onClick={() => { setCurrentArticle(article); setIsEditing(true); }} className="rounded-full hover:bg-primary/10 hover:text-primary">
                             <Pencil className="h-4 w-4" />
                           </Button>
                           <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 rounded-full" onClick={() => setArticleToDelete(article)}>
@@ -266,8 +270,8 @@ export function ArticleManager() {
                   ))}
                   {filteredArticles.length === 0 && !isLoading && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-20 text-slate-400 font-bold italic">
-                        記事が見つかりません。
+                      <TableCell colSpan={5} className="text-center py-20 text-slate-300 font-black italic">
+                        表示する記事がありません。
                       </TableCell>
                     </TableRow>
                   )}
@@ -283,15 +287,15 @@ export function ArticleManager() {
           <AlertDialogHeader>
             <div className="flex items-center gap-3 text-destructive mb-2">
               <Trash2 className="h-6 w-6" />
-              <AlertDialogTitle className="text-2xl font-black">記事を完全に削除しますか？</AlertDialogTitle>
+              <AlertDialogTitle className="text-2xl font-black">記事を完全に消去しますか？</AlertDialogTitle>
             </div>
-            <AlertDialogDescription className="font-bold">
-              「{articleToDelete?.title}」をデータベースから抹消します。この操作は取り消せません。
+            <AlertDialogDescription className="font-bold text-slate-500">
+              「{articleToDelete?.title}」をデータベースから完全に抹消します。<br />この操作は取り消せません。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2 mt-6">
             <AlertDialogCancel className="rounded-xl font-bold h-12">キャンセル</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90 rounded-xl font-black h-12 px-8">削除を実行</AlertDialogAction>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90 rounded-xl font-black h-12 px-8">削除を確定する</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
