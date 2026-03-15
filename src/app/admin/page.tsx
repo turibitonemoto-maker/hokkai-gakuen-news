@@ -27,7 +27,7 @@ import { useCollection, useDoc, useFirestore, useMemoFirebase, useUser } from "@
 import { collection, query, orderBy, limit, doc } from "firebase/firestore";
 import Link from "next/link";
 
-const PUBLIC_SITE_URL = "/articles";
+const PUBLIC_SITE_URL = "/";
 
 export default function AdminDashboard() {
   const [currentTime, setCurrentTime] = useState<string | null>(null);
