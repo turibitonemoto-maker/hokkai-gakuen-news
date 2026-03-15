@@ -1,8 +1,7 @@
-
 "use client";
 
 import Link from 'next/link';
-import { Menu, Search, User } from 'lucide-react';
+import { Menu, Search, User, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
@@ -48,6 +47,7 @@ export function PublicHeader() {
           <nav className="hidden md:flex items-center gap-8">
             <NavLink href="/">ホーム</NavLink>
             <NavLink href="/articles">記事一覧</NavLink>
+            <NavLink href="/viewer">紙面ビューアー</NavLink>
             <NavLink href="/about">新聞会について</NavLink>
           </nav>
 

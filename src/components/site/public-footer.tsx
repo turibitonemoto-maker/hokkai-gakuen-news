@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Twitter, Instagram, Mail, MapPin } from 'lucide-react';
+import { Twitter, Instagram, Mail, MapPin, BookOpen } from 'lucide-react';
 import Image from 'next/image';
 
 export function PublicFooter() {
@@ -48,6 +48,7 @@ export function PublicFooter() {
             <ul className="space-y-3 text-sm font-medium">
               <li><Link href="/" className="hover:text-primary transition-colors">ホーム</Link></li>
               <li><Link href="/articles" className="hover:text-primary transition-colors">記事一覧</Link></li>
+              <li><Link href="/viewer" className="hover:text-primary transition-colors">紙面ビューアー</Link></li>
               <li><Link href="/about" className="hover:text-primary transition-colors">新聞会について</Link></li>
             </ul>
           </div>
