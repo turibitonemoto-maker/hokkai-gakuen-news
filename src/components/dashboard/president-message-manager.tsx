@@ -120,11 +120,11 @@ export function PresidentMessageManager() {
       await setDoc(docRef, {
         authorName: values.authorName,
         authorImageUrl: values.authorImageUrl,
-        content: htmlContent, // Sacred Scripture: Field is 'content'
+        content: htmlContent, // Sacred Scripture: Field must be 'content'
         updatedAt: serverTimestamp(),
       }, { merge: true });
 
-      toast({ title: "更新しました", description: "会長挨拶を最新の形式で保存しました。" });
+      toast({ title: "更新しました", description: "会長挨拶を記事と同じ形式で保存しました。" });
     } catch (error: any) {
       console.error("Save failed:", error);
       toast({ variant: "destructive", title: "保存エラー", description: "更新に失敗しました。" });
