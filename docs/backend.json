@@ -3,7 +3,7 @@
   "entities": {
     "Article": {
       "title": "Article",
-      "description": "記事および紙面データ。紙面（Viewer）の場合は mainImageUrl に JPEG データを保持します。",
+      "description": "記事および紙面データ。紙面（Viewer）の場合は mainImageUrl に加え paperImages 配列に全ページのJPEGデータを保持します。",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
@@ -15,14 +15,11 @@
         "categoryId": { "type": "string", "enum": ["Campus", "Event", "Interview", "Sports", "Column", "Opinion", "Viewer"] },
         "tags": { "type": "array", "items": { "type": "string" } },
         "publishDate": { "type": "string", "format": "date" },
-        "mainImageUrl": { "type": "string", "format": "uri", "description": "紙面のJPEG画像データ（Base64）" },
-        "mainImageTransform": {
-          "type": "object",
-          "properties": {
-            "scale": { "type": "number" },
-            "x": { "type": "number" },
-            "y": { "type": "number" }
-          }
+        "mainImageUrl": { "type": "string", "format": "uri", "description": "表紙のJPEG画像データ（Base64）" },
+        "paperImages": {
+          "type": "array",
+          "items": { "type": "string", "format": "uri" },
+          "description": "全ページの画像データ配列"
         },
         "isPublished": { "type": "boolean" },
         "viewCount": { "type": "number" },

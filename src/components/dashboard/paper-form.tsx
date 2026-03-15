@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useFirestore, useUser } from "@/firebase";
@@ -12,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, ImageIcon, RefreshCw } from "lucide-react";
+import { Loader2, Upload, ImageIcon, RefreshCw, Plus, Trash2, ChevronUp, ChevronDown } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
@@ -20,66 +20,68 @@ const paperSchema = z.object({
   issueNumber: z.number().min(1, "号数を入力してください"),
   title: z.string().min(1, "タイトルを入力してください"),
   publishDate: z.string().min(1, "発行日を選択してください"),
-  mainImageUrl: z.string().min(1, "紙面画像を選択してください"),
+  pages: z.array(z.object({
+    url: z.string().min(1, "画像を選択してください")
+  })).min(1, "少なくとも1ページは必要です"),
   isPublished: z.boolean().default(true),
 });
 
 type PaperFormValues = z.infer<typeof paperSchema>;
 
-/**
- * 紙面登録フォーム（JPEG方式）
- * PDFを廃止し、画像（Base64）による管理に特化させました。
- */
 export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => void }) {
   const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
+  const [isProcessing, setIsProcessing] = useState<number | null>(null);
+  
   const form = useForm<PaperFormValues>({
     resolver: zodResolver(paperSchema),
     defaultValues: {
       issueNumber: paper?.issueNumber || 0,
       title: paper?.title || "",
       publishDate: paper?.publishDate || new Date().toISOString().split("T")[0],
-      mainImageUrl: paper?.mainImageUrl || "",
+      pages: paper?.paperImages?.map((url: string) => ({ url })) || [{ url: "" }],
       isPublished: paper?.isPublished ?? true,
     },
   });
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement> | React.DragEvent) => {
-    let file: File | undefined;
-    if ('files' in (e.target as any) && (e.target as any).files) {
-      file = (e.target as any).files[0];
-    } else if ('dataTransfer' in e && e.dataTransfer.files) {
-      file = e.dataTransfer.files[0];
-    }
+  const { fields, append, remove, move } = useFieldArray({
+    control: form.control,
+    name: "pages",
+  });
 
-    if (!file || !file.type.startsWith('image/')) {
-      toast({ variant: "destructive", title: "エラー", description: "画像ファイル（JPEG/PNG）を選択してください。" });
+  const handleFileUpload = (index: number, file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast({ variant: "destructive", title: "エラー", description: "画像ファイルを選択してください。" });
       return;
     }
 
-    setIsProcessing(true);
+    setIsProcessing(index);
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = () => {
-      form.setValue("mainImageUrl", reader.result as string);
-      setIsProcessing(false);
-      toast({ title: "紙面画像を読み込みました" });
+      form.setValue(`pages.${index}.url`, reader.result as string);
+      setIsProcessing(null);
+      toast({ title: `${index + 1}ページの画像を読み込みました` });
     };
     reader.onerror = () => {
-      setIsProcessing(false);
-      toast({ variant: "destructive", title: "失敗", description: "画像の読み込みに失敗しました。" });
+      setIsProcessing(null);
+      toast({ variant: "destructive", title: "失敗" });
     };
   };
 
   const onSubmit = (values: PaperFormValues) => {
     if (!firestore) return;
+    
+    // 最初のページを表紙（mainImageUrl）として扱う
+    const paperImages = values.pages.map(p => p.url);
+    const mainImageUrl = paperImages[0] || "";
+
     const data = {
       ...values,
+      mainImageUrl,
+      paperImages,
+      pages: undefined, // 不要なフィールドを除去
       categoryId: "Viewer",
       articleType: "Standard",
       updatedAt: serverTimestamp(),
@@ -98,12 +100,10 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
     onSuccess();
   };
 
-  const currentImage = form.watch("mainImageUrl");
-
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-w-2xl mx-auto pb-10">
-        <div className="grid grid-cols-2 gap-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10 max-w-4xl mx-auto pb-20">
+        <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-100 shadow-sm grid grid-cols-1 md:grid-cols-3 gap-6">
           <FormField
             control={form.control}
             name="issueNumber"
@@ -111,7 +111,7 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
               <FormItem>
                 <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">号数</FormLabel>
                 <FormControl>
-                  <Input type="number" className="h-12 rounded-xl font-bold border-slate-100 bg-slate-50/50" {...field} onChange={e => field.onChange(Number(e.target.value))} />
+                  <Input type="number" className="h-12 rounded-xl font-bold border-white bg-white shadow-sm" {...field} onChange={e => field.onChange(Number(e.target.value))} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -124,7 +124,20 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
               <FormItem>
                 <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">発行日</FormLabel>
                 <FormControl>
-                  <Input type="date" className="h-12 rounded-xl font-bold border-slate-100 bg-slate-50/50" {...field} />
+                  <Input type="date" className="h-12 rounded-xl font-bold border-white bg-white shadow-sm" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="title"
+            render={({ field }) => (
+              <FormItem className="md:col-span-1">
+                <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">タイトル</FormLabel>
+                <FormControl>
+                  <Input placeholder="例：2025年度 新入生歓迎号" className="h-12 rounded-xl font-bold border-white bg-white shadow-sm" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -132,66 +145,80 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
           />
         </div>
 
-        <FormField
-          control={form.control}
-          name="title"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">タイトル</FormLabel>
-              <FormControl>
-                <Input placeholder="例：2025年度 新入生歓迎号" className="h-12 rounded-xl font-bold border-slate-100 bg-slate-50/50" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="space-y-6">
+          <div className="flex items-center justify-between border-b pb-4">
+            <h3 className="font-black text-slate-800 flex items-center gap-2">
+              <ImageIcon className="h-5 w-5 text-primary" />
+              紙面ページ構成
+            </h3>
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm" 
+              onClick={() => append({ url: "" })}
+              className="rounded-full font-black border-primary/20 text-primary hover:bg-primary/5"
+            >
+              <Plus className="h-4 w-4 mr-1" /> ページを追加
+            </Button>
+          </div>
 
-        <div className="space-y-4">
-          <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
-            <ImageIcon className="h-3.5 w-3.5" /> 紙面画像 (JPEG/PNG)
-          </FormLabel>
-          <div 
-            className={cn(
-              "relative aspect-[1/1.414] border-4 border-dashed rounded-[2rem] transition-all flex flex-col items-center justify-center cursor-pointer overflow-hidden group",
-              isDragging ? "border-primary bg-primary/5 scale-[0.98]" : "border-slate-100 bg-slate-50/30 hover:border-primary/30"
-            )}
-            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-            onDragLeave={() => setIsDragging(false)}
-            onDrop={(e) => { e.preventDefault(); setIsDragging(false); handleFileUpload(e as any); }}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            {currentImage ? (
-              <div className="relative w-full h-full">
-                <Image src={currentImage} alt="Preview" fill className="object-contain" unoptimized />
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
-                  <RefreshCw className="h-10 w-10 text-white animate-in spin-in duration-500" />
-                  <span className="text-white text-xs font-black uppercase tracking-widest">画像を入れ替える</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {fields.map((field, index) => (
+              <div key={field.id} className="relative group animate-in fade-in zoom-in duration-300">
+                <div className="flex items-center justify-between mb-2 px-2">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Page {index + 1}</span>
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => index > 0 && move(index, index - 1)} disabled={index === 0}><ChevronUp className="h-3 w-3" /></Button>
+                    <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => index < fields.length - 1 && move(index, index + 1)} disabled={index === fields.length - 1}><ChevronDown className="h-3 w-3" /></Button>
+                    <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:bg-destructive/10" onClick={() => remove(index)} disabled={fields.length === 1}><Trash2 className="h-3 w-3" /></Button>
+                  </div>
+                </div>
+
+                <div 
+                  className={cn(
+                    "relative aspect-[1/1.414] border-2 border-dashed rounded-3xl transition-all flex flex-col items-center justify-center cursor-pointer overflow-hidden bg-white shadow-sm",
+                    field.url ? "border-slate-100" : "border-slate-200 hover:border-primary/30"
+                  )}
+                  onClick={() => document.getElementById(`file-input-${index}`)?.click()}
+                >
+                  {field.url ? (
+                    <div className="relative w-full h-full">
+                      <Image src={field.url} alt={`Page ${index + 1}`} fill className="object-contain" unoptimized />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+                        <RefreshCw className="h-8 w-8 text-white" />
+                        <span className="text-white text-[10px] font-black uppercase">ページを差し替え</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center p-6">
+                      <Upload className="h-8 w-8 text-slate-300 mx-auto mb-2" />
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">クリックして画像を選択</p>
+                    </div>
+                  )}
+                  <input 
+                    type="file" 
+                    id={`file-input-${index}`}
+                    accept="image/*" 
+                    className="hidden" 
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleFileUpload(index, file);
+                    }} 
+                  />
+                  {isProcessing === index && (
+                    <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                  )}
                 </div>
               </div>
-            ) : (
-              <div className="text-center space-y-4">
-                <div className="bg-white p-6 rounded-full shadow-sm mx-auto w-fit text-slate-300 group-hover:text-primary transition-colors group-hover:scale-110 duration-300">
-                  <Upload className="h-10 w-10" />
-                </div>
-                <div>
-                  <p className="text-sm font-black text-slate-400">紙面のJPEGファイルをドロップ</p>
-                  <p className="text-[10px] font-bold text-slate-300 mt-1 uppercase tracking-widest">またはクリックして選択</p>
-                </div>
-              </div>
-            )}
-            <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
-            {isProcessing && (
-              <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3">
-                <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                <p className="text-[10px] font-black text-primary uppercase tracking-widest">処理中...</p>
-              </div>
-            )}
+            ))}
           </div>
         </div>
 
-        <div className="pt-6 border-t border-slate-100">
-          <Button type="submit" disabled={isProcessing} className="w-full h-16 shadow-2xl font-black rounded-2xl text-xl bg-primary hover:bg-primary/90 transition-all active:scale-95">
-            紙面を保存する
+        <div className="pt-10 border-t sticky bottom-6 z-20">
+          <Button type="submit" disabled={isProcessing !== null} className="w-full h-16 shadow-2xl font-black rounded-2xl text-xl bg-primary hover:bg-primary/90 transition-all active:scale-95">
+            紙面アーカイブを保存する
           </Button>
         </div>
       </form>
