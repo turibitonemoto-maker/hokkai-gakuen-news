@@ -1,17 +1,16 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 210 20% 98%; /* 更に白に近い背景 */
+    --background: 210 20% 98%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: 210 60% 35%; /* 深みのあるプロフェッショナルな青 */
+    --primary: 210 60% 35%;
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222 47% 11.2%;
@@ -43,13 +42,13 @@
   }
 }
 
-/* Tiptapエディタのカスタマイズ (note風) */
+/* Tiptapエディタのカスタマイズ (note風・行間調整版) */
 .ProseMirror {
   @apply outline-none min-h-[600px] text-lg leading-relaxed;
 }
 
 .ProseMirror p {
-  @apply mb-6;
+  @apply mb-6 leading-relaxed; /* 行間を適切に保ちつつ、段落下の余白を調整 */
 }
 
 .ProseMirror h1 {
@@ -77,20 +76,18 @@
 }
 
 .ProseMirror img {
-  @apply rounded-3xl shadow-2xl my-12 mx-auto;
+  @apply rounded-3xl shadow-2xl my-10 mx-auto max-w-full h-auto;
 }
 
 .ProseMirror img.ProseMirror-selectednode {
   @apply outline outline-4 outline-primary/30;
 }
 
-/* プレースホルダーのスタイル (Tiptap) */
 .ProseMirror p.is-editor-empty:first-child::before {
   content: "ここに記事を執筆してください...";
   @apply text-slate-300 float-left pointer-events-none h-0 font-bold italic;
 }
 
-/* ページ全体のトランジション */
 .page-fade-in {
   animation: fadeIn 1s ease-out;
 }

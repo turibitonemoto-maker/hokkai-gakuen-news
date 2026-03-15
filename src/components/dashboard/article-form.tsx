@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -102,9 +101,15 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       const url = await getDownloadURL(storageRef);
       editor.chain().focus().setImage({ src: url }).run();
       toast({ title: "画像を挿入しました", description: "Storageへのアップロードが完了しました。" });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Upload failed:", error);
-      toast({ variant: "destructive", title: "エラー", description: "画像のアップロードに失敗しました。" });
+      let errorMessage = "画像のアップロードに失敗しました。";
+      if (error.code === 'storage/unauthorized') {
+        errorMessage = "Storageの書き込み権限がありません。FirebaseコンソールのRulesを確認してください。";
+      } else if (error.code === 'storage/retry-limit-exceeded') {
+        errorMessage = "アップロードがタイムアウトしました。";
+      }
+      toast({ variant: "destructive", title: "エラー", description: errorMessage });
     } finally {
       setIsUploading(false);
     }
@@ -299,12 +304,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
           <div className="min-h-[600px] bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-inner">
             <EditorContent editor={editor} className="outline-none" />
           </div>
-          {isNote && (
-            <FormDescription className="text-purple-600 font-bold text-[10px] mt-2 flex items-center gap-2">
-              <Share2 className="h-3 w-3" />
-              note同期記事の場合、原文の更新が推奨されますが、このエディタで修正して公開することも可能です。
-            </FormDescription>
-          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6">

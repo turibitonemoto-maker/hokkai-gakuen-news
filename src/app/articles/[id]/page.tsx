@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
@@ -29,17 +28,9 @@ export default function ArticleDetailPage() {
 
   useEffect(() => {
     if (article?.content) {
-      // HTMLエディタからの入力（HTML）か、単なるテキストかを判断してサニタイズ
-      const isHtml = /<[a-z][\s\S]*>/i.test(article.content);
-      if (isHtml) {
-        setSanitizedHtml(DOMPurify.sanitize(article.content));
-      } else {
-        // テキストの場合は改行を<br>に変換
-        const escaped = article.content.replace(/[&<>"']/g, (m: string) => ({
-          '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-        }[m] || m));
-        setSanitizedHtml(escaped.replace(/\n/g, '<br>'));
-      }
+      // HTMLエディタからの入力（HTML）をサニタイズ
+      // whitespace-pre-wrapは使用せず、HTMLタグに任せる
+      setSanitizedHtml(DOMPurify.sanitize(article.content));
     }
   }, [article]);
 
@@ -110,7 +101,7 @@ export default function ArticleDetailPage() {
               )}
             </div>
 
-            <h1 className="text-4xl md:text-6xl font-black text-slate-800 mb-12 leading-[1.1] tracking-tighter">
+            <h1 className="text-4xl md:text-6xl font-black text-slate-800 mb-12 leading-[1.2] tracking-tighter">
               {article.title}
             </h1>
 
@@ -131,8 +122,14 @@ export default function ArticleDetailPage() {
               </div>
             </div>
 
+            {/* 修正：whitespace-pre-wrapを削除し、proseの設定で密度を調整 */}
             <div 
-              className="prose prose-slate prose-img:rounded-3xl prose-img:shadow-2xl prose-img:my-12 prose-headings:font-black prose-headings:tracking-tighter prose-a:text-primary prose-a:font-black prose-a:no-underline hover:prose-a:underline max-w-none text-lg md:text-xl leading-relaxed text-slate-700 whitespace-pre-wrap"
+              className="prose prose-slate max-w-none 
+                         text-slate-700 text-lg md:text-xl leading-relaxed
+                         prose-p:my-6 prose-p:leading-relaxed
+                         prose-headings:font-black prose-headings:tracking-tighter prose-headings:mt-12 prose-headings:mb-6
+                         prose-img:rounded-3xl prose-img:shadow-2xl prose-img:my-10
+                         prose-a:text-primary prose-a:font-black prose-a:no-underline hover:prose-a:underline"
               dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
             />
 
