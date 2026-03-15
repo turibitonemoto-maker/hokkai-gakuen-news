@@ -3,7 +3,7 @@
   "entities": {
     "Article": {
       "title": "Article",
-      "description": "記事および紙面データ。",
+      "description": "記事および紙面データ。紙面（Viewer）の場合は mainImageUrl に JPEG データを保持します。",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
@@ -11,22 +11,11 @@
         "articleType": { "type": "string", "enum": ["Standard"] },
         "content": { "type": "string" },
         "imageCaption": { "type": "string" },
-        "pdfUrl": { "type": "string", "format": "uri", "description": "メインのPDF URL（下位互換用）" },
-        "pdfUrls": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "label": { "type": "string", "description": "例：本紙、別刷、号外" },
-              "url": { "type": "string", "format": "uri" }
-            }
-          }
-        },
         "issueNumber": { "type": "number", "description": "第〇号" },
         "categoryId": { "type": "string", "enum": ["Campus", "Event", "Interview", "Sports", "Column", "Opinion", "Viewer"] },
         "tags": { "type": "array", "items": { "type": "string" } },
         "publishDate": { "type": "string", "format": "date" },
-        "mainImageUrl": { "type": "string", "format": "uri" },
+        "mainImageUrl": { "type": "string", "format": "uri", "description": "紙面のJPEG画像データ（Base64）" },
         "mainImageTransform": {
           "type": "object",
           "properties": {
