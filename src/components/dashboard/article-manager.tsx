@@ -27,7 +27,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 
 const CATEGORY_LABELS: Record<string, string> = {
-  Top: "トップ",
   Campus: "キャンパス",
   Event: "イベント",
   Interview: "インタビュー",
@@ -39,7 +38,6 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 const getTagColor = (tag: string, isActive: boolean) => {
   const colorMap: Record<string, string> = {
-    "トップ": "bg-slate-700",
     "キャンパス": "bg-blue-500",
     "イベント": "bg-emerald-500",
     "インタビュー": "bg-violet-500",

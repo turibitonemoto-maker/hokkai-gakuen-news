@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 import { 
   LayoutDashboard, 
   FileText, 
-  ImageIcon, 
   Megaphone, 
   UserRound, 
   ChevronRight,
@@ -49,7 +48,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const menuItems = [
     { id: "/admin", label: "ダッシュボード", icon: LayoutDashboard },
     { id: "/admin/articles", label: "記事・公開管理", icon: FileText },
-    { id: "/admin/hero", label: "ヒーロー画像", icon: ImageIcon },
     { id: "/admin/ads", label: "広告管理", icon: Megaphone, isProtected: true },
     { id: "/admin/president", label: "会長挨拶", icon: UserRound, isProtected: true },
     { id: "/admin/maintenance", label: "サイト制御", icon: ShieldAlert, isProtected: true },

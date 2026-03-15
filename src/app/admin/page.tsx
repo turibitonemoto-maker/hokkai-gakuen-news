@@ -17,7 +17,7 @@ import {
   User,
   ShieldCheck,
   Lock,
-  ImageIcon
+  Megaphone
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -189,10 +189,10 @@ export default function AdminDashboard() {
                 <span>記事を新規作成・管理</span>
               </Button>
             </Link>
-            <Link href="/admin/hero">
+            <Link href="/admin/ads">
               <Button variant="outline" className="w-full justify-start gap-3 h-12 border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-sm rounded-xl">
-                <ImageIcon className="h-5 w-5" />
-                <span>ヒーロー画像管理</span>
+                <Megaphone className="h-5 w-5" />
+                <span>広告管理</span>
               </Button>
             </Link>
             <Link href="/admin/maintenance">

@@ -15,7 +15,6 @@ import DOMPurify from 'dompurify';
 import { useState, useEffect } from 'react';
 
 const CATEGORY_LABELS: Record<string, string> = {
-  Top: "トップ",
   Campus: "キャンパス",
   Event: "イベント",
   Interview: "インタビュー",

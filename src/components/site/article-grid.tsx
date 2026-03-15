@@ -8,7 +8,6 @@ import { Calendar, ArrowRight, ImageOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const CATEGORY_LABELS: Record<string, string> = {
-  Top: "トップ",
   Campus: "キャンパス",
   Event: "イベント",
   Interview: "インタビュー",

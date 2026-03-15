@@ -27,7 +27,7 @@ const articleSchema = z.object({
   content: z.string().min(1, "本文を入力してください"),
   imageCaption: z.string().optional().or(z.literal("")),
   pdfUrl: z.string().optional().or(z.literal("")),
-  categoryId: z.enum(["Top", "Campus", "Event", "Interview", "Sports", "Column", "Opinion", "Viewer"]),
+  categoryId: z.enum(["Campus", "Event", "Interview", "Sports", "Column", "Opinion", "Viewer"]),
   publishDate: z.string(),
   mainImageUrl: z.string().optional().or(z.literal("")),
   isPublished: z.boolean().default(false),
@@ -183,7 +183,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="Top">トップ</SelectItem>
                       <SelectItem value="Campus">キャンパス</SelectItem>
                       <SelectItem value="Event">イベント</SelectItem>
                       <SelectItem value="Interview">インタビュー</SelectItem>
@@ -234,7 +233,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b border-slate-50 pb-2">
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-              <Type className="h-3 w-3" /> 本文執筆（人力入魂）
+              <Type className="h-3 w-3" /> 本文執筆
             </span>
             <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl">
               <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", editor?.isActive('bold') && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleBold().run()}><Bold className="h-4 w-4" /></Button>
