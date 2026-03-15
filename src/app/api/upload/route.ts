@@ -2,19 +2,30 @@
 import { v2 as cloudinary } from "cloudinary";
 import { NextResponse } from "next/server";
 
-// Cloudinary の構成設定
-// 注意: これらの環境変数は .env.local で定義されている必要があります。
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dl2yqrpfj",
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
 /**
  * サーバー側で画像を Cloudinary へアップロードする API ルート
  */
 export async function POST(request: Request) {
   try {
+    // 環境変数の取得
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dl2yqrpfj";
+    const apiKey = process.env.CLOUDINARY_API_KEY;
+    const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+    // APIキーの存在確認
+    if (!apiKey || !apiSecret) {
+      return NextResponse.json({ 
+        error: "Must supply api_key and api_secret. Please check your .env.local file." 
+      }, { status: 500 });
+    }
+
+    // Cloudinary の構成設定（リクエスト毎に確実に適用）
+    cloudinary.config({
+      cloud_name: cloudName,
+      api_key: apiKey,
+      api_secret: apiSecret,
+    });
+
     const formData = await request.formData();
     const file = formData.get("file") as File;
 

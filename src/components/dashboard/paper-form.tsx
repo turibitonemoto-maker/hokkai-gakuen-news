@@ -87,7 +87,7 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
   };
 
   /**
-   * 自前のAPIルートを経由した画像アップロード
+   * システム内中継APIを経由した画像アップロード
    */
   const handleInternalUpload = async (index: number, file: File) => {
     if (!file.type.startsWith('image/')) {
@@ -115,7 +115,7 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
       toast({ title: `${index + 1}ページの読み込みに成功しました` });
     } catch (error: any) {
       console.error(error);
-      toast({ variant: "destructive", title: "失敗", description: error.message });
+      toast({ variant: "destructive", title: "アップロード失敗", description: error.message });
     } finally {
       setIsUploading(null);
     }
