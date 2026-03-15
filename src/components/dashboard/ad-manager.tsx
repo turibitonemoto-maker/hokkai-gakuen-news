@@ -84,6 +84,15 @@ export function AdManager() {
     }
   };
 
+  const confirmDelete = () => {
+    if (!adToDelete || !firestore) return;
+    const docRef = doc(firestore, "ads", adToDelete.id);
+    deleteDocumentNonBlocking(docRef);
+    toast({ title: "削除しました", description: `「${adToDelete.title}」を完全に削除しました。` });
+    setAdToDelete(null);
+    setSelectedAd(null);
+  };
+
   if (isVerifying) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
