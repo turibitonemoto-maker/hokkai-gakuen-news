@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -17,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import ImageExtension from '@tiptap/extension-image';
-import Link from '@tiptap/extension-link';
+import LinkExtension from '@tiptap/extension-link';
 import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
@@ -28,7 +29,7 @@ const articleSchema = z.object({
   content: z.string().min(1, "本文を入力してください"),
   imageCaption: z.string().optional().or(z.literal("")),
   pdfUrl: z.string().optional().or(z.literal("")),
-  categoryId: z.enum(["Campus", "Event", "Interview", "Sports", "Column", "Opinion", "Viewer"]),
+  categoryId: z.enum(["Campus", "Event", "Interview", "Sports", "Column", "Opinion"]),
   publishDate: z.string(),
   mainImageUrl: z.string().optional().or(z.literal("")),
   mainImageTransform: z.object({
@@ -54,23 +55,33 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
   const [isDraggingMain, setIsDraggingMain] = useState(false);
   const mainImageInputRef = useRef<HTMLInputElement>(null);
   
-  const form = useForm<ArticleFormValues>({
-    resolver: zodResolver(articleSchema),
-    defaultValues: {
-      title: article?.title || "",
-      articleType: "Standard",
-      content: article?.content || "",
-      imageCaption: article?.imageCaption || "",
-      pdfUrl: article?.pdfUrl || "",
-      categoryId: article?.categoryId || "Campus",
-      publishDate: article?.publishDate || new Date().toISOString().split("T")[0],
-      mainImageUrl: article?.mainImageUrl || "",
-      mainImageTransform: article?.mainImageTransform || { scale: 0, x: 0, y: 0 },
-      isPublished: article?.isPublished || false,
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      ImageExtension.configure({
+        HTMLAttributes: {
+          class: 'rounded-2xl shadow-xl my-8 mx-auto max-w-full h-auto',
+        },
+      }),
+      LinkExtension.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          class: 'text-primary font-bold underline',
+        },
+      }),
+    ],
+    content: article?.content || "",
+    immediatelyRender: false,
+    onUpdate: ({ editor }) => {
+      form.setValue("content", editor.getHTML());
+    },
+    editorProps: {
+      attributes: {
+        class: 'ProseMirror outline-none min-h-[600px] p-8 md:p-12',
+      },
     },
   });
 
-  // Hoisted function to handle image insertion into the editor
   async function handleImageInsert(file: File) {
     if (!file.type.startsWith('image/')) return;
     setIsProcessing(true);
@@ -89,53 +100,19 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     }
   }
 
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      ImageExtension.configure({
-        HTMLAttributes: {
-          class: 'rounded-2xl shadow-xl my-8 mx-auto max-w-full h-auto',
-        },
-      }),
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: {
-          class: 'text-primary font-bold underline',
-        },
-      }),
-    ],
-    content: article?.content || "",
-    immediatelyRender: false,
-    onUpdate: ({ editor }) => {
-      form.setValue("content", editor.getHTML());
-    },
-    editorProps: {
-      attributes: {
-        class: 'ProseMirror outline-none min-h-[600px] p-8 md:p-12',
-      },
-      handleDrop: (view, event, slice, moved) => {
-        if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]) {
-          const file = event.dataTransfer.files[0];
-          if (file.type.startsWith('image/')) {
-            handleImageInsert(file);
-            return true;
-          }
-        }
-        return false;
-      },
-      handlePaste: (view, event) => {
-        const items = Array.from(event.clipboardData?.items || []);
-        for (const item of items) {
-          if (item.type.indexOf('image') === 0) {
-            const file = item.getAsFile();
-            if (file) {
-              handleImageInsert(file);
-              return true;
-            }
-          }
-        }
-        return false;
-      }
+  const form = useForm<ArticleFormValues>({
+    resolver: zodResolver(articleSchema),
+    defaultValues: {
+      title: article?.title || "",
+      articleType: "Standard",
+      content: article?.content || "",
+      imageCaption: article?.imageCaption || "",
+      pdfUrl: article?.pdfUrl || "",
+      categoryId: (article?.categoryId === "Viewer" ? "Campus" : article?.categoryId) || "Campus",
+      publishDate: article?.publishDate || new Date().toISOString().split("T")[0],
+      mainImageUrl: article?.mainImageUrl || "",
+      mainImageTransform: article?.mainImageTransform || { scale: 0, x: 0, y: 0 },
+      isPublished: article?.isPublished || false,
     },
   });
 
@@ -150,15 +127,12 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
 
   const handleMainImageUpload = async (e: React.ChangeEvent<HTMLInputElement> | React.DragEvent) => {
     let file: File | undefined;
-    
     if ('files' in (e.target as any) && (e.target as any).files) {
       file = (e.target as any).files[0];
     } else if ('dataTransfer' in e && e.dataTransfer.files) {
       file = e.dataTransfer.files[0];
     }
-
     if (!file || !file.type.startsWith('image/')) return;
-
     setIsProcessing(true);
     try {
       const base64 = await convertToBase64(file);
@@ -255,31 +229,12 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
               )}
             />
           </div>
-
-          <FormField
-            control={form.control}
-            name="pdfUrl"
-            render={({ field }) => (
-              <FormItem className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
-                <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 mb-2">
-                  <FileType className="h-4 w-4 text-primary" /> 新聞紙面PDF (Googleドライブ共有リンク)
-                </FormLabel>
-                <FormControl>
-                  <Input placeholder="https://drive.google.com/file/d/..." className="h-12 rounded-xl border-slate-200 bg-white" {...field} />
-                </FormControl>
-                <FormDescription className="text-[10px] font-bold mt-2">
-                   ※Googleドライブ側で「詳細設定 ＞ 閲覧者にダウンロードを禁止する」にチェックを入れることを推奨します。
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
         </div>
 
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b border-slate-50 pb-2">
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-              <Type className="h-3 w-3" /> 本文執筆 (画像はドラッグ＆ドロップまたは貼り付け可能)
+              <Type className="h-3 w-3" /> 本文執筆
             </span>
             <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl">
               <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", editor?.isActive('bold') && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleBold().run()}><Bold className="h-4 w-4" /></Button>
@@ -311,7 +266,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 ml-1">
-                      <ImageIcon className="h-3 w-3" /> 表紙画像 (ドラッグ＆ドロップ対応)
+                      <ImageIcon className="h-3 w-3" /> 表紙画像
                     </FormLabel>
                     <div 
                       className={cn(
@@ -436,9 +391,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                     <div className="w-full h-full flex items-center justify-center text-slate-300 italic text-sm">画像が未選択です</div>
                   )}
                 </div>
-                <p className="text-[8px] text-slate-400 font-bold uppercase text-center tracking-widest mt-2">
-                  ※サイト上での実際の見え方です
-                </p>
               </div>
 
               <FormField

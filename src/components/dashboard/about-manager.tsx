@@ -6,28 +6,25 @@ import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, Info, Lock, Bold, Italic, Heading2, List, Type, ImageIcon, Upload } from "lucide-react";
-import { useEffect, useState, useRef } from "react";
+import { Loader2, Save, Info, Lock, Bold, Italic, Heading2, List, Type, ImageIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import ImageExtension from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
 import { cn } from "@/lib/utils";
 
-const aboutSchema = z.object({
-  // Tiptapエディタ側で制御するため、スキーマは空定義
-});
-
-type AboutValues = z.infer<typeof aboutSchema>;
+const aboutSchema = z.object({});
 
 /**
  * About Us 司令部
  * 組織紹介（沿革、理念、活動内容）を統制します。
+ * 本文（HTML）のみを管理する構成に純化しました。
  */
 export function AboutManager() {
   const [password, setPassword] = useState("");
@@ -63,27 +60,6 @@ export function AboutManager() {
       attributes: {
         class: 'ProseMirror outline-none min-h-[500px] p-8 md:p-12',
       },
-      handleDrop: (view, event, slice, moved) => {
-        if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]) {
-          const file = event.dataTransfer.files[0];
-          handleImageInsert(file);
-          return true;
-        }
-        return false;
-      },
-      handlePaste: (view, event) => {
-        const items = Array.from(event.clipboardData?.items || []);
-        for (const item of items) {
-          if (item.type.indexOf('image') === 0) {
-            const file = item.getAsFile();
-            if (file) {
-              handleImageInsert(file);
-              return true;
-            }
-          }
-        }
-        return false;
-      }
     },
   });
 
@@ -94,7 +70,6 @@ export function AboutManager() {
 
   const { data: aboutData, isLoading } = useDoc(docRef);
 
-  // 画像投入ハンドラ (Hoisted)
   async function handleImageInsert(file: File) {
     if (!file.type.startsWith('image/')) return;
     setIsProcessing(true);
@@ -113,14 +88,14 @@ export function AboutManager() {
     }
   }
 
-  const form = useForm<AboutValues>({
+  const form = useForm({
     resolver: zodResolver(aboutSchema),
     defaultValues: {},
   });
 
   useEffect(() => {
-    if (aboutData) {
-      if (editor && aboutData.content && editor.getHTML() !== aboutData.content) {
+    if (aboutData && editor) {
+      if (aboutData.content && editor.getHTML() !== aboutData.content) {
         editor.commands.setContent(aboutData.content);
       }
     }
@@ -144,7 +119,7 @@ export function AboutManager() {
     if (password === correctPassword) {
       setIsUnlocked(true);
       setFailCount(0);
-      toast({ title: "認証完了", description: "編集権限を確認しました。" });
+      toast({ title: "認証完了" });
     } else {
       const newCount = failCount + 1;
       setFailCount(newCount);
@@ -155,7 +130,7 @@ export function AboutManager() {
           const until = Date.now() + 5 * 60 * 1000;
           setLockoutTime(until);
           localStorage.setItem("lockout_until", until.toString());
-          toast({ variant: "destructive", title: "アクセス拒否", description: "頭を冷やしてください。" });
+          toast({ variant: "destructive", title: "アクセス拒否" });
         }, 800);
       } else {
         toast({ variant: "destructive", title: "不一致", description: `あと ${3 - newCount} 回でロックされます。` });
@@ -165,7 +140,6 @@ export function AboutManager() {
 
   async function onSubmit() {
     if (!firestore || !docRef || !editor) return;
-
     setIsSaving(true);
     try {
       const htmlContent = editor.getHTML();
@@ -174,61 +148,41 @@ export function AboutManager() {
         updatedAt: serverTimestamp(),
         updatedBy: user?.email || "unknown"
       }, { merge: true });
-
-      toast({ title: "更新しました", description: "About Us の情報を保存しました。" });
+      toast({ title: "更新しました", description: "About Us を保存しました。公式サイトに即座に反映されます。" });
     } catch (error: any) {
-      console.error("Save failed:", error);
-      toast({ variant: "destructive", title: "保存エラー", description: "更新に失敗しました。" });
+      toast({ variant: "destructive", title: "保存エラー" });
     } finally {
       setIsSaving(false);
     }
   }
 
-  if (isVerifying) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="font-black text-slate-400 animate-pulse">確認中...</p>
-      </div>
-    );
-  }
+  if (isVerifying) return <div className="flex flex-col items-center justify-center min-h-[400px]"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
 
   if (lockoutTime && lockoutTime > Date.now()) {
     return (
-      <div className="max-w-4xl mx-auto mt-10 animate-in fade-in zoom-in duration-500">
-        <Card className="shadow-2xl border-none bg-black text-white rounded-[3rem] overflow-hidden text-center p-0">
-          <div className="relative aspect-video w-full bg-slate-900">
-            <iframe src="https://drive.google.com/file/d/1Exd3NJVJ4KeS5PNI9IgZJEDsWgvjshBJ/preview" className="absolute inset-0 w-full h-full border-none" title="Trap Video" />
-          </div>
-          <div className="p-12 space-y-6">
-            <h2 className="text-3xl font-black mb-4 text-red-500">アクセス禁止 🔒</h2>
-            <p className="text-slate-400 font-bold text-lg">頭を冷やして出直してください。</p>
-            <Button variant="outline" className="border-slate-700 text-slate-400 h-12 px-8 rounded-2xl" onClick={() => window.location.reload()}>システム再起動</Button>
-          </div>
+      <div className="max-w-4xl mx-auto mt-10">
+        <Card className="bg-black text-white rounded-[3rem] text-center p-12">
+          <h2 className="text-3xl font-black mb-4 text-red-500">アクセス禁止 🔒</h2>
+          <p className="text-slate-400 font-bold text-lg">頭を冷やして出直してください。</p>
         </Card>
       </div>
     );
   }
 
-  if (isLoading) {
-    return <div className="flex justify-center p-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
-  }
+  if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
   if (!isUnlocked) {
     return (
-      <div className="max-w-md mx-auto mt-20 animate-in fade-in zoom-in duration-500">
+      <div className="max-w-md mx-auto mt-20">
         <Card className="shadow-2xl border-none bg-white rounded-3xl overflow-hidden">
           <CardHeader className="text-center pt-10 pb-6 bg-slate-50/50">
-            <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner"><Info className="h-10 w-10 text-primary" /></div>
-            <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">About Us 🔒</CardTitle>
-            <CardDescription className="text-sm font-bold text-slate-500 px-6 mt-2">編集には管理者認証が必要です。</CardDescription>
+            <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"><Info className="h-10 w-10 text-primary" /></div>
+            <CardTitle className="text-2xl font-black">About Us 🔒</CardTitle>
+            <CardDescription>編集には管理者認証が必要です。</CardDescription>
           </CardHeader>
-          <CardContent className="p-10 pt-4 space-y-6">
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">パスワード</label>
-              <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleUnlock()} className="text-center h-14 text-lg font-bold rounded-2xl" autoFocus />
-            </div>
-            <Button className="w-full h-14 font-black text-md rounded-2xl" onClick={handleUnlock}>認証する</Button>
+          <CardContent className="p-10 space-y-6">
+            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleUnlock()} className="text-center h-14 text-lg font-bold rounded-2xl" placeholder="パスワードを入力" autoFocus />
+            <Button className="w-full h-14 font-black rounded-2xl" onClick={handleUnlock}>認証する</Button>
           </CardContent>
         </Card>
       </div>
@@ -243,14 +197,13 @@ export function AboutManager() {
         </div>
         <div>
           <h2 className="text-3xl font-black text-slate-800 tracking-tight">About Us 🔒</h2>
-          <p className="text-sm font-bold text-slate-500">組織の紹介、活動内容、理念を統制します。</p>
+          <p className="text-sm font-bold text-slate-500">組織の紹介、理念を統制します。ここでの更新は公式サイトに即座に反映されます。</p>
         </div>
       </div>
 
       <Card className="shadow-sm border-slate-200 rounded-[2.5rem] bg-white overflow-hidden">
         <CardHeader className="bg-slate-50/50 border-b p-8 md:p-12">
           <CardTitle className="text-xl font-black flex items-center gap-3"><Type className="h-6 w-6 text-primary" />内容の編集</CardTitle>
-          <CardDescription className="font-bold">「北海学園大学一部新聞会とは」といった見出しも、エディタ内で自由に構成してください。</CardDescription>
         </CardHeader>
         <CardContent className="p-8 md:p-12">
           <Form {...form}>
@@ -258,7 +211,7 @@ export function AboutManager() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b pb-2">
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                    <Type className="h-3 w-3" /> 本文執筆 (画像ドラッグ＆ドロップ対応)
+                    <Type className="h-3 w-3" /> 本文執筆
                   </span>
                   <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl">
                     <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('bold') && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleBold().run()}><Bold className="h-4 w-4" /></Button>
