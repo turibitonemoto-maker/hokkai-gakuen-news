@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -97,15 +96,31 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     setIsUploading(true);
     try {
       const storage = getStorage(firebaseApp);
+      // asia-northeast1 (東京) の指定などはバケット名に含まれる
       const storageRef = ref(storage, `articles/${Date.now()}_${file.name}`);
+      
       await uploadBytes(storageRef, file);
       const url = await getDownloadURL(storageRef);
       
       editor.chain().focus().setImage({ src: url }).run();
-      toast({ title: "画像を挿入しました", description: "Storageへのアップロードが完了しました。" });
+      toast({ title: "画像を挿入しました", description: "Firebase Storageへのアップロードが完了しました。" });
     } catch (error: any) {
       console.error("Upload failed:", error);
-      toast({ variant: "destructive", title: "アップロードエラー", description: "Firebase Storageへのアクセスに失敗しました。リージョン設定やルールを確認してください。" });
+      let errorMessage = "Firebase Storageへのアクセスに失敗しました。";
+      
+      if (error.code === 'storage/unauthorized') {
+        errorMessage = "権限がありません。StorageのRulesを確認してください。";
+      } else if (error.code === 'storage/retry-limit-exceeded') {
+        errorMessage = "ネットワークエラーが発生しました。インターネット接続を確認してください。";
+      } else if (error.message.includes("not found")) {
+        errorMessage = "ストレージバケットが見つかりません。FirebaseコンソールでStorageを有効化してください。";
+      }
+      
+      toast({ 
+        variant: "destructive", 
+        title: "アップロードエラー", 
+        description: errorMessage 
+      });
     } finally {
       setIsUploading(false);
       if (e.target) e.target.value = '';

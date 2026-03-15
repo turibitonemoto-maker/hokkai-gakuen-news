@@ -12,15 +12,17 @@
 - **サイト・コントロール**: メンテナンスモードの切り替え、緊急メッセージの配信。
 - **画像・広告管理**: Firebase Storageと連携したバナー広告およびヒーロー画像の管理。
 
+## 現在の進捗状況 (2025/03)
+
+- [x] **文字更新の完全同期**: 会長挨拶および記事の `content` フィールド同期に成功。
+- [x] **日本仕様の黄金比**: 行間 `leading-7` (約1.6倍) および段落余白を全域で適用済み。
+- [/] **ストレージ構築中**: Firebase Storage (asia-northeast1) への接続設定を完了。画像アップロードの安定性を検証中。
+
 ## 接続・プレビュー情報
 
 ### 📡 開発・テスト用 (Firebase Studio)
 - **管理用サイト (ログイン)**: [https://6000-firebase-studio-1773136574841.cluster-y75up3teuvc62qmnwys4deqv6y.cloudworkstations.dev/admin](https://6000-firebase-studio-1773136574841.cluster-y75up3teuvc62qmnwys4deqv6y.cloudworkstations.dev/admin)
 - **表示用サイト (参照用)**: [https://6000-firebase-studio-1771906628521.cluster-osvg2nzmmzhzqqjio6oojllbg4.cloudworkstations.dev/](https://6000-firebase-studio-1771906628521.cluster-osvg2nzmmzhzqqjio6oojllbg4.cloudworkstations.dev/)
-
-### 🚀 公開用 (Vercel)
-- **管理用サイト (ログイン)**: [https://hokkai-gakuen-news.vercel.app/admin](https://hokkai-gakuen-news.vercel.app/admin)
-- **表示用サイト**: [https://hokkai-newspaper-frontend.vercel.app/](https://hokkai-newspaper-frontend.vercel.app/)
 
 ---
 © 2025 北海学園大学一部新聞会 / COMMANDING FOR THE FUTURE
