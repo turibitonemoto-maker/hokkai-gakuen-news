@@ -4,20 +4,22 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useFirestore, useUser } from "@/firebase";
+import { useFirestore, useUser, useFirebase } from "@/firebase";
 import { collection, doc, serverTimestamp } from "firebase/firestore";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { FileText, Share2, Tag, ImageIcon, Type } from "lucide-react";
+import { FileText, Share2, Tag, ImageIcon, Type, Heading1, Heading2, List, Link as LinkIcon, Bold, Italic, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import dynamic from "next/dynamic";
-import "react-quill/dist/quill.snow.css";
-
-const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import ImageExtension from '@tiptap/extension-image';
+import LinkExtension from '@tiptap/extension-link';
+import { useState, useCallback } from "react";
 
 const articleSchema = z.object({
   title: z.string().min(1, "タイトルを入力してください"),
@@ -38,26 +40,11 @@ interface ArticleFormProps {
   onSuccess: () => void;
 }
 
-const QUILL_MODULES = {
-  toolbar: [
-    [{ header: [1, 2, 3, false] }],
-    ["bold", "italic", "underline", "strike"],
-    [{ list: "ordered" }, { list: "bullet" }],
-    ["link", "image"],
-    ["clean"],
-  ],
-};
-
-const QUILL_FORMATS = [
-  "header",
-  "bold", "italic", "underline", "strike",
-  "list", "bullet",
-  "link", "image",
-];
-
 export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
   const firestore = useFirestore();
   const { user } = useUser();
+  const { firebaseApp } = useFirebase();
+  const [isUploading, setIsUploading] = useState(false);
   
   const form = useForm<ArticleFormValues>({
     resolver: zodResolver(articleSchema),
@@ -73,6 +60,43 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       isPublished: article?.isPublished || false,
     },
   });
+
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      ImageExtension,
+      LinkExtension.configure({
+        openOnClick: false,
+      }),
+    ],
+    content: article?.content || "",
+    onUpdate: ({ editor }) => {
+      form.setValue("content", editor.getHTML());
+    },
+    editorProps: {
+      attributes: {
+        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl m-5 focus:outline-none min-h-[500px]',
+      },
+    },
+  });
+
+  const handleImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !editor || !firebaseApp) return;
+
+    setIsUploading(true);
+    try {
+      const storage = getStorage(firebaseApp);
+      const storageRef = ref(storage, `articles/${Date.now()}_${file.name}`);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+      editor.chain().focus().setImage({ src: url }).run();
+    } catch (error) {
+      console.error("Upload failed:", error);
+    } finally {
+      setIsUploading(false);
+    }
+  }, [editor, firebaseApp]);
 
   const articleType = form.watch("articleType");
   const isNote = articleType === "Note";
@@ -185,38 +209,89 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
         </div>
 
         <div className="space-y-4">
-          <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50 pb-2">
-            <Type className="h-3 w-3" />
-            本文 (Rich Editor)
+          <div className="flex items-center justify-between gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50 pb-2">
+            <div className="flex items-center gap-2">
+              <Type className="h-3 w-3" />
+              本文 (Tiptap Editor)
+            </div>
+            <div className="flex items-center gap-1">
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 rounded-lg"
+                onClick={() => editor?.chain().focus().toggleBold().run()}
+                disabled={!editor?.can().chain().focus().toggleBold().run()}
+              >
+                <Bold className="h-4 w-4" />
+              </Button>
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 rounded-lg"
+                onClick={() => editor?.chain().focus().toggleItalic().run()}
+                disabled={!editor?.can().chain().focus().toggleItalic().run()}
+              >
+                <Italic className="h-4 w-4" />
+              </Button>
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 rounded-lg"
+                onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}
+              >
+                <Heading1 className="h-4 w-4" />
+              </Button>
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 rounded-lg"
+                onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
+              >
+                <Heading2 className="h-4 w-4" />
+              </Button>
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 rounded-lg"
+                onClick={() => editor?.chain().focus().toggleBulletList().run()}
+              >
+                <List className="h-4 w-4" />
+              </Button>
+              <div className="relative">
+                <Input 
+                  type="file" 
+                  accept="image/*" 
+                  className="hidden" 
+                  id="tiptap-image-upload" 
+                  onChange={handleImageUpload}
+                />
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8 rounded-lg"
+                  onClick={() => document.getElementById('tiptap-image-upload')?.click()}
+                  disabled={isUploading}
+                >
+                  {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
           </div>
-          <FormField
-            control={form.control}
-            name="content"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <div className="min-h-[600px] bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
-                    <ReactQuill 
-                      theme="snow"
-                      value={field.value}
-                      onChange={field.onChange}
-                      modules={QUILL_MODULES}
-                      formats={QUILL_FORMATS}
-                      className="h-[550px]"
-                      readOnly={isNote}
-                      placeholder="さあ、物語を書きましょう..."
-                    />
-                  </div>
-                </FormControl>
-                {isNote && (
-                  <FormDescription className="text-purple-600 font-bold text-[10px] mt-2">
-                    ※ note同期記事の本文は note.com で編集してください。
-                  </FormDescription>
-                )}
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          
+          <div className="min-h-[600px] bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+            <EditorContent editor={editor} className="outline-none" />
+          </div>
+          {isNote && (
+            <FormDescription className="text-purple-600 font-bold text-[10px] mt-2">
+              ※ note同期記事の本文は note.com で編集してください。
+            </FormDescription>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6">

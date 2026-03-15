@@ -7,7 +7,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { PublicHeader } from '@/components/site/public-header';
 import { PublicFooter } from '@/components/site/public-footer';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Tag, ChevronLeft, Share2, Printer } from 'lucide-react';
+import { Calendar, Tag, ChevronLeft, Printer, ImageOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -63,7 +63,7 @@ export default function ArticleDetailPage() {
         </Link>
 
         <article className="bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl shadow-slate-200/50 overflow-hidden border border-slate-100">
-          {article.mainImageUrl && (
+          {article.mainImageUrl ? (
             <div className="relative h-[250px] md:h-[500px] w-full bg-slate-100">
               <Image 
                 src={article.mainImageUrl} 
@@ -74,6 +74,11 @@ export default function ArticleDetailPage() {
                 sizes="(max-width: 768px) 100vw, 1200px"
               />
             </div>
+          ) : (
+             <div className="relative h-[250px] md:h-[300px] w-full bg-slate-50 flex flex-col items-center justify-center text-slate-200 gap-2 border-b">
+                <ImageOff className="h-16 w-16 opacity-10" />
+                <span className="text-xs font-black uppercase tracking-widest opacity-20">Hokkai Shinbun</span>
+             </div>
           )}
 
           <div className="p-8 md:p-16">
@@ -108,9 +113,9 @@ export default function ArticleDetailPage() {
               </div>
             </div>
 
-            {/* 本文：HTMLレンダリング */}
+            {/* 本文：Tailwind Typography (prose) を適用 */}
             <div 
-              className="prose-custom max-w-none text-lg leading-relaxed text-slate-700 font-medium"
+              className="prose prose-slate max-w-none lg:prose-xl prose-img:rounded-3xl prose-img:shadow-xl prose-a:text-primary prose-headings:font-black"
               dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
             />
 
