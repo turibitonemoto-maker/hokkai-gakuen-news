@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -84,7 +85,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-slate max-w-none focus:outline-none min-h-[600px] p-8 md:p-12',
+        class: 'prose prose-slate max-w-none focus:outline-none min-h-[600px] p-8 md:p-12 prose-p:leading-7 prose-p:my-4',
       },
     },
   });
@@ -96,7 +97,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     setIsUploading(true);
     try {
       const storage = getStorage(firebaseApp);
-      // リージョンは asia-northeast1 (東京) 等をコンソール側で設定してください。
       const storageRef = ref(storage, `articles/${Date.now()}_${file.name}`);
       await uploadBytes(storageRef, file);
       const url = await getDownloadURL(storageRef);
@@ -105,20 +105,9 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       toast({ title: "画像を挿入しました", description: "Storageへのアップロードが完了しました。" });
     } catch (error: any) {
       console.error("Upload failed:", error);
-      let errorMessage = "画像のアップロードに失敗しました。";
-      
-      if (error.code === 'storage/unauthorized') {
-        errorMessage = "権限がありません。FirebaseコンソールのStorage Rulesを 'allow write: if request.auth != null;' に設定してください。";
-      } else if (error.code === 'storage/unknown') {
-        errorMessage = "Storageが作成されていないか、リージョン設定に問題があります。コンソールを確認してください。";
-      } else if (error.code === 'storage/retry-limit-exceeded') {
-        errorMessage = "アップロードがタイムアウトしました。ネットワークを確認してください。";
-      }
-      
-      toast({ variant: "destructive", title: "アップロードエラー", description: errorMessage });
+      toast({ variant: "destructive", title: "アップロードエラー", description: "Firebase Storageへのアクセスに失敗しました。リージョン設定やルールを確認してください。" });
     } finally {
       setIsUploading(false);
-      // 同じファイルを連続選択できるようリセット
       if (e.target) e.target.value = '';
     }
   }, [editor, firebaseApp, toast]);
@@ -239,141 +228,52 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
               本文執筆 (note風エディタ)
             </div>
             <div className="flex items-center gap-1">
-              <Button 
-                type="button" 
-                variant="ghost" 
-                size="icon" 
-                className={cn("h-8 w-8 rounded-lg", editor?.isActive('bold') && "bg-slate-100")}
-                onClick={() => editor?.chain().focus().toggleBold().run()}
-              >
-                <Bold className="h-4 w-4" />
-              </Button>
-              <Button 
-                type="button" 
-                variant="ghost" 
-                size="icon" 
-                className={cn("h-8 w-8 rounded-lg", editor?.isActive('italic') && "bg-slate-100")}
-                onClick={() => editor?.chain().focus().toggleItalic().run()}
-              >
-                <Italic className="h-4 w-4" />
-              </Button>
-              <Button 
-                type="button" 
-                variant="ghost" 
-                size="icon" 
-                className={cn("h-8 w-8 rounded-lg", editor?.isActive('heading', { level: 1 }) && "bg-slate-100")}
-                onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}
-              >
-                <Heading1 className="h-4 w-4" />
-              </Button>
-              <Button 
-                type="button" 
-                variant="ghost" 
-                size="icon" 
-                className={cn("h-8 w-8 rounded-lg", editor?.isActive('heading', { level: 2 }) && "bg-slate-100")}
-                onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
-              >
-                <Heading2 className="h-4 w-4" />
-              </Button>
-              <Button 
-                type="button" 
-                variant="ghost" 
-                size="icon" 
-                className={cn("h-8 w-8 rounded-lg", editor?.isActive('bulletList') && "bg-slate-100")}
-                onClick={() => editor?.chain().focus().toggleBulletList().run()}
-              >
-                <List className="h-4 w-4" />
-              </Button>
+              <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('bold') && "bg-slate-100")} onClick={() => editor?.chain().focus().toggleBold().run()}><Bold className="h-4 w-4" /></Button>
+              <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('italic') && "bg-slate-100")} onClick={() => editor?.chain().focus().toggleItalic().run()}><Italic className="h-4 w-4" /></Button>
+              <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('heading', { level: 1 }) && "bg-slate-100")} onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}><Heading1 className="h-4 w-4" /></Button>
+              <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('heading', { level: 2 }) && "bg-slate-100")} onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}><Heading2 className="h-4 w-4" /></Button>
+              <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('bulletList') && "bg-slate-100")} onClick={() => editor?.chain().focus().toggleBulletList().run()}><List className="h-4 w-4" /></Button>
               <div className="relative">
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  className="hidden" 
-                  id="tiptap-image-upload" 
-                  onChange={handleImageUpload}
-                />
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-8 w-8 rounded-lg"
-                  onClick={() => document.getElementById('tiptap-image-upload')?.click()}
-                  disabled={isUploading}
-                >
+                <input type="file" accept="image/*" className="hidden" id="tiptap-image-upload" onChange={handleImageUpload}/>
+                <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => document.getElementById('tiptap-image-upload')?.click()} disabled={isUploading}>
                   {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
                 </Button>
               </div>
             </div>
           </div>
-          
           <div className="min-h-[600px] bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-inner">
             <EditorContent editor={editor} className="outline-none" />
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6">
-          <div className="space-y-6">
-             <FormField
-              control={form.control}
-              name="mainImageUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 ml-1">
-                    <ImageIcon className="h-3 w-3" /> 表紙画像URL (アイキャッチ)
-                  </FormLabel>
-                  <FormControl>
-                    <Input placeholder="" className="h-12 rounded-xl border-slate-100 bg-slate-50/30" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="tagsInput"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 ml-1">
-                    <Tag className="h-3 w-3" /> タグ (カンマ区切り)
-                  </FormLabel>
-                  <FormControl>
-                    <Input placeholder="" className="h-12 rounded-xl border-slate-100 bg-slate-50/30" {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className="space-y-6">
-            <FormField
-              control={form.control}
-              name="isPublished"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-3xl border-2 border-primary/10 p-8 bg-primary/5 transition-all hover:border-primary/20">
-                  <div className="space-y-1">
-                    <FormLabel className="text-xl font-black text-primary flex items-center gap-2">
-                      公式サイトに公開
-                    </FormLabel>
-                    <FormDescription className="text-[10px] font-bold opacity-60">
-                      オンにすると即座に北海学園大学の読者へ届きます。
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                      className="scale-150"
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          </div>
+          <FormField
+            control={form.control}
+            name="mainImageUrl"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 ml-1"><ImageIcon className="h-3 w-3" /> 表紙画像URL</FormLabel>
+                <FormControl><Input placeholder="" className="h-12 rounded-xl border-slate-100 bg-slate-50/30" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="isPublished"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-3xl border-2 border-primary/10 p-8 bg-primary/5 transition-all hover:border-primary/20">
+                <div className="space-y-1">
+                  <FormLabel className="text-xl font-black text-primary">公式サイトに公開</FormLabel>
+                </div>
+                <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} className="scale-150" /></FormControl>
+              </FormItem>
+            )}
+          />
         </div>
 
         <div className="flex flex-col-reverse md:flex-row justify-end gap-3 pt-10 border-t bg-white/95 backdrop-blur-md sticky bottom-0 pb-6 z-20">
-          <Button type="button" variant="outline" onClick={onSuccess} className="w-full md:w-32 h-14 rounded-2xl font-bold border-slate-200">破棄</Button>
+          <Button type="button" variant="outline" onClick={onSuccess} className="w-full md:w-32 h-14 rounded-2xl font-bold">破棄</Button>
           <Button type="submit" className="w-full md:w-48 h-14 shadow-2xl font-black rounded-2xl text-lg bg-primary hover:bg-primary/90 transform hover:scale-[1.02] transition-all">
             {article?.id ? "変更を公開" : "記事を創出"}
           </Button>

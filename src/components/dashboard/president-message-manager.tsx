@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useDoc, useFirestore, useMemoFirebase, useUser } from "@/firebase";
@@ -56,7 +57,7 @@ export function PresidentMessageManager() {
     immediatelyRender: false,
     editorProps: {
       attributes: {
-        class: 'prose prose-slate max-w-none focus:outline-none min-h-[300px] p-8',
+        class: 'prose prose-slate max-w-none focus:outline-none min-h-[300px] p-8 prose-p:leading-7 prose-p:my-4',
       },
     },
   });
@@ -116,8 +117,6 @@ export function PresidentMessageManager() {
     setIsSaving(true);
     try {
       const htmlContent = editor.getHTML();
-      
-      // 記事更新と同じロジック: setDocで確実に「content」フィールドへ上書き
       await setDoc(docRef, {
         authorName: values.authorName,
         authorImageUrl: values.authorImageUrl,
@@ -128,11 +127,7 @@ export function PresidentMessageManager() {
       toast({ title: "更新しました", description: "会長挨拶を最新の形式で保存しました。" });
     } catch (error: any) {
       console.error("Save failed:", error);
-      toast({ 
-        variant: "destructive", 
-        title: "保存エラー", 
-        description: "更新に失敗しました。権限を確認してください。" 
-      });
+      toast({ variant: "destructive", title: "保存エラー", description: "更新に失敗しました。" });
     } finally {
       setIsSaving(false);
     }
@@ -156,7 +151,7 @@ export function PresidentMessageManager() {
           </div>
           <div className="p-12 space-y-6">
             <h2 className="text-3xl font-black mb-4 text-red-500">アクセス禁止 🔒</h2>
-            <p className="text-slate-400 font-bold text-lg">頭を冷やして出直してください。<br />再試行まであと約 {Math.ceil((lockoutTime - Date.now()) / 60000)} 分です。</p>
+            <p className="text-slate-400 font-bold text-lg">頭を冷やして出直してください。</p>
             <Button variant="outline" className="border-slate-700 text-slate-400 h-12 px-8 rounded-2xl" onClick={() => window.location.reload()}>システム再起動</Button>
           </div>
         </Card>
@@ -175,14 +170,14 @@ export function PresidentMessageManager() {
           <CardHeader className="text-center pt-10 pb-6 bg-slate-50/50">
             <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner"><Lock className="h-10 w-10 text-primary" /></div>
             <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">会長挨拶 🔒</CardTitle>
-            <CardDescription className="text-sm font-bold text-slate-500 px-6 mt-2">このセクションを編集するには認証が必要です。</CardDescription>
+            <CardDescription className="text-sm font-bold text-slate-500 px-6 mt-2">認証が必要です。</CardDescription>
           </CardHeader>
           <CardContent className="p-10 pt-4 space-y-6">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">パスワード</label>
-              <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleUnlock()} className="text-center h-14 text-lg font-bold rounded-2xl border-slate-200 shadow-sm" autoFocus />
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">パスワード</label>
+              <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleUnlock()} className="text-center h-14 text-lg font-bold rounded-2xl" autoFocus />
             </div>
-            <Button className="w-full h-14 font-black text-md rounded-2xl shadow-lg hover:scale-[1.02] transition-transform" onClick={handleUnlock}>認証する</Button>
+            <Button className="w-full h-14 font-black text-md rounded-2xl" onClick={handleUnlock}>認証する</Button>
           </CardContent>
         </Card>
       </div>
@@ -191,18 +186,15 @@ export function PresidentMessageManager() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-700">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <div className="bg-white p-2 rounded-2xl shadow-md border-2 border-slate-50">
-            <Image src="/icon.png" alt="" width={48} height={48} className="rounded-xl" />
-          </div>
-          <h2 className="text-3xl font-black text-slate-800 tracking-tight">会長挨拶 🔒</h2>
+      <div className="flex items-center gap-4">
+        <div className="bg-white p-2 rounded-2xl shadow-md border-2 border-slate-50">
+          <Image src="/icon.png" alt="" width={48} height={48} className="rounded-xl" />
         </div>
+        <h2 className="text-3xl font-black text-slate-800 tracking-tight">会長挨拶 🔒</h2>
       </div>
       <Card className="shadow-sm border-slate-200 rounded-3xl bg-white overflow-hidden">
         <CardHeader className="bg-slate-50/50 border-b p-8">
           <CardTitle className="text-xl font-black flex items-center gap-3"><UserIcon className="h-6 w-6 text-primary" />メッセージの編集</CardTitle>
-          <CardDescription className="text-sm font-bold text-slate-500 mt-1">公式サイトのトップページに表示される「会長の言葉」を、記事と同じ形式で作成します。</CardDescription>
         </CardHeader>
         <CardContent className="p-8 md:p-12">
           <Form {...form}>
@@ -211,14 +203,14 @@ export function PresidentMessageManager() {
                 <FormField control={form.control} name="authorName" render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">会長氏名</FormLabel>
-                    <FormControl><Input placeholder="" className="h-12 font-bold rounded-xl border-slate-200" {...field} /></FormControl>
+                    <FormControl><Input placeholder="" className="h-12 font-bold rounded-xl" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="authorImageUrl" render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">顔写真URL</FormLabel>
-                    <FormControl><Input placeholder="" className="h-12 font-bold rounded-xl border-slate-200" {...field} /></FormControl>
+                    <FormControl><Input placeholder="" className="h-12 font-bold rounded-xl" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -238,12 +230,8 @@ export function PresidentMessageManager() {
                 </div>
               </div>
               <div className="flex justify-end pt-8 border-t border-slate-100">
-                <Button 
-                  type="submit" 
-                  disabled={isSaving}
-                  className="flex items-center gap-3 px-12 h-14 font-black rounded-2xl shadow-xl shadow-primary/10 hover:scale-105 transition-transform"
-                >
-                  {isSaving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
+                <Button type="submit" disabled={isSaving} className="px-12 h-14 font-black rounded-2xl shadow-xl shadow-primary/10">
+                  {isSaving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5 mr-3" />}
                   記事と同じ形式で保存
                 </Button>
               </div>
