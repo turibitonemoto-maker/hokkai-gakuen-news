@@ -1,4 +1,3 @@
-
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
@@ -8,18 +7,10 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 export function initializeFirebase() {
-  if (!getApps().length) {
-    let firebaseApp;
-    try {
-      firebaseApp = initializeApp(firebaseConfig);
-    } catch (e) {
-      console.error("Firebase initialization failed", e);
-      firebaseApp = initializeApp(firebaseConfig);
-    }
-    return getSdks(firebaseApp);
-  }
-
-  return getSdks(getApp());
+  const apps = getApps();
+  const firebaseApp = apps.length ? apps[0] : initializeApp(firebaseConfig);
+  
+  return getSdks(firebaseApp);
 }
 
 export function getSdks(firebaseApp: FirebaseApp) {

@@ -46,7 +46,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [isMobile]);
 
   const menuItems = [
-    { id: "/admin", label: "ダッシュバード", icon: LayoutDashboard },
+    { id: "/admin", label: "ダッシュボード", icon: LayoutDashboard },
     { id: "/admin/articles", label: "記事・公開管理", icon: FileText },
     { id: "/admin/viewer", label: "紙面ビューアー", icon: BookOpen },
     { id: "/admin/ads", label: "広告管理", icon: Megaphone, isProtected: true },
