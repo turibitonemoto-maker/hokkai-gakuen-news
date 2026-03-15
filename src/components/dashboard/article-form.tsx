@@ -119,7 +119,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     } finally {
       setIsUploading(false);
       // 同じファイルを連続選択できるようリセット
-      e.target.value = '';
+      if (e.target) e.target.value = '';
     }
   }, [editor, firebaseApp, toast]);
 

@@ -115,7 +115,7 @@ export default function ArticleDetailPage() {
               </div>
             </div>
 
-            {/* 日本仕様の黄金比（leading-7, my-4）を適用 */}
+            {/* 日本仕様の黄金比（leading-7, my-4）を適用。不自然な二重改行(whitespace-pre-wrap)を完全排除 */}
             <div 
               className="prose prose-slate max-w-none 
                          text-slate-700 text-lg md:text-xl

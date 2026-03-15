@@ -5,7 +5,7 @@ import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -117,7 +117,7 @@ export function PresidentMessageManager() {
     try {
       const htmlContent = editor.getHTML();
       
-      // 記事と同じロジック: setDocで確実に上書き
+      // 記事更新と同じロジック: setDocで確実に「content」フィールドへ上書き
       await setDoc(docRef, {
         authorName: values.authorName,
         authorImageUrl: values.authorImageUrl,
@@ -125,7 +125,7 @@ export function PresidentMessageManager() {
         updatedAt: serverTimestamp(),
       }, { merge: true });
 
-      toast({ title: "更新しました", description: "会長挨拶を記事と同じ形式で保存しました。" });
+      toast({ title: "更新しました", description: "会長挨拶を最新の形式で保存しました。" });
     } catch (error: any) {
       console.error("Save failed:", error);
       toast({ 

@@ -22,8 +22,12 @@ export function SidebarContent({ ads }: { ads: any[] }) {
   const { data: president } = useDoc(presidentRef);
 
   useEffect(() => {
+    // Firebaseコンソールの手動書き換え（contentフィールド）に即座に反応するように同期
     if (president?.content) {
       setSanitizedMessage(DOMPurify.sanitize(president.content));
+    } else if (president?.message) {
+      // 移行期間用: messageフィールドもフォールバックとして認める
+      setSanitizedMessage(DOMPurify.sanitize(president.message));
     }
   }, [president]);
 
@@ -77,12 +81,12 @@ export function SidebarContent({ ads }: { ads: any[] }) {
             
             <div className="relative">
               <MessageCircle className="absolute -top-4 -left-2 h-8 w-8 text-primary/10" />
-              {/* 記事詳細と同じクラス体系を適用（日本仕様の密度） */}
+              {/* 日本仕様の黄金比（leading-7, my-4）を適用し、不自然な空白(whitespace-pre-wrap)を排除 */}
               <div 
                 className="prose prose-slate prose-sm max-w-none 
                            text-slate-600 font-medium
                            prose-p:leading-7 prose-p:my-4
-                           text-center px-4 line-clamp-[12]"
+                           text-center px-4"
                 dangerouslySetInnerHTML={{ __html: sanitizedMessage }}
               />
             </div>

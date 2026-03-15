@@ -18,7 +18,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 // HTMLタグを安全に除去してスニペットを生成する
 function stripHtmlTags(html: string) {
   if (!html) return "";
-  // タグを削除し、連続する空白や改行を1つにする
+  // タグを削除し、連続する空白や改行を1つにする。これによりエディタのタグが漏れるのを防ぐ
   return html
     .replace(/<[^>]*>/g, ' ')
     .replace(/\s+/g, ' ')
