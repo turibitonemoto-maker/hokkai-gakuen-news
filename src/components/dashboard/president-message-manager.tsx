@@ -122,7 +122,6 @@ export function PresidentMessageManager() {
     setIsSaving(true);
     try {
       const htmlContent = editor.getHTML();
-      // 「聖典」に基づきフィールド名を 'content' に固定し、強制上書き
       await setDoc(docRef, {
         authorName: values.authorName,
         authorImageUrl: values.authorImageUrl,
