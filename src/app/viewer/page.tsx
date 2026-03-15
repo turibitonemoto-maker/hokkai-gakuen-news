@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
@@ -11,6 +10,10 @@ import { Badge } from "@/components/ui/badge";
 import { PublicHeader } from "@/components/site/public-header";
 import { PublicFooter } from "@/components/site/public-footer";
 
+/**
+ * 紙面アーカイブ一覧ページ
+ * 北海道新聞デジタルのように、日付ごとに紙面をグループ化して表示します。
+ */
 export default function ViewerListPage() {
   const firestore = useFirestore();
 
@@ -25,6 +28,7 @@ export default function ViewerListPage() {
 
   const { data: articles, isLoading } = useCollection(viewerQuery);
 
+  // 日付（降順）→ 号数（降順）でソートし、日付でグループ化
   const groupedArticles = useMemo(() => {
     if (!articles) return {};
     const sorted = [...articles].sort((a, b) => {

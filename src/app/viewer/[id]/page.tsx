@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useDoc, useFirestore } from "@/firebase";
@@ -12,6 +11,10 @@ import { Badge } from "@/components/ui/badge";
 import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 
+/**
+ * 紙面ビューアー詳細ページ
+ * 複数のPDF（本紙、別刷、号外など）を切り替えて表示できます。
+ */
 export default function PaperViewerPage() {
   const { id } = useParams();
   const router = useRouter();
@@ -21,6 +24,7 @@ export default function PaperViewerPage() {
   const docRef = id ? doc(firestore, "articles", id as string) : null;
   const { data: article, isLoading } = useDoc(docRef);
 
+  // 下位互換性を保ちつつ、複数のPDFリストを作成
   const pdfList = useMemo(() => {
     if (!article) return [];
     const list = [...(article.pdfUrls || [])];
@@ -55,6 +59,7 @@ export default function PaperViewerPage() {
       <PublicHeader />
 
       <main className="flex-1 flex flex-col">
+        {/* 紙面情報ヘッダー */}
         <div className="bg-white border-b py-8 md:py-12 shadow-sm relative z-10">
           <div className="max-w-7xl mx-auto px-4 md:px-8">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -83,6 +88,7 @@ export default function PaperViewerPage() {
                 </div>
               </div>
 
+              {/* PDF切り替えタブ */}
               {pdfList.length > 1 && (
                 <div className="flex flex-col gap-3">
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 ml-1">
@@ -108,6 +114,7 @@ export default function PaperViewerPage() {
           </div>
         </div>
 
+        {/* PDFビューアー本体 */}
         <div className="flex-1 bg-slate-900/5 p-4 md:p-10 flex flex-col items-center gap-8">
           {activePdf ? (
             <>

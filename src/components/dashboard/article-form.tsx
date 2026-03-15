@@ -45,6 +45,10 @@ interface ArticleFormProps {
   onSuccess: () => void;
 }
 
+/**
+ * ニュース記事作成フォーム
+ * 「紙面ビューアー」カテゴリーは専用フォームで扱うためここには含みません。
+ */
 export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
   const firestore = useFirestore();
   const { user } = useUser();

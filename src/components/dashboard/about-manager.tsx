@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 /**
  * About Us 管理画面
  * settings/about の content フィールドを編集・保存します。
+ * タイトル入力を廃止し、内容本位の構成に純化。
  */
 export function AboutManager() {
   const [password, setPassword] = useState("");

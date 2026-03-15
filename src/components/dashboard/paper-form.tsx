@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useForm, useFieldArray } from "react-hook-form";
@@ -36,6 +35,10 @@ interface PaperFormProps {
   onSuccess: () => void;
 }
 
+/**
+ * 紙面登録・編集用フォーム
+ * Firebase Storage への直接アップロードと進捗表示をサポートします。
+ */
 export function PaperForm({ paper, onSuccess }: PaperFormProps) {
   const firestore = useFirestore();
   const storage = useStorage();
