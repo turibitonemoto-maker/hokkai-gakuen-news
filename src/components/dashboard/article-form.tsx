@@ -13,13 +13,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { ImageIcon, Type, Heading2, Loader2, Upload, FileType, MessageSquareText, Bold, Italic, List, Maximize, MoveHorizontal, MoveVertical } from "lucide-react";
+import { ImageIcon, Type, Heading2, Loader2, Upload, FileType, MessageSquareText, Bold, Italic, List, Maximize, MoveHorizontal, MoveVertical, MousePointer2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import ImageExtension from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 
@@ -33,10 +33,10 @@ const articleSchema = z.object({
   publishDate: z.string(),
   mainImageUrl: z.string().optional().or(z.literal("")),
   mainImageTransform: z.object({
-    scale: z.number().default(1),
+    scale: z.number().default(0),
     x: z.number().default(0),
     y: z.number().default(0),
-  }).default({ scale: 1, x: 0, y: 0 }),
+  }).default({ scale: 0, x: 0, y: 0 }),
   isPublished: z.boolean().default(false),
 });
 
@@ -52,6 +52,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
   const { user } = useUser();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isDraggingMain, setIsDraggingMain] = useState(false);
   const mainImageInputRef = useRef<HTMLInputElement>(null);
   
   const form = useForm<ArticleFormValues>({
@@ -65,10 +66,33 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       categoryId: article?.categoryId || "Campus",
       publishDate: article?.publishDate || new Date().toISOString().split("T")[0],
       mainImageUrl: article?.mainImageUrl || "",
-      mainImageTransform: article?.mainImageTransform || { scale: 1, x: 0, y: 0 },
+      mainImageTransform: article?.mainImageTransform || { scale: 0, x: 0, y: 0 },
       isPublished: article?.isPublished || false,
     },
   });
+
+  const convertToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  };
+
+  const handleImageInsert = useCallback(async (file: File) => {
+    if (!file.type.startsWith('image/')) return;
+    setIsProcessing(true);
+    try {
+      const base64 = await convertToBase64(file);
+      editor?.chain().focus().setImage({ src: base64 }).run();
+      toast({ title: "画像を本文に埋め込みました" });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "失敗", description: "画像の処理に失敗しました。" });
+    } finally {
+      setIsProcessing(false);
+    }
+  }, []);
 
   const editor = useEditor({
     extensions: [
@@ -94,21 +118,43 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       attributes: {
         class: 'ProseMirror outline-none min-h-[600px] p-8 md:p-12',
       },
+      handleDrop: (view, event, slice, moved) => {
+        if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]) {
+          const file = event.dataTransfer.files[0];
+          if (file.type.startsWith('image/')) {
+            handleImageInsert(file);
+            return true;
+          }
+        }
+        return false;
+      },
+      handlePaste: (view, event) => {
+        const items = Array.from(event.clipboardData?.items || []);
+        for (const item of items) {
+          if (item.type.indexOf('image') === 0) {
+            const file = item.getAsFile();
+            if (file) {
+              handleImageInsert(file);
+              return true;
+            }
+          }
+        }
+        return false;
+      }
     },
   });
 
-  const convertToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = error => reject(error);
-    });
-  };
+  const handleMainImageUpload = async (e: React.ChangeEvent<HTMLInputElement> | React.DragEvent) => {
+    let file: File | undefined;
+    
+    if ('files' in e.target && e.target.files) {
+      file = e.target.files[0];
+    } else if ('dataTransfer' in e && e.dataTransfer.files) {
+      file = e.dataTransfer.files[0];
+    }
 
-  const handleMainImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !file.type.startsWith('image/')) return;
+
     setIsProcessing(true);
     try {
       const base64 = await convertToBase64(file);
@@ -118,22 +164,13 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       toast({ variant: "destructive", title: "失敗", description: "画像の処理に失敗しました。" });
     } finally {
       setIsProcessing(false);
+      setIsDraggingMain(false);
     }
   };
 
-  const handleEditorImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleEditorImageButton = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !editor) return;
-    setIsProcessing(true);
-    try {
-      const base64 = await convertToBase64(file);
-      editor.chain().focus().setImage({ src: base64 }).run();
-      toast({ title: "画像を本文に埋め込みました" });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "失敗", description: "画像の処理に失敗しました。" });
-    } finally {
-      setIsProcessing(false);
-    }
+    if (file) handleImageInsert(file);
   };
 
   function onSubmit(values: ArticleFormValues) {
@@ -244,7 +281,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b border-slate-50 pb-2">
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-              <Type className="h-3 w-3" /> 本文執筆
+              <Type className="h-3 w-3" /> 本文執筆 (画像はドラッグ＆ドロップまたは貼り付け可能)
             </span>
             <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl">
               <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", editor?.isActive('bold') && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleBold().run()}><Bold className="h-4 w-4" /></Button>
@@ -252,14 +289,14 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
               <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", editor?.isActive('heading', { level: 2 }) && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}><Heading2 className="h-4 w-4" /></Button>
               <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", editor?.isActive('bulletList') && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleBulletList().run()}><List className="h-4 w-4" /></Button>
               <div className="relative">
-                <input type="file" accept="image/*" className="hidden" id="editor-image-upload" onChange={handleEditorImageUpload}/>
+                <input type="file" accept="image/*" className="hidden" id="editor-image-upload" onChange={handleEditorImageButton}/>
                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => document.getElementById('editor-image-upload')?.click()} disabled={isProcessing}>
                   {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
                 </Button>
               </div>
             </div>
           </div>
-          <div className="min-h-[600px] bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-inner">
+          <div className="min-h-[600px] bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-inner relative">
             <EditorContent editor={editor} />
           </div>
         </div>
@@ -273,23 +310,44 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 ml-1">
-                      <ImageIcon className="h-3 w-3" /> 表紙画像 (Base64)
+                      <ImageIcon className="h-3 w-3" /> 表紙画像 (ドラッグ＆ドロップ対応)
                     </FormLabel>
-                    <div className="flex gap-2">
-                      <FormControl>
-                        <Input placeholder="ファイルを選択してください" className="h-12 rounded-xl border-slate-100 bg-white flex-1" {...field} readOnly />
-                      </FormControl>
+                    <div 
+                      className={cn(
+                        "relative h-48 md:h-64 rounded-[2rem] border-4 border-dashed transition-all flex flex-col items-center justify-center gap-4 group cursor-pointer overflow-hidden",
+                        isDraggingMain ? "border-primary bg-primary/5 scale-[0.98]" : "border-slate-200 bg-white hover:border-primary/50"
+                      )}
+                      onDragOver={(e) => { e.preventDefault(); setIsDraggingMain(true); }}
+                      onDragLeave={() => setIsDraggingMain(false)}
+                      onDrop={(e) => { e.preventDefault(); handleMainImageUpload(e as any); }}
+                      onClick={() => mainImageInputRef.current?.click()}
+                    >
+                      {mainImageUrl ? (
+                        <div className="relative w-full h-full">
+                           <Image 
+                            src={mainImageUrl} 
+                            alt="" 
+                            fill 
+                            className="object-cover opacity-20"
+                            unoptimized
+                          />
+                          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                            <RefreshCw className="h-8 w-8 text-primary/40" />
+                            <span className="text-[10px] font-black text-primary/40 uppercase tracking-widest">画像を入れ替える</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="bg-slate-50 p-6 rounded-full text-slate-300 group-hover:scale-110 transition-transform">
+                            <Upload className="h-8 w-8" />
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm font-black text-slate-400">ファイルをドロップ</p>
+                            <p className="text-[10px] font-bold text-slate-300 mt-1 uppercase tracking-widest">またはクリックして選択</p>
+                          </div>
+                        </>
+                      )}
                       <input type="file" accept="image/*" className="hidden" ref={mainImageInputRef} onChange={handleMainImageUpload} />
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        className="h-12 px-6 rounded-xl gap-2 font-bold bg-white"
-                        onClick={() => mainImageInputRef.current?.click()}
-                        disabled={isProcessing}
-                      >
-                        {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                        選択
-                      </Button>
                     </div>
                   </FormItem>
                 )}
@@ -306,19 +364,19 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                       <div className="flex justify-between items-center">
                         <label className="text-[10px] font-bold text-slate-500">倍率 (中央: 0%)</label>
                         <span className="text-[10px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded">
-                          {((transform.scale - 1) * 100).toFixed(0)}%
+                          {transform.scale.toFixed(0)}%
                         </span>
                       </div>
                       <Slider 
                         min={-200} 
                         max={200} 
                         step={1} 
-                        value={[(transform.scale - 1) * 100]} 
-                        onValueChange={([val]) => form.setValue("mainImageTransform.scale", Math.max(0.1, 1 + val / 100))} 
+                        value={[transform.scale]} 
+                        onValueChange={([val]) => form.setValue("mainImageTransform.scale", val)} 
                       />
                       <div className="flex justify-between text-[8px] font-bold text-slate-300 uppercase tracking-widest">
                         <span>縮小</span>
-                        <span className="text-primary/40">標準 (0%)</span>
+                        <span className="text-primary/40 font-black">標準 (0%)</span>
                         <span>拡大</span>
                       </div>
                     </div>
@@ -371,7 +429,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                         fill 
                         className="object-cover"
                         style={{
-                          transform: `scale(${transform.scale}) translate(${transform.x}%, ${transform.y}%)`,
+                          transform: `scale(${1 + transform.scale / 100}) translate(${transform.x}%, ${transform.y}%)`,
                           transition: 'transform 0.1s linear',
                           willChange: 'transform'
                         }}
@@ -379,7 +437,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                       />
                     </div>
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-slate-300 italic text-sm">画像が選択されていません</div>
+                    <div className="w-full h-full flex items-center justify-center text-slate-300 italic text-sm">画像が未選択です</div>
                   )}
                 </div>
               </div>
@@ -426,4 +484,26 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       </form>
     </Form>
   );
+}
+
+function RefreshCw(props: any) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+      <path d="M21 3v5h-5" />
+      <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+      <path d="M3 21v-5h5" />
+    </svg>
+  )
 }
