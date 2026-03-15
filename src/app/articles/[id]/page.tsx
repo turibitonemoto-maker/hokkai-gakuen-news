@@ -7,12 +7,23 @@ import { useParams, useRouter } from 'next/navigation';
 import { PublicHeader } from '@/components/site/public-header';
 import { PublicFooter } from '@/components/site/public-footer';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Tag, ChevronLeft, ImageOff, Share2, FileType, Shield, MessageSquareText } from 'lucide-react';
+import { Calendar, Tag, ChevronLeft, ImageOff, FileType, Shield, MessageSquareText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import Link from 'next/link';
 import DOMPurify from 'dompurify';
 import { useState, useEffect } from 'react';
+
+const CATEGORY_LABELS: Record<string, string> = {
+  Top: "トップ",
+  Campus: "キャンパス",
+  Event: "イベント",
+  Interview: "インタビュー",
+  Sports: "スポーツ",
+  Column: "コラム",
+  Opinion: "オピニオン",
+  Viewer: "紙面ビューアー",
+};
 
 // Googleドライブのリンクをプレビュー用に変換し、UIを最小化する
 function getDriveEmbedUrl(url: string) {
@@ -116,7 +127,7 @@ export default function ArticleDetailPage() {
           <div className="p-8 md:p-16">
             <div className="flex flex-wrap items-center gap-4 mb-8">
               <Badge className="bg-primary font-black px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest">
-                {article.categoryId}
+                {CATEGORY_LABELS[article.categoryId] || article.categoryId}
               </Badge>
               <div className="flex items-center gap-2 text-[10px] font-black text-slate-400">
                 <Calendar className="h-4 w-4" /> {article.publishDate}

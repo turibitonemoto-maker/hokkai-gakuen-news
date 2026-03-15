@@ -5,7 +5,7 @@ import { useState, useMemo } from "react";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc, orderBy, query, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Loader2, X, Filter, Tag as TagIcon, AlertCircle, FileText, Eye, RefreshCw } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, X, Filter, Tag as TagIcon, AlertCircle, RefreshCw, Eye } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -27,22 +27,26 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 
 const CATEGORY_LABELS: Record<string, string> = {
-  Campus: "学内ニュース",
+  Top: "トップ",
+  Campus: "キャンパス",
   Event: "イベント",
   Interview: "インタビュー",
   Sports: "スポーツ",
   Column: "コラム",
   Opinion: "オピニオン",
+  Viewer: "紙面ビューアー",
 };
 
 const getTagColor = (tag: string, isActive: boolean) => {
   const colorMap: Record<string, string> = {
-    "学内ニュース": "bg-blue-500",
+    "トップ": "bg-slate-700",
+    "キャンパス": "bg-blue-500",
     "イベント": "bg-emerald-500",
     "インタビュー": "bg-violet-500",
     "スポーツ": "bg-amber-500",
     "コラム": "bg-rose-500",
     "オピニオン": "bg-indigo-500",
+    "紙面ビューアー": "bg-red-600",
   };
 
   if (!isActive) return "bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200 hover:text-slate-600";

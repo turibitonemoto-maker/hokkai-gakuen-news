@@ -18,9 +18,8 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import ImageExtension from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const articleSchema = z.object({
   title: z.string().min(1, "タイトルを入力してください"),
@@ -28,7 +27,7 @@ const articleSchema = z.object({
   content: z.string().min(1, "本文を入力してください"),
   imageCaption: z.string().optional().or(z.literal("")),
   pdfUrl: z.string().optional().or(z.literal("")),
-  categoryId: z.enum(["Campus", "Event", "Interview", "Sports", "Column", "Opinion"]),
+  categoryId: z.enum(["Top", "Campus", "Event", "Interview", "Sports", "Column", "Opinion", "Viewer"]),
   publishDate: z.string(),
   mainImageUrl: z.string().optional().or(z.literal("")),
   isPublished: z.boolean().default(false),
@@ -184,12 +183,14 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="Campus">学内ニュース</SelectItem>
+                      <SelectItem value="Top">トップ</SelectItem>
+                      <SelectItem value="Campus">キャンパス</SelectItem>
                       <SelectItem value="Event">イベント</SelectItem>
                       <SelectItem value="Interview">インタビュー</SelectItem>
                       <SelectItem value="Sports">スポーツ</SelectItem>
                       <SelectItem value="Column">コラム</SelectItem>
                       <SelectItem value="Opinion">オピニオン</SelectItem>
+                      <SelectItem value="Viewer">紙面ビューアー</SelectItem>
                     </SelectContent>
                   </Select>
                 </FormItem>
@@ -222,7 +223,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                   <Input placeholder="https://drive.google.com/file/d/..." className="h-12 rounded-xl border-slate-200 bg-white" {...field} />
                 </FormControl>
                 <FormDescription className="text-[10px] font-bold mt-2">
-                  共有リンクをそのまま貼り付けてください。自動でビューアー形式へ変換されます。
+                   ※Googleドライブ側で「詳細設定 ＞ 閲覧者にダウンロードを禁止する」にチェックを入れることを推奨します。
                 </FormDescription>
                 <FormMessage />
               </FormItem>

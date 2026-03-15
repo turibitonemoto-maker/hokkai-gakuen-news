@@ -8,12 +8,14 @@ import { Calendar, ArrowRight, ImageOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const CATEGORY_LABELS: Record<string, string> = {
-  Campus: "学内ニュース",
+  Top: "トップ",
+  Campus: "キャンパス",
   Event: "イベント",
   Interview: "インタビュー",
   Sports: "スポーツ",
   Column: "コラム",
   Opinion: "オピニオン",
+  Viewer: "紙面ビューアー",
 };
 
 function stripHtmlTags(html: string) {

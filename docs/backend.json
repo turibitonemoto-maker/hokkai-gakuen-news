@@ -12,7 +12,7 @@
         "content": { "type": "string" },
         "imageCaption": { "type": "string", "description": "メイン画像の説明文（キャプション）" },
         "pdfUrl": { "type": "string", "format": "uri", "description": "新聞紙面のPDF（Googleドライブ等）のURL" },
-        "categoryId": { "type": "string" },
+        "categoryId": { "type": "string", "enum": ["Top", "Campus", "Event", "Interview", "Sports", "Column", "Opinion", "Viewer"] },
         "tags": { "type": "array", "items": { "type": "string" } },
         "publishDate": { "type": "string", "format": "date" },
         "mainImageUrl": { "type": "string", "format": "uri" },
