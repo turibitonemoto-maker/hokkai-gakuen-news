@@ -33,7 +33,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   Sports: "スポーツ",
   Column: "コラム",
   Opinion: "オピニオン",
-  Viewer: "紙面ビューアー",
+  // Viewer は専用管理画面で扱うため、ここからは除外
 };
 
 const getTagColor = (tag: string, isActive: boolean) => {
@@ -44,7 +44,6 @@ const getTagColor = (tag: string, isActive: boolean) => {
     "スポーツ": "bg-amber-500",
     "コラム": "bg-rose-500",
     "オピニオン": "bg-indigo-500",
-    "紙面ビューアー": "bg-red-600",
   };
 
   if (!isActive) return "bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200 hover:text-slate-600";
@@ -77,6 +76,8 @@ export function ArticleManager() {
     const tagsSet = new Set<string>();
     Object.values(CATEGORY_LABELS).forEach(label => tagsSet.add(label));
     allArticles?.forEach(article => {
+      // Viewer カテゴリーの記事はタグ収集からも除外
+      if (article.categoryId === "Viewer") return;
       article.tags?.forEach((tag: string) => {
         if (tag && tag.trim()) tagsSet.add(tag.trim());
       });
@@ -86,9 +87,13 @@ export function ArticleManager() {
 
   const filteredArticles = useMemo(() => {
     if (!allArticles) return [];
-    if (selectedTags.length === 0) return allArticles;
+    
+    // Viewer カテゴリーの記事は専用画面で管理するため、ここでは一切表示しない
+    const baseArticles = allArticles.filter(a => a.categoryId !== "Viewer");
+    
+    if (selectedTags.length === 0) return baseArticles;
 
-    return allArticles.filter(article => {
+    return baseArticles.filter(article => {
       const articleTags = [
         CATEGORY_LABELS[article.categoryId] || article.categoryId,
         ...(article.tags || [])

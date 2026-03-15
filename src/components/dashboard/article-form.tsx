@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { ImageIcon, Type, Heading2, Loader2, Upload, FileType, MessageSquareText, Bold, Italic, List, Maximize, MoveHorizontal, MoveVertical, MousePointer2 } from "lucide-react";
+import { ImageIcon, Type, Heading2, Loader2, Upload, FileType, MessageSquareText, Bold, Italic, List, Maximize, MoveHorizontal, MoveVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -237,7 +237,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                       <SelectItem value="Sports">スポーツ</SelectItem>
                       <SelectItem value="Column">コラム</SelectItem>
                       <SelectItem value="Opinion">オピニオン</SelectItem>
-                      <SelectItem value="Viewer">紙面ビューアー</SelectItem>
+                      {/* 紙面ビューアーは専用画面で管理するため、ここでは非表示 */}
                     </SelectContent>
                   </Select>
                 </FormItem>
@@ -362,7 +362,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
-                        <label className="text-[10px] font-bold text-slate-500">倍率 (中央: 0%)</label>
+                        <label className="text-[10px] font-bold text-slate-500">倍率 (標準: 0%)</label>
                         <span className="text-[10px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded">
                           {transform.scale.toFixed(0)}%
                         </span>
@@ -370,7 +370,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                       <Slider 
                         min={-200} 
                         max={200} 
-                        step={1} 
+                        step={0.1} 
                         value={[transform.scale]} 
                         onValueChange={([val]) => form.setValue("mainImageTransform.scale", val)} 
                       />
@@ -391,7 +391,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                       <Slider 
                         min={-200} 
                         max={200} 
-                        step={1} 
+                        step={0.1} 
                         value={[transform.x]} 
                         onValueChange={([val]) => form.setValue("mainImageTransform.x", val)} 
                       />
@@ -407,7 +407,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                       <Slider 
                         min={-200} 
                         max={200} 
-                        step={1} 
+                        step={0.1} 
                         value={[transform.y]} 
                         onValueChange={([val]) => form.setValue("mainImageTransform.y", val)} 
                       />
