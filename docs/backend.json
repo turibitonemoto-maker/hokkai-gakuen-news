@@ -8,7 +8,7 @@
       "properties": {
         "id": { "type": "string" },
         "title": { "type": "string" },
-        "articleType": { "type": "string", "enum": ["Standard"] },
+        "articleType": { "type": "string", "enum": ["Standard", "Note"] },
         "content": { "type": "string" },
         "imageCaption": { "type": "string" },
         "issueNumber": { "type": "number", "description": "第〇号" },

@@ -23,7 +23,7 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
-} from "@dnd-kit/core";
+} from "@nd-kit/core";
 import {
   arrayMove,
   SortableContext,
@@ -58,7 +58,7 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
       issueNumber: paper?.issueNumber || 0,
       title: paper?.title || "",
       publishDate: paper?.publishDate || new Date().toISOString().split("T")[0],
-      pages: paper?.paperImages?.map((url: string, index: number) => ({ id: `page-${index}`, url })) || [{ id: "page-0", url: "" }],
+      pages: paper?.paperImages?.map((url: string, index: number) => ({ id: `page-${index}-${Date.now()}`, url })) || [{ id: "page-0", url: "" }],
       isPublished: paper?.isPublished ?? true,
     },
   });
@@ -67,6 +67,9 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
     control: form.control,
     name: "pages",
   });
+
+  // watch を使用して最新の URL 状態を取得（プレビューの即時反映に必要）
+  const watchedPages = form.watch("pages");
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -112,10 +115,12 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
     const mainImageUrl = paperImages[0] || "";
 
     const data = {
-      ...values,
+      issueNumber: values.issueNumber,
+      title: values.title,
+      publishDate: values.publishDate,
+      isPublished: values.isPublished,
       mainImageUrl,
       paperImages,
-      pages: undefined,
       categoryId: "Viewer",
       articleType: "Standard",
       updatedAt: serverTimestamp(),
@@ -211,7 +216,7 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
                     key={field.id}
                     id={field.id}
                     index={index}
-                    url={field.url}
+                    url={watchedPages[index]?.url}
                     isProcessing={isProcessing === field.id}
                     onFileSelect={(file) => handleFileUpload(index, file)}
                     onRemove={() => remove(index)}

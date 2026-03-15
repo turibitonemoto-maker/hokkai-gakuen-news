@@ -71,7 +71,7 @@ export function ViewerManager() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-black text-slate-800">{currentPaper ? `第 ${currentPaper.issueNumber} 号を編集` : "新しい紙面を登録"}</h2>
-            <p className="text-sm font-bold text-slate-500">PDFファイルをアップロードしてアーカイブを構築します。</p>
+            <p className="text-sm font-bold text-slate-500">紙面画像をアップロードしてアーカイブを構築します。</p>
           </div>
           <Button variant="ghost" onClick={() => setIsEditing(false)} className="font-bold rounded-full">戻る</Button>
         </div>
@@ -111,7 +111,7 @@ export function ViewerManager() {
                   <TableHead className="w-[100px] font-black text-xs uppercase text-center">号数</TableHead>
                   <TableHead className="min-w-[250px] font-black text-xs uppercase">タイトル</TableHead>
                   <TableHead className="w-[150px] font-black text-xs uppercase text-center">発行日</TableHead>
-                  <TableHead className="w-[150px] font-black text-xs uppercase text-center">PDF数</TableHead>
+                  <TableHead className="w-[150px] font-black text-xs uppercase text-center">ページ数</TableHead>
                   <TableHead className="text-right font-black text-xs uppercase px-8">操作</TableHead>
                 </TableRow>
               </TableHeader>
@@ -135,7 +135,7 @@ export function ViewerManager() {
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge variant="outline" className="font-black text-[10px] gap-1 px-3 py-1 bg-slate-50 border-slate-200">
-                        <FileType className="h-3 w-3" /> {(article.pdfUrls?.length || 0) + (article.pdfUrl ? 1 : 0)} Files
+                        <ImageIcon className="h-3 w-3" /> {(article.paperImages?.length || 0)} ページ
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right px-8">
@@ -171,7 +171,7 @@ export function ViewerManager() {
               <AlertDialogTitle className="text-2xl font-black">紙面データを消去しますか？</AlertDialogTitle>
             </div>
             <AlertDialogDescription className="font-bold text-slate-500">
-              この操作は取り消せません。ストレージ内のPDFファイルは手動で削除する必要があります。
+              この操作は取り消せません。データベースから完全に削除されます。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2 mt-6">
