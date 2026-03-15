@@ -20,11 +20,15 @@ import LinkExtension from '@tiptap/extension-link';
 import { cn } from "@/lib/utils";
 
 const aboutSchema = z.object({
-  // No fields needed for the form itself if we only use the editor
+  // Tiptapエディタ側で制御するため、スキーマは空定義
 });
 
 type AboutValues = z.infer<typeof aboutSchema>;
 
+/**
+ * About Us 司令部
+ * 組織紹介（沿革、理念、活動内容）を統制します。
+ */
 export function AboutManager() {
   const [password, setPassword] = useState("");
   const [isUnlocked, setIsUnlocked] = useState(false);
@@ -90,6 +94,7 @@ export function AboutManager() {
 
   const { data: aboutData, isLoading } = useDoc(docRef);
 
+  // 画像投入ハンドラ (Hoisted)
   async function handleImageInsert(file: File) {
     if (!file.type.startsWith('image/')) return;
     setIsProcessing(true);
@@ -238,18 +243,18 @@ export function AboutManager() {
         </div>
         <div>
           <h2 className="text-3xl font-black text-slate-800 tracking-tight">About Us 🔒</h2>
-          <p className="text-sm font-bold text-slate-500">沿革、活動紹介、入会案内などを統制します。</p>
+          <p className="text-sm font-bold text-slate-500">組織の紹介、活動内容、理念を統制します。</p>
         </div>
       </div>
 
       <Card className="shadow-sm border-slate-200 rounded-[2.5rem] bg-white overflow-hidden">
         <CardHeader className="bg-slate-50/50 border-b p-8 md:p-12">
           <CardTitle className="text-xl font-black flex items-center gap-3"><Type className="h-6 w-6 text-primary" />内容の編集</CardTitle>
-          <CardDescription className="font-bold">題名は不要です。本文のみで構成してください。</CardDescription>
+          <CardDescription className="font-bold">「北海学園大学一部新聞会とは」といった見出しも、エディタ内で自由に構成してください。</CardDescription>
         </CardHeader>
         <CardContent className="p-8 md:p-12">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12">
+            <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }} className="space-y-12">
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b pb-2">
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
@@ -277,7 +282,7 @@ export function AboutManager() {
               </div>
 
               <div className="flex justify-end pt-8 border-t border-slate-100 sticky bottom-6 bg-white py-4 z-10">
-                <Button type="submit" disabled={isSaving} className="px-12 h-16 font-black rounded-2xl shadow-2xl shadow-primary/20 text-lg">
+                <Button type="button" onClick={onSubmit} disabled={isSaving} className="px-12 h-16 font-black rounded-2xl shadow-2xl shadow-primary/20 text-lg">
                   {isSaving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5 mr-3" />}
                   内容を確定する
                 </Button>
