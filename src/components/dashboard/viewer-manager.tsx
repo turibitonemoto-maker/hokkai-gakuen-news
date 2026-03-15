@@ -3,9 +3,9 @@
 
 import { useState, useMemo } from "react";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection, doc, orderBy, query, where, serverTimestamp } from "firebase/firestore";
+import { collection, doc, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Loader2, RefreshCw, Eye, FileType, BookOpen } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, RefreshCw, BookOpen, FileType } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -33,16 +33,25 @@ export function ViewerManager() {
   const { user } = useUser();
   const { toast } = useToast();
 
-  const viewerQuery = useMemoFirebase(() => {
+  // 複合インデックスエラーを回避するため、全記事を取得してからメモリ上でフィルタリングする
+  const articlesQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(
-      collection(firestore, "articles"), 
-      where("categoryId", "==", "Viewer"),
-      orderBy("publishDate", "desc")
-    );
+    return collection(firestore, "articles");
   }, [firestore, user]);
 
-  const { data: viewerArticles, isLoading, error } = useCollection(viewerQuery);
+  const { data: allArticles, isLoading, error } = useCollection(articlesQuery);
+
+  // クライアントサイドでのフィルタリングとソート
+  const viewerArticles = useMemo(() => {
+    if (!allArticles) return [];
+    return allArticles
+      .filter(a => a.categoryId === "Viewer")
+      .sort((a, b) => {
+        const dateA = a.publishDate || "";
+        const dateB = b.publishDate || "";
+        return dateB.localeCompare(dateA); // 日付の降順
+      });
+  }, [allArticles]);
 
   const handleTogglePublish = (article: any) => {
     if (!firestore) return;
@@ -130,7 +139,7 @@ export function ViewerManager() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {viewerArticles?.map((article) => (
+                  {viewerArticles.map((article) => (
                     <TableRow key={article.id} className="group hover:bg-slate-50/80 transition-colors border-slate-50">
                       <TableCell className="px-8">
                         <div className="flex items-center gap-3">
@@ -176,7 +185,7 @@ export function ViewerManager() {
                       </TableCell>
                     </TableRow>
                   ))}
-                  {viewerArticles?.length === 0 && !isLoading && (
+                  {viewerArticles.length === 0 && !isLoading && (
                     <TableRow>
                       <TableCell colSpan={5} className="text-center py-24 text-slate-300 font-black italic">
                         登録されている紙面データがありません。
@@ -185,6 +194,11 @@ export function ViewerManager() {
                   )}
                 </TableBody>
               </Table>
+            )}
+            {error && (
+              <div className="p-8 text-center text-destructive text-sm font-bold bg-destructive/5">
+                データの取得に失敗しました。
+              </div>
             )}
           </CardContent>
         </div>
