@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { ImageIcon, Type, Heading2, Loader2, Upload, FileType, MessageSquareText, Bold, Italic, List, Maximize, MoveHorizontal, MoveVertical, RefreshCw } from "lucide-react";
+import { ImageIcon, Type, Heading2, Loader2, Upload, MessageSquareText, Bold, Italic, List, Maximize, MoveHorizontal, MoveVertical, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
