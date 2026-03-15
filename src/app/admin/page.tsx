@@ -16,7 +16,8 @@ import {
   AlertCircle,
   User,
   ShieldCheck,
-  Megaphone
+  Megaphone,
+  BookOpen
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -64,6 +65,7 @@ export default function AdminDashboard() {
   const stats = {
     total: articles?.length || 0,
     published: articles?.filter(a => a.isPublished).length || 0,
+    viewer: articles?.filter(a => a.categoryId === "Viewer").length || 0,
   };
 
   return (
@@ -106,12 +108,12 @@ export default function AdminDashboard() {
           href="/admin/articles"
         />
         <QuickStatCard 
-          title="最終更新" 
-          value={recentArticles?.[0]?.updatedAt ? new Date(recentArticles[0].updatedAt).toLocaleTimeString("ja-JP", { hour: '2-digit', minute: '2-digit' }) : "--:--"} 
-          delta={recentArticles?.[0]?.updatedAt ? new Date(recentArticles[0].updatedAt).toLocaleDateString("ja-JP") : "履歴なし"} 
-          icon={Clock} 
+          title="紙面ビューアー" 
+          value={isArticlesLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : stats.viewer} 
+          delta="電子版発行数" 
+          icon={BookOpen} 
           color="green"
-          href="/admin/articles"
+          href="/admin/viewer"
         />
         <QuickStatCard 
           title="システム状態" 
@@ -186,6 +188,12 @@ export default function AdminDashboard() {
               <Button className="w-full justify-start gap-3 h-12 shadow-sm font-bold text-sm rounded-xl">
                 <FileText className="h-5 w-5" />
                 <span>記事を新規作成・管理</span>
+              </Button>
+            </Link>
+            <Link href="/admin/viewer">
+              <Button variant="outline" className="w-full justify-start gap-3 h-12 border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-sm rounded-xl">
+                <BookOpen className="h-5 w-5" />
+                <span>紙面ビューアー管理</span>
               </Button>
             </Link>
             <Link href="/admin/ads">

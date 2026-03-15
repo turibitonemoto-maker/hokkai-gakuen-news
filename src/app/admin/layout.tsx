@@ -14,7 +14,8 @@ import {
   Globe,
   ExternalLink,
   Loader2,
-  Lock
+  Lock,
+  BookOpen
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -48,6 +49,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const menuItems = [
     { id: "/admin", label: "ダッシュバード", icon: LayoutDashboard },
     { id: "/admin/articles", label: "記事・公開管理", icon: FileText },
+    { id: "/admin/viewer", label: "紙面ビューアー", icon: BookOpen },
     { id: "/admin/ads", label: "広告管理", icon: Megaphone, isProtected: true },
     { id: "/admin/president", label: "会長挨拶", icon: UserRound, isProtected: true },
     { id: "/admin/maintenance", label: "サイト制御", icon: ShieldAlert, isProtected: true },
