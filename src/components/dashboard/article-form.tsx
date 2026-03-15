@@ -283,7 +283,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                           />
                           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
                             <RefreshCw className="h-8 w-8 text-primary/40" />
-                            <span className="text-[10px] font-black text-primary/40 uppercase tracking-widest">画像を入れ替える</span>
+                            <span className="text-[10px] font-black text-primary/40 uppercase tracking-widest">画像を入れ替え</span>
                           </div>
                         </div>
                       ) : (
