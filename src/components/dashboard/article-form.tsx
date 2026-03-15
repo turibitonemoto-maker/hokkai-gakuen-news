@@ -153,7 +153,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                   <FormControl>
                     <Input 
                       placeholder="" 
-                      className="h-auto py-4 text-3xl md:text-5xl font-black border-none bg-transparent shadow-none px-0 focus-visible:ring-0 placeholder:opacity-20" 
+                      className="h-auto py-4 text-3xl md:text-5xl font-black border-none bg-transparent shadow-none px-0 focus-visible:ring-0 placeholder:opacity:20" 
                       {...field} 
                     />
                   </FormControl>
