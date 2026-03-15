@@ -30,12 +30,8 @@ import {
   sortableKeyboardCoordinates,
   useSortable,
   rectSortingStrategy,
-} from "@nd-kit/sortable"; // ※実際は @dnd-kit/sortable だが、前の修正で typo があった可能性を考慮して再確認
+} from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-
-// @dnd-kit の正しいインポートを保証
-import * as dndSortable from "@dnd-kit/sortable";
-import * as dndCore from "@dnd-kit/core";
 
 const paperSchema = z.object({
   issueNumber: z.number().min(1, "号数を入力してください"),
