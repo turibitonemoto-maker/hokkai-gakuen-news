@@ -5,26 +5,26 @@
 
 @layer base {
   :root {
-    --background: 210 20% 95%; /* #F0F2F5 - Subtle cool light grey */
+    --background: 210 20% 98%; /* 更に白に近い背景 */
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: 210 50% 40%; /* #336699 - Deep professional blue */
+    --primary: 210 60% 35%; /* 深みのあるプロフェッショナルな青 */
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222 47% 11.2%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 180 70% 50%; /* #26D9D9 - Vibrant cyan */
+    --accent: 180 70% 45%; 
     --accent-foreground: 210 40% 98%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 210 50% 40%;
-    --radius: 0.75rem;
+    --ring: 210 60% 35%;
+    --radius: 1.25rem;
   }
 
   .dark {
@@ -43,64 +43,59 @@
   }
 }
 
-/* note風のリッチテキストレンダリングスタイル */
-.prose-custom {
-  @apply space-y-6;
+/* Tiptapエディタのカスタマイズ (note風) */
+.ProseMirror {
+  @apply outline-none min-h-[600px] text-lg leading-relaxed;
 }
 
-.prose-custom p {
-  @apply leading-relaxed mb-6;
+.ProseMirror p {
+  @apply mb-6;
 }
 
-.prose-custom h1 {
-  @apply text-3xl font-black mb-6 mt-10;
+.ProseMirror h1 {
+  @apply text-3xl font-black mb-6 mt-12 tracking-tighter;
 }
 
-.prose-custom h2 {
-  @apply text-2xl font-black mb-4 mt-8 pb-2 border-b-2 border-slate-50;
+.ProseMirror h2 {
+  @apply text-2xl font-black mb-4 mt-10 tracking-tight border-b-2 border-slate-50 pb-2;
 }
 
-.prose-custom h3 {
-  @apply text-xl font-bold mb-3 mt-6;
+.ProseMirror ul {
+  @apply list-disc ml-6 mb-6;
 }
 
-.prose-custom img {
-  @apply rounded-2xl shadow-lg my-8 max-w-full h-auto mx-auto;
+.ProseMirror ol {
+  @apply list-decimal ml-6 mb-6;
 }
 
-.prose-custom ul, .prose-custom ol {
-  @apply ml-6 mb-6 list-outside;
+.ProseMirror li {
+  @apply mb-2;
 }
 
-.prose-custom ul {
-  @apply list-disc;
+.ProseMirror blockquote {
+  @apply border-l-4 border-primary/20 pl-6 italic text-slate-500 my-8;
 }
 
-.prose-custom ol {
-  @apply list-decimal;
+.ProseMirror img {
+  @apply rounded-3xl shadow-2xl my-12 mx-auto;
 }
 
-.prose-custom li {
-  @apply mb-2 pl-2;
+.ProseMirror img.ProseMirror-selectednode {
+  @apply outline outline-4 outline-primary/30;
 }
 
-.prose-custom a {
-  @apply text-primary font-bold underline hover:opacity-70 transition-opacity;
+/* プレースホルダーのスタイル (Tiptap) */
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: "ここに記事を執筆してください...";
+  @apply text-slate-300 float-left pointer-events-none h-0 font-bold italic;
 }
 
-/* Quillエディタのカスタマイズ */
-.ql-container.ql-snow {
-  @apply border-none font-body text-lg;
+/* ページ全体のトランジション */
+.page-fade-in {
+  animation: fadeIn 1s ease-out;
 }
 
-.ql-toolbar.ql-snow {
-  @apply border-none bg-slate-50 border-b border-slate-100 py-4 px-6;
-}
-
-.ql-editor {
-  @apply p-10 leading-relaxed min-h-[500px];
-}
-
-.ql-editor.ql-blank::before {
-  @apply left-10 text-slate-300 font-bold italic;
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
