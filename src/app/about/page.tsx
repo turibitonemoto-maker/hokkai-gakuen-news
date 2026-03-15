@@ -11,9 +11,8 @@ import DOMPurify from "dompurify";
 import { Badge } from "@/components/ui/badge";
 
 /**
- * About Us 公開ページ
- * 管理画面の「About Us」司令部で編集された内容を、リアルタイムに取得して描画します。
- * 全ての固定文を排除し、管理画面からの信号のみを映し出す「鏡」として機能します。
+ * About Us 公開ページ（表示用サイト）
+ * 命令に基づき、settings/about の content フィールドのみを映し出す「純粋な鏡」として機能します。
  */
 export default function AboutPage() {
   const firestore = useFirestore();
@@ -21,7 +20,6 @@ export default function AboutPage() {
 
   const docRef = useMemoFirebase(() => {
     if (!firestore) return null;
-    // 管理画面と同じパス（settings/about）を確実に参照
     return doc(firestore, "settings", "about");
   }, [firestore]);
 
@@ -30,7 +28,7 @@ export default function AboutPage() {
   useEffect(() => {
     if (aboutData?.content) {
       setSanitizedContent(DOMPurify.sanitize(aboutData.content));
-    } else if (aboutData?.content === '') {
+    } else {
       setSanitizedContent('');
     }
   }, [aboutData]);
@@ -43,8 +41,8 @@ export default function AboutPage() {
     );
   }
 
-  // データが空、または初期状態の場合
-  const isEmpty = !aboutData || !aboutData.content || aboutData.content === '<p></p>';
+  // データが空（未入力）の状態判定
+  const isEmpty = !aboutData || !aboutData.content || aboutData.content === '<p></p>' || aboutData.content === '';
 
   return (
     <div className="min-h-screen flex flex-col bg-white font-body animate-in fade-in duration-1000">

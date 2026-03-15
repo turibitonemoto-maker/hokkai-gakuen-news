@@ -6,10 +6,6 @@ import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Form } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Save, Info, Lock, Bold, Italic, Heading2, List, Type, ImageIcon } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -19,12 +15,9 @@ import ImageExtension from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
 import { cn } from "@/lib/utils";
 
-const aboutSchema = z.object({});
-
 /**
- * About Us 司令部
- * 組織紹介（沿革、理念、活動内容）を統制します。
- * 本文（HTML）のみを管理する構成に純化しました。
+ * About Us 管制室（管理用サイト）
+ * 命令に基づき、不純なコードを排除し、settings/about の content フィールドを統制することに特化しました。
  */
 export function AboutManager() {
   const [password, setPassword] = useState("");
@@ -70,6 +63,7 @@ export function AboutManager() {
 
   const { data: aboutData, isLoading } = useDoc(docRef);
 
+  // 本文内への画像挿入ハンドラ
   async function handleImageInsert(file: File) {
     if (!file.type.startsWith('image/')) return;
     setIsProcessing(true);
@@ -88,11 +82,7 @@ export function AboutManager() {
     }
   }
 
-  const form = useForm({
-    resolver: zodResolver(aboutSchema),
-    defaultValues: {},
-  });
-
+  // 既存データの復元
   useEffect(() => {
     if (aboutData && editor) {
       if (aboutData.content && editor.getHTML() !== aboutData.content) {
@@ -101,6 +91,7 @@ export function AboutManager() {
     }
   }, [aboutData, editor]);
 
+  // ロックアウト状態の管理
   useEffect(() => {
     const storedLockout = localStorage.getItem("lockout_until");
     if (storedLockout) {
@@ -138,19 +129,21 @@ export function AboutManager() {
     }
   };
 
-  async function onSubmit() {
+  // 保存処理（再構築プロトコル準拠）
+  async function handleSave() {
     if (!firestore || !docRef || !editor) return;
     setIsSaving(true);
     try {
       const htmlContent = editor.getHTML();
+      // settings/about ドキュメントの content フィールドのみを更新
       await setDoc(docRef, {
         content: htmlContent, 
         updatedAt: serverTimestamp(),
         updatedBy: user?.email || "unknown"
       }, { merge: true });
-      toast({ title: "更新しました", description: "About Us を保存しました。公式サイトに即座に反映されます。" });
+      toast({ title: "更新しました", description: "About Us を保存しました。表示サイトに即座に反映されます。" });
     } catch (error: any) {
-      toast({ variant: "destructive", title: "保存エラー" });
+      toast({ variant: "destructive", title: "保存エラー", description: error.message });
     } finally {
       setIsSaving(false);
     }
@@ -206,42 +199,40 @@ export function AboutManager() {
           <CardTitle className="text-xl font-black flex items-center gap-3"><Type className="h-6 w-6 text-primary" />内容の編集</CardTitle>
         </CardHeader>
         <CardContent className="p-8 md:p-12">
-          <Form {...form}>
-            <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }} className="space-y-12">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between border-b pb-2">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                    <Type className="h-3 w-3" /> 本文執筆
-                  </span>
-                  <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl">
-                    <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('bold') && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleBold().run()}><Bold className="h-4 w-4" /></Button>
-                    <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('italic') && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleItalic().run()}><Italic className="h-4 w-4" /></Button>
-                    <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('heading') && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}><Heading2 className="h-4 w-4" /></Button>
-                    <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('bulletList') && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleBulletList().run()}><List className="h-4 w-4" /></Button>
-                    <div className="relative">
-                      <input type="file" accept="image/*" className="hidden" id="about-image-upload" onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) handleImageInsert(file);
-                      }}/>
-                      <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => document.getElementById('about-image-upload')?.click()} disabled={isProcessing}>
-                        {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
-                      </Button>
-                    </div>
+          <div className="space-y-12">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between border-b pb-2">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <Type className="h-3 w-3" /> 本文執筆
+                </span>
+                <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl">
+                  <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('bold') && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleBold().run()}><Bold className="h-4 w-4" /></Button>
+                  <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('italic') && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleItalic().run()}><Italic className="h-4 w-4" /></Button>
+                  <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('heading', { level: 2 }) && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}><Heading2 className="h-4 w-4" /></Button>
+                  <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('bulletList') && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleBulletList().run()}><List className="h-4 w-4" /></Button>
+                  <div className="relative">
+                    <input type="file" accept="image/*" className="hidden" id="about-image-upload" onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleImageInsert(file);
+                    }}/>
+                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => document.getElementById('about-image-upload')?.click()} disabled={isProcessing}>
+                      {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
+                    </Button>
                   </div>
                 </div>
-                <div className="min-h-[600px] bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-inner relative">
-                  <EditorContent editor={editor} />
-                </div>
               </div>
+              <div className="min-h-[600px] bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-inner relative">
+                <EditorContent editor={editor} />
+              </div>
+            </div>
 
-              <div className="flex justify-end pt-8 border-t border-slate-100 sticky bottom-6 bg-white py-4 z-10">
-                <Button type="button" onClick={onSubmit} disabled={isSaving} className="px-12 h-16 font-black rounded-2xl shadow-2xl shadow-primary/20 text-lg">
-                  {isSaving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5 mr-3" />}
-                  内容を確定する
-                </Button>
-              </div>
-            </form>
-          </Form>
+            <div className="flex justify-end pt-8 border-t border-slate-100 sticky bottom-6 bg-white py-4 z-10">
+              <Button type="button" onClick={handleSave} disabled={isSaving} className="px-12 h-16 font-black rounded-2xl shadow-2xl shadow-primary/20 text-lg">
+                {isSaving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5 mr-3" />}
+                内容を確定する
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
