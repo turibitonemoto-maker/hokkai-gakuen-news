@@ -42,13 +42,13 @@
   }
 }
 
-/* Tiptapエディタのカスタマイズ (行間密度・日本向け調整版) */
+/* Tiptapエディタのカスタマイズ (行間密度・日本向け最適化版) */
 .ProseMirror {
-  @apply outline-none min-h-[400px] text-lg leading-7 text-slate-700;
+  @apply outline-none min-h-[400px] text-lg leading-relaxed text-slate-700;
 }
 
 .ProseMirror p {
-  @apply mb-4 leading-7; 
+  @apply mb-4 leading-relaxed; 
 }
 
 .ProseMirror h1 {

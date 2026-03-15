@@ -19,7 +19,6 @@ import { cn } from "@/lib/utils";
 const presidentMessageSchema = z.object({
   authorName: z.string().min(1, "会長の氏名を入力してください"),
   authorImageUrl: z.string().url("有効なURLを入力してください").optional().or(z.literal("")),
-  content: z.string().optional(),
 });
 
 type PresidentMessageValues = z.infer<typeof presidentMessageSchema>;
@@ -47,7 +46,6 @@ export function PresidentMessageManager() {
     defaultValues: {
       authorName: "",
       authorImageUrl: "",
-      content: "",
     },
   });
 
@@ -63,13 +61,12 @@ export function PresidentMessageManager() {
   });
 
   useEffect(() => {
-    if (messageData && editor) {
+    if (messageData) {
       form.reset({
         authorName: messageData.authorName || "",
         authorImageUrl: messageData.authorImageUrl || "",
-        content: messageData.content || "",
       });
-      if (messageData.content && editor.getHTML() !== messageData.content) {
+      if (editor && messageData.content && editor.getHTML() !== messageData.content) {
         editor.commands.setContent(messageData.content);
       }
     }
@@ -117,7 +114,6 @@ export function PresidentMessageManager() {
 
     setIsSaving(true);
     try {
-      // エディタから直接HTMLを取得して保存（確実性を高める）
       const htmlContent = editor.getHTML();
       
       await setDoc(docRef, {
@@ -219,7 +215,7 @@ export function PresidentMessageManager() {
                 )} />
                 <div className="md:col-span-2">
                   <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 mb-2">
-                    <Type className="h-3 w-3" /> 挨拶本文 (リッチエディタ)
+                    <Type className="h-3 w-3" /> 挨拶本文 (Tiptapエディタ)
                   </FormLabel>
                   <div className="flex items-center gap-1 border-b pb-2 mb-2">
                     <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('bold') && "bg-slate-100")} onClick={() => editor?.chain().focus().toggleBold().run()}><Bold className="h-4 w-4" /></Button>

@@ -18,7 +18,8 @@ const CATEGORY_LABELS: Record<string, string> = {
 // HTMLタグを除去して純粋なテキストのみを抽出するユーティリティ
 function stripHtmlTags(html: string) {
   if (!html) return "";
-  return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ');
+  // HTMLタグを削除し、改行や空白を正規化
+  return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
 }
 
 export function ArticleGrid({ articles }: { articles: any[] }) {
