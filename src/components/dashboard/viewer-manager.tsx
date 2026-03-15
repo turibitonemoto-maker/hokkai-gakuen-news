@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -127,7 +126,11 @@ export function ViewerManager() {
                     <TableCell>
                       <div className="flex flex-col">
                         <span className="font-bold text-slate-800">{paper.title}</span>
-                        {(paper.mainImageUrl || paper.paperImages?.length > 0) && <span className="text-[9px] font-black text-green-500 uppercase flex items-center gap-1 mt-1"><CheckCircle2 className="h-2 w-2" /> Thumbnail Set</span>}
+                        {(paper.mainImageUrl || (paper.paperImages && paper.paperImages.length > 0)) && (
+                          <span className="text-[9px] font-black text-green-500 uppercase flex items-center gap-1 mt-1">
+                            <CheckCircle2 className="h-2 w-2" /> Storage Synced
+                          </span>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell className="text-center font-bold text-slate-500 text-sm">
@@ -150,7 +153,7 @@ export function ViewerManager() {
                     </TableCell>
                   </TableRow>
                 ))}
-                {viewerPapers.length === 0 && (
+                {viewerPapers.length === 0 && !isLoading && (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-24 text-slate-300 font-black italic">
                       登録されている紙面データがありません。

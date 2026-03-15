@@ -89,7 +89,7 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
   const handleCloudinaryUpload = (index: number) => {
     // @ts-ignore
     if (!window.cloudinary) {
-      toast({ variant: "destructive", title: "エラー", description: "アップロード準備ができていません。再度お試しください。" });
+      toast({ variant: "destructive", title: "準備中", description: "アップロード準備ができていません。再度お試しください。" });
       return;
     }
 
@@ -98,7 +98,7 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
     const widget = window.cloudinary.createUploadWidget(
       {
         cloudName: "dl2yqrpfj",
-        uploadPreset: "hokkai gakuen news cloud", // 最高司令官の設定したプリセット名へ完全同期
+        uploadPreset: "hokkai gakuen news cloud",
         sources: ["local", "url", "camera"],
         multiple: false,
         cropping: false,
