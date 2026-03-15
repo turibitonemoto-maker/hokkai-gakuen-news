@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -289,7 +288,7 @@ export function AdManager() {
       {ads && ads.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-700">
           {ads.map((ad) => {
-            const transform = ad.imageTransform || { scale: 1, x: 0, y: 0 };
+            const transform = ad.imageTransform || { scale: 0, x: 0, y: 0 };
             return (
               <Card 
                 key={ad.id} 
@@ -303,7 +302,7 @@ export function AdManager() {
                     fill 
                     className="object-cover transition-transform group-hover:scale-105"
                     style={{
-                      transform: `scale(${transform.scale}) translate(${transform.x}%, ${transform.y}%)`,
+                      transform: `scale(${Math.max(0.01, 1 + transform.scale / 100)}) translate(${transform.x}%, ${transform.y}%)`,
                       willChange: 'transform'
                     }}
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"

@@ -1,5 +1,4 @@
-
-'use client';
+"use client";
 
 import Link from 'next/link';
 import Image from 'next/image';
@@ -58,7 +57,7 @@ function ArticleCard({ article }: { article: any }) {
               fill
               className="object-cover transition-transform duration-700"
               style={{
-                transform: `scale(${1 + transform.scale / 100}) translate(${transform.x}%, ${transform.y}%)`,
+                transform: `scale(${Math.max(0.01, 1 + transform.scale / 100)}) translate(${transform.x}%, ${transform.y}%)`,
                 willChange: 'transform'
               }}
               unoptimized

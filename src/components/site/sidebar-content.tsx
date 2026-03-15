@@ -1,5 +1,4 @@
-
-'use client';
+"use client";
 
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -66,7 +65,7 @@ export function SidebarContent({ ads }: { ads: any[] }) {
                     fill
                     className="object-cover"
                     style={{
-                      transform: `scale(${1 + transform.scale / 100}) translate(${transform.x}%, ${transform.y}%)`,
+                      transform: `scale(${Math.max(0.01, 1 + transform.scale / 100)}) translate(${transform.x}%, ${transform.y}%)`,
                       willChange: 'transform'
                     }}
                     sizes="96px"
@@ -123,7 +122,7 @@ export function SidebarContent({ ads }: { ads: any[] }) {
                       fill
                       className="object-cover transition-transform"
                       style={{
-                        transform: `scale(${1 + adTransform.scale / 100}) translate(${adTransform.x}%, ${adTransform.y}%)`,
+                        transform: `scale(${Math.max(0.01, 1 + adTransform.scale / 100)}) translate(${adTransform.x}%, ${adTransform.y}%)`,
                         willChange: 'transform'
                       }}
                       unoptimized

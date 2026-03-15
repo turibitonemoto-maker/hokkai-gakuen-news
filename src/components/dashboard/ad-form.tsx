@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -201,7 +200,7 @@ export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
                   fill 
                   className="object-cover"
                   style={{
-                    transform: `scale(${1 + transform.scale / 100}) translate(${transform.x}%, ${transform.y}%)`,
+                    transform: `scale(${Math.max(0.01, 1 + transform.scale / 100)}) translate(${transform.x}%, ${transform.y}%)`,
                     transition: 'transform 0.1s linear',
                     willChange: 'transform'
                   }}

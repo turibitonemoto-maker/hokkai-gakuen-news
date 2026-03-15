@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -18,7 +17,7 @@ import { cn } from "@/lib/utils";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import ImageExtension from '@tiptap/extension-image';
-import LinkExtension from '@tiptap/extension-link';
+import LinkExtension from '@radix-ui/react-link';
 import { useState, useRef, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
@@ -421,7 +420,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                         fill 
                         className="object-cover"
                         style={{
-                          transform: `scale(${1 + transform.scale / 100}) translate(${transform.x}%, ${transform.y}%)`,
+                          transform: `scale(${Math.max(0.01, 1 + transform.scale / 100)}) translate(${transform.x}%, ${transform.y}%)`,
                           transition: 'transform 0.1s linear',
                           willChange: 'transform'
                         }}
