@@ -79,7 +79,7 @@ export default function ArticleDetailPage() {
           ) : (
              <div className="relative h-[300px] md:h-[400px] w-full bg-slate-50 flex flex-col items-center justify-center text-slate-200 gap-2 border-b">
                 <ImageOff className="h-20 w-20 opacity-10" />
-                <span className="text-xs font-black uppercase tracking-widest opacity-20">Hokkai Shinbun</span>
+                <span className="text-[10px] font-black uppercase tracking-widest opacity-20">Hokkai Shinbun</span>
              </div>
           )}
 
@@ -115,12 +115,13 @@ export default function ArticleDetailPage() {
               </div>
             </div>
 
+            {/* 日本仕様の黄金比（leading-7, my-4）を適用 */}
             <div 
               className="prose prose-slate max-w-none 
                          text-slate-700 text-lg md:text-xl
-                         prose-p:my-4 prose-p:leading-relaxed
+                         prose-p:leading-7 prose-p:my-4
                          prose-headings:font-black prose-headings:tracking-tighter prose-headings:mt-8 prose-headings:mb-4
-                         prose-img:rounded-2xl prose-img:shadow-xl prose-img:my-8
+                         prose-img:rounded-3xl prose-img:shadow-2xl prose-img:my-10
                          prose-a:text-primary prose-a:font-black prose-a:no-underline hover:prose-a:underline"
               dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
             />

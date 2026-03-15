@@ -46,16 +46,16 @@ export function SidebarContent({ ads }: { ads: any[] }) {
   return (
     <div className="space-y-10 sticky top-28">
       {president && (
-        <Card className="border-none shadow-lg bg-white rounded-2xl overflow-hidden">
+        <Card className="border-none shadow-2xl bg-white rounded-[2rem] overflow-hidden">
           <CardHeader className="bg-primary/5 border-b border-primary/10 pb-4">
-            <CardTitle className="text-lg font-bold flex items-center gap-2 text-primary">
-              <User className="h-5 w-5" />
+            <CardTitle className="text-sm font-black flex items-center gap-2 text-primary uppercase tracking-widest">
+              <User className="h-4 w-4" />
               会長挨拶
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-6">
-            <div className="flex flex-col items-center mb-6">
-              <div className="relative h-24 w-24 rounded-2xl overflow-hidden shadow-md mb-4 border-2 border-white bg-slate-50">
+          <CardContent className="pt-8">
+            <div className="flex flex-col items-center mb-8">
+              <div className="relative h-24 w-24 rounded-[1.5rem] overflow-hidden shadow-xl mb-4 border-2 border-white bg-slate-50">
                 {president.authorImageUrl ? (
                   <Image
                     src={president.authorImageUrl}
@@ -71,13 +71,18 @@ export function SidebarContent({ ads }: { ads: any[] }) {
                   </div>
                 )}
               </div>
-              <h4 className="font-bold text-slate-800 text-lg">{president.authorName}</h4>
-              <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">会長 / 代表職</p>
+              <h4 className="font-black text-slate-800 text-lg">{president.authorName}</h4>
+              <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-1">北海学園大学一部新聞会 会長</p>
             </div>
+            
             <div className="relative">
-              <MessageCircle className="absolute -top-2 -left-2 h-6 w-6 text-primary/10" />
+              <MessageCircle className="absolute -top-4 -left-2 h-8 w-8 text-primary/10" />
+              {/* 記事詳細と同じクラス体系を適用（日本仕様の密度） */}
               <div 
-                className="prose prose-slate prose-sm max-w-none text-slate-600 leading-relaxed text-center px-4 line-clamp-[10]"
+                className="prose prose-slate prose-sm max-w-none 
+                           text-slate-600 font-medium
+                           prose-p:leading-7 prose-p:my-4
+                           text-center px-4 line-clamp-[12]"
                 dangerouslySetInnerHTML={{ __html: sanitizedMessage }}
               />
             </div>
@@ -89,7 +94,7 @@ export function SidebarContent({ ads }: { ads: any[] }) {
         <section className="space-y-4">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="h-4 w-4 text-accent" />
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">スポンサー</h3>
+            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Sponsors</h3>
           </div>
           <div className="space-y-4">
             {activeAds.map((ad) => (
@@ -101,12 +106,12 @@ export function SidebarContent({ ads }: { ads: any[] }) {
                 onClick={() => handleAdClick(ad)}
                 className="block group"
               >
-                <div className="relative h-28 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-slate-200">
+                <div className="relative h-28 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-slate-100 bg-white">
                   <Image
                     src={ad.imageUrl}
                     alt={ad.title || "広告バナー"}
                     fill
-                    className="object-contain p-2 bg-white group-hover:scale-105 transition-transform"
+                    className="object-contain p-4 group-hover:scale-105 transition-transform"
                     unoptimized
                     sizes="(max-width: 768px) 100vw, 300px"
                   />
@@ -114,7 +119,7 @@ export function SidebarContent({ ads }: { ads: any[] }) {
                     <ExternalLink className="h-6 w-6 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                 </div>
-                <p className="text-[10px] font-bold text-slate-400 mt-2 text-center truncate">{ad.title}</p>
+                <p className="text-[10px] font-black text-slate-400 mt-2 text-center truncate uppercase tracking-tighter">{ad.title}</p>
               </a>
             ))}
           </div>

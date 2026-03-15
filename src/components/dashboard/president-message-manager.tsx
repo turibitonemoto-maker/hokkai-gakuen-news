@@ -15,6 +15,7 @@ import { useEffect, useState } from "react";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 const presidentMessageSchema = z.object({
   authorName: z.string().min(1, "会長の氏名を入力してください"),
@@ -116,6 +117,7 @@ export function PresidentMessageManager() {
     try {
       const htmlContent = editor.getHTML();
       
+      // 記事と同じロジック: setDocで確実に上書き
       await setDoc(docRef, {
         authorName: values.authorName,
         authorImageUrl: values.authorImageUrl,
@@ -123,13 +125,13 @@ export function PresidentMessageManager() {
         updatedAt: serverTimestamp(),
       }, { merge: true });
 
-      toast({ title: "更新しました", description: "会長挨拶の内容を保存しました。" });
+      toast({ title: "更新しました", description: "会長挨拶を記事と同じ形式で保存しました。" });
     } catch (error: any) {
       console.error("Save failed:", error);
       toast({ 
         variant: "destructive", 
         title: "保存エラー", 
-        description: "Firestoreへの書き込みに失敗しました。" 
+        description: "更新に失敗しました。権限を確認してください。" 
       });
     } finally {
       setIsSaving(false);
@@ -189,11 +191,18 @@ export function PresidentMessageManager() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-700">
-      <div className="flex justify-between items-center"><h2 className="text-3xl font-black text-slate-800 tracking-tight">会長挨拶 🔒</h2></div>
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-4">
+          <div className="bg-white p-2 rounded-2xl shadow-md border-2 border-slate-50">
+            <Image src="/icon.png" alt="" width={48} height={48} className="rounded-xl" />
+          </div>
+          <h2 className="text-3xl font-black text-slate-800 tracking-tight">会長挨拶 🔒</h2>
+        </div>
+      </div>
       <Card className="shadow-sm border-slate-200 rounded-3xl bg-white overflow-hidden">
         <CardHeader className="bg-slate-50/50 border-b p-8">
           <CardTitle className="text-xl font-black flex items-center gap-3"><UserIcon className="h-6 w-6 text-primary" />メッセージの編集</CardTitle>
-          <CardDescription className="text-sm font-bold text-slate-500 mt-1">公式サイトのトップページに表示される「会長の言葉」を編集します。</CardDescription>
+          <CardDescription className="text-sm font-bold text-slate-500 mt-1">公式サイトのトップページに表示される「会長の言葉」を、記事と同じ形式で作成します。</CardDescription>
         </CardHeader>
         <CardContent className="p-8 md:p-12">
           <Form {...form}>
@@ -201,21 +210,21 @@ export function PresidentMessageManager() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <FormField control={form.control} name="authorName" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-bold text-slate-600">会長氏名</FormLabel>
-                    <FormControl><Input placeholder="例：北海 太郎" className="h-12 font-bold rounded-xl border-slate-200" {...field} /></FormControl>
+                    <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">会長氏名</FormLabel>
+                    <FormControl><Input placeholder="" className="h-12 font-bold rounded-xl border-slate-200" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="authorImageUrl" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-bold text-slate-600">顔写真URL</FormLabel>
-                    <FormControl><Input placeholder="https://..." className="h-12 font-bold rounded-xl border-slate-200" {...field} /></FormControl>
+                    <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">顔写真URL</FormLabel>
+                    <FormControl><Input placeholder="" className="h-12 font-bold rounded-xl border-slate-200" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
                 <div className="md:col-span-2">
                   <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 mb-2">
-                    <Type className="h-3 w-3" /> 挨拶本文 (Tiptapエディタ)
+                    <Type className="h-3 w-3" /> 挨拶本文 (リッチエディタ)
                   </FormLabel>
                   <div className="flex items-center gap-1 border-b pb-2 mb-2">
                     <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('bold') && "bg-slate-100")} onClick={() => editor?.chain().focus().toggleBold().run()}><Bold className="h-4 w-4" /></Button>
@@ -235,7 +244,7 @@ export function PresidentMessageManager() {
                   className="flex items-center gap-3 px-12 h-14 font-black rounded-2xl shadow-xl shadow-primary/10 hover:scale-105 transition-transform"
                 >
                   {isSaving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
-                  保存して更新する
+                  記事と同じ形式で保存
                 </Button>
               </div>
             </form>
