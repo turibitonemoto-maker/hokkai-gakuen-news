@@ -29,7 +29,7 @@ export default function ArticleDetailPage() {
   useEffect(() => {
     if (article?.content) {
       // HTMLエディタからの入力（HTML）をサニタイズ
-      // whitespace-pre-wrapは使用せず、HTMLタグに任せる
+      // 注: whitespace-pre-wrap は HTML の構造を壊し二重改行を招くため使用しません。
       setSanitizedHtml(DOMPurify.sanitize(article.content));
     }
   }, [article]);
@@ -122,13 +122,13 @@ export default function ArticleDetailPage() {
               </div>
             </div>
 
-            {/* 修正：whitespace-pre-wrapを削除し、proseの設定で密度を調整 */}
+            {/* 修正：行間と段落の余白を日本人が読みやすい密度に調整 */}
             <div 
               className="prose prose-slate max-w-none 
-                         text-slate-700 text-lg md:text-xl leading-relaxed
-                         prose-p:my-6 prose-p:leading-relaxed
-                         prose-headings:font-black prose-headings:tracking-tighter prose-headings:mt-12 prose-headings:mb-6
-                         prose-img:rounded-3xl prose-img:shadow-2xl prose-img:my-10
+                         text-slate-700 text-lg md:text-xl
+                         prose-p:my-4 prose-p:leading-7
+                         prose-headings:font-black prose-headings:tracking-tighter prose-headings:mt-8 prose-headings:mb-4
+                         prose-img:rounded-2xl prose-img:shadow-xl prose-img:my-8
                          prose-a:text-primary prose-a:font-black prose-a:no-underline hover:prose-a:underline"
               dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
             />

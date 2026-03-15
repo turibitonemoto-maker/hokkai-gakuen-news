@@ -12,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { FileText, Share2, Tag, ImageIcon, Type, Heading1, Heading2, List, Link as LinkIcon, Bold, Italic, Loader2, Eraser } from "lucide-react";
+import { FileText, Share2, Tag, ImageIcon, Type, Heading1, Heading2, List, Link as LinkIcon, Bold, Italic, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -78,7 +78,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       }),
     ],
     content: article?.content || "",
-    immediatelyRender: false, // SSR Hydrationエラー対策
+    immediatelyRender: false,
     onUpdate: ({ editor }) => {
       form.setValue("content", editor.getHTML());
     },
@@ -96,27 +96,32 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     setIsUploading(true);
     try {
       const storage = getStorage(firebaseApp);
+      // リージョンは asia-northeast1 (東京) 等をコンソール側で設定してください。
       const storageRef = ref(storage, `articles/${Date.now()}_${file.name}`);
       await uploadBytes(storageRef, file);
       const url = await getDownloadURL(storageRef);
+      
       editor.chain().focus().setImage({ src: url }).run();
       toast({ title: "画像を挿入しました", description: "Storageへのアップロードが完了しました。" });
     } catch (error: any) {
       console.error("Upload failed:", error);
       let errorMessage = "画像のアップロードに失敗しました。";
+      
       if (error.code === 'storage/unauthorized') {
-        errorMessage = "Storageの書き込み権限がありません。FirebaseコンソールのRulesを確認してください。";
+        errorMessage = "権限がありません。FirebaseコンソールのStorage Rulesを 'allow write: if request.auth != null;' に設定してください。";
+      } else if (error.code === 'storage/unknown') {
+        errorMessage = "Storageが作成されていないか、リージョン設定に問題があります。コンソールを確認してください。";
       } else if (error.code === 'storage/retry-limit-exceeded') {
-        errorMessage = "アップロードがタイムアウトしました。";
+        errorMessage = "アップロードがタイムアウトしました。ネットワークを確認してください。";
       }
-      toast({ variant: "destructive", title: "エラー", description: errorMessage });
+      
+      toast({ variant: "destructive", title: "アップロードエラー", description: errorMessage });
     } finally {
       setIsUploading(false);
+      // 同じファイルを連続選択できるようリセット
+      e.target.value = '';
     }
   }, [editor, firebaseApp, toast]);
-
-  const articleType = form.watch("articleType");
-  const isNote = articleType === "Note";
 
   function onSubmit(values: ArticleFormValues) {
     if (!firestore) return;
@@ -280,7 +285,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                 <List className="h-4 w-4" />
               </Button>
               <div className="relative">
-                <Input 
+                <input 
                   type="file" 
                   accept="image/*" 
                   className="hidden" 
