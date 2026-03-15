@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useDoc, useFirestore, useMemoFirebase, useUser } from "@/firebase";
@@ -16,8 +15,8 @@ import LinkExtension from '@tiptap/extension-link';
 import { cn } from "@/lib/utils";
 
 /**
- * About Us 管制室（管理用サイト）
- * 命令に基づき、不純なコードを排除し、settings/about の content フィールドを統制することに特化しました。
+ * About Us 管理画面
+ * settings/about の content フィールドを編集・保存します。
  */
 export function AboutManager() {
   const [password, setPassword] = useState("");
@@ -63,7 +62,6 @@ export function AboutManager() {
 
   const { data: aboutData, isLoading } = useDoc(docRef);
 
-  // 本文内への画像挿入ハンドラ
   async function handleImageInsert(file: File) {
     if (!file.type.startsWith('image/')) return;
     setIsProcessing(true);
@@ -73,7 +71,7 @@ export function AboutManager() {
       reader.onload = () => {
         const base64 = reader.result as string;
         editor?.chain().focus().setImage({ src: base64 }).run();
-        toast({ title: "画像を本文に埋め込みました" });
+        toast({ title: "画像を挿入しました" });
         setIsProcessing(false);
       };
     } catch (error: any) {
@@ -82,7 +80,6 @@ export function AboutManager() {
     }
   }
 
-  // 既存データの復元
   useEffect(() => {
     if (aboutData && editor) {
       if (aboutData.content && editor.getHTML() !== aboutData.content) {
@@ -91,7 +88,6 @@ export function AboutManager() {
     }
   }, [aboutData, editor]);
 
-  // ロックアウト状態の管理
   useEffect(() => {
     const storedLockout = localStorage.getItem("lockout_until");
     if (storedLockout) {
@@ -110,7 +106,7 @@ export function AboutManager() {
     if (password === correctPassword) {
       setIsUnlocked(true);
       setFailCount(0);
-      toast({ title: "認証完了" });
+      toast({ title: "認証成功" });
     } else {
       const newCount = failCount + 1;
       setFailCount(newCount);
@@ -121,7 +117,7 @@ export function AboutManager() {
           const until = Date.now() + 5 * 60 * 1000;
           setLockoutTime(until);
           localStorage.setItem("lockout_until", until.toString());
-          toast({ variant: "destructive", title: "アクセス拒否" });
+          toast({ variant: "destructive", title: "ロックされました" });
         }, 800);
       } else {
         toast({ variant: "destructive", title: "不一致", description: `あと ${3 - newCount} 回でロックされます。` });
@@ -129,34 +125,32 @@ export function AboutManager() {
     }
   };
 
-  // 保存処理（再構築プロトコル準拠）
   async function handleSave() {
     if (!firestore || !docRef || !editor) return;
     setIsSaving(true);
     try {
       const htmlContent = editor.getHTML();
-      // settings/about ドキュメントの content フィールドのみを更新
       await setDoc(docRef, {
         content: htmlContent, 
         updatedAt: serverTimestamp(),
         updatedBy: user?.email || "unknown"
       }, { merge: true });
-      toast({ title: "更新しました", description: "About Us を保存しました。表示サイトに即座に反映されます。" });
+      toast({ title: "保存完了", description: "About Us を更新しました。" });
     } catch (error: any) {
-      toast({ variant: "destructive", title: "保存エラー", description: error.message });
+      toast({ variant: "destructive", title: "エラー", description: error.message });
     } finally {
       setIsSaving(false);
     }
   }
 
-  if (isVerifying) return <div className="flex flex-col items-center justify-center min-h-[400px]"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
+  if (isVerifying) return <div className="flex justify-center p-12"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
 
   if (lockoutTime && lockoutTime > Date.now()) {
     return (
       <div className="max-w-4xl mx-auto mt-10">
-        <Card className="bg-black text-white rounded-[3rem] text-center p-12">
-          <h2 className="text-3xl font-black mb-4 text-red-500">アクセス禁止 🔒</h2>
-          <p className="text-slate-400 font-bold text-lg">頭を冷やして出直してください。</p>
+        <Card className="bg-black text-white p-12 rounded-[2rem] text-center">
+          <h2 className="text-2xl font-bold mb-4 text-red-500">アクセス制限中 🔒</h2>
+          <p className="text-slate-400">しばらく時間をおいてから再試行してください。</p>
         </Card>
       </div>
     );
@@ -167,15 +161,15 @@ export function AboutManager() {
   if (!isUnlocked) {
     return (
       <div className="max-w-md mx-auto mt-20">
-        <Card className="shadow-2xl border-none bg-white rounded-3xl overflow-hidden">
-          <CardHeader className="text-center pt-10 pb-6 bg-slate-50/50">
-            <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"><Info className="h-10 w-10 text-primary" /></div>
-            <CardTitle className="text-2xl font-black">About Us 🔒</CardTitle>
-            <CardDescription>編集には管理者認証が必要です。</CardDescription>
+        <Card className="shadow-2xl border-none rounded-2xl overflow-hidden">
+          <CardHeader className="text-center bg-slate-50/50 py-8">
+            <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"><Lock className="h-8 w-8 text-primary" /></div>
+            <CardTitle className="text-xl font-bold">About Us 管理 🔒</CardTitle>
+            <CardDescription>編集するには認証が必要です。</CardDescription>
           </CardHeader>
-          <CardContent className="p-10 space-y-6">
-            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleUnlock()} className="text-center h-14 text-lg font-bold rounded-2xl" placeholder="パスワードを入力" autoFocus />
-            <Button className="w-full h-14 font-black rounded-2xl" onClick={handleUnlock}>認証する</Button>
+          <CardContent className="p-8 space-y-4">
+            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleUnlock()} className="h-12 text-center font-bold" placeholder="パスワードを入力" autoFocus />
+            <Button className="w-full h-12 font-bold" onClick={handleUnlock}>認証</Button>
           </CardContent>
         </Card>
       </div>
@@ -183,52 +177,46 @@ export function AboutManager() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-700 pb-20">
+    <div className="max-w-5xl mx-auto space-y-6 pb-20">
       <div className="flex items-center gap-4">
-        <div className="bg-white p-2 rounded-2xl shadow-md border-2 border-slate-50">
-          <Info className="h-10 w-10 text-primary" />
+        <div className="bg-white p-2 rounded-xl shadow-sm border">
+          <Info className="h-8 w-8 text-primary" />
         </div>
         <div>
-          <h2 className="text-3xl font-black text-slate-800 tracking-tight">About Us 🔒</h2>
-          <p className="text-sm font-bold text-slate-500">組織の紹介、理念を統制します。ここでの更新は公式サイトに即座に反映されます。</p>
+          <h2 className="text-2xl font-bold text-slate-800">About Us 管理 🔒</h2>
+          <p className="text-sm text-slate-500">組織の紹介ページを編集します。</p>
         </div>
       </div>
 
-      <Card className="shadow-sm border-slate-200 rounded-[2.5rem] bg-white overflow-hidden">
-        <CardHeader className="bg-slate-50/50 border-b p-8 md:p-12">
-          <CardTitle className="text-xl font-black flex items-center gap-3"><Type className="h-6 w-6 text-primary" />内容の編集</CardTitle>
+      <Card className="shadow-sm border-slate-200 rounded-2xl bg-white overflow-hidden">
+        <CardHeader className="bg-slate-50/30 border-b p-6">
+          <CardTitle className="text-lg font-bold flex items-center gap-2"><Type className="h-5 w-5 text-primary" />内容の編集</CardTitle>
         </CardHeader>
-        <CardContent className="p-8 md:p-12">
-          <div className="space-y-12">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between border-b pb-2">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                  <Type className="h-3 w-3" /> 本文執筆
-                </span>
-                <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl">
-                  <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('bold') && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleBold().run()}><Bold className="h-4 w-4" /></Button>
-                  <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('italic') && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleItalic().run()}><Italic className="h-4 w-4" /></Button>
-                  <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('heading', { level: 2 }) && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}><Heading2 className="h-4 w-4" /></Button>
-                  <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('bulletList') && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleBulletList().run()}><List className="h-4 w-4" /></Button>
-                  <div className="relative">
-                    <input type="file" accept="image/*" className="hidden" id="about-image-upload" onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleImageInsert(file);
-                    }}/>
-                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => document.getElementById('about-image-upload')?.click()} disabled={isProcessing}>
-                      {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              <div className="min-h-[600px] bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-inner relative">
-                <EditorContent editor={editor} />
+        <CardContent className="p-6">
+          <div className="space-y-6">
+            <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-lg w-fit">
+              <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('bold') && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleBold().run()}><Bold className="h-4 w-4" /></Button>
+              <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('italic') && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleItalic().run()}><Italic className="h-4 w-4" /></Button>
+              <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('heading', { level: 2 }) && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}><Heading2 className="h-4 w-4" /></Button>
+              <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('bulletList') && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleBulletList().run()}><List className="h-4 w-4" /></Button>
+              <div className="relative">
+                <input type="file" accept="image/*" className="hidden" id="about-image-upload" onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleImageInsert(file);
+                }}/>
+                <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => document.getElementById('about-image-upload')?.click()} disabled={isProcessing}>
+                  {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
+                </Button>
               </div>
             </div>
+            
+            <div className="min-h-[500px] border rounded-xl overflow-hidden bg-white shadow-inner">
+              <EditorContent editor={editor} />
+            </div>
 
-            <div className="flex justify-end pt-8 border-t border-slate-100 sticky bottom-6 bg-white py-4 z-10">
-              <Button type="button" onClick={handleSave} disabled={isSaving} className="px-12 h-16 font-black rounded-2xl shadow-2xl shadow-primary/20 text-lg">
-                {isSaving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5 mr-3" />}
+            <div className="flex justify-end pt-4">
+              <Button type="button" onClick={handleSave} disabled={isSaving} className="px-10 h-12 font-bold shadow-lg">
+                {isSaving ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Save className="h-5 w-5 mr-2" />}
                 内容を確定する
               </Button>
             </div>
