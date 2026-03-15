@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm, useFieldArray } from "react-hook-form";
@@ -57,7 +58,7 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
       issueNumber: paper?.issueNumber || 0,
       title: paper?.title || "",
       publishDate: paper?.publishDate || new Date().toISOString().split("T")[0],
-      pages: paper?.paperImages?.map((url: string, index: number) => ({ id: `page-${index}-${Date.now()}`, url })) || [{ id: "page-0", url: "" }],
+      pages: paper?.paperImages?.map((url: string, index: number) => ({ id: `page-${index}-${Date.now()}`, url })) || [{ id: `page-initial-${Date.now()}`, url: "" }],
       isPublished: paper?.isPublished ?? true,
     },
   });

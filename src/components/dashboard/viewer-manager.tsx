@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -46,7 +47,9 @@ export function ViewerManager() {
       .sort((a, b) => {
         const dateA = a.publishDate || "";
         const dateB = b.publishDate || "";
-        return dateB.localeCompare(dateA);
+        const dateCompare = dateB.localeCompare(dateA);
+        if (dateCompare !== 0) return dateCompare;
+        return (b.issueNumber || 0) - (a.issueNumber || 0);
       });
   }, [allArticles]);
 
@@ -126,7 +129,7 @@ export function ViewerManager() {
                     <TableCell>
                       <div className="flex flex-col">
                         <span className="font-bold text-slate-800">{article.title}</span>
-                        {article.mainImageUrl && <span className="text-[9px] font-black text-green-500 uppercase flex items-center gap-1 mt-1"><CheckCircle2 className="h-2 w-2" /> Thumbnail Set</span>}
+                        {(article.mainImageUrl || article.paperImages?.length > 0) && <span className="text-[9px] font-black text-green-500 uppercase flex items-center gap-1 mt-1"><CheckCircle2 className="h-2 w-2" /> Thumbnail Set</span>}
                       </div>
                     </TableCell>
                     <TableCell className="text-center font-bold text-slate-500 text-sm">

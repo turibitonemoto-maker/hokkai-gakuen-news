@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useDoc, useFirestore } from "@/firebase";
@@ -12,9 +13,6 @@ import Image from "next/image";
 import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 
-/**
- * 紙面ビューアー詳細ページ（マルチページ対応版）
- */
 export default function PaperViewerPage() {
   const { id } = useParams();
   const router = useRouter();
@@ -26,6 +24,7 @@ export default function PaperViewerPage() {
 
   const displayPages = useMemo(() => {
     if (!article) return [];
+    // paperImages がある場合はそれを優先、ない場合は mainImageUrl を配列にして返す
     const basePages = article.paperImages || (article.mainImageUrl ? [article.mainImageUrl] : []);
     return basePages.filter((url: string) => url && url.trim() !== "");
   }, [article]);
