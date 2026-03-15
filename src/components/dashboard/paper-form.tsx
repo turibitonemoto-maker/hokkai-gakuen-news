@@ -98,7 +98,7 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
     const widget = window.cloudinary.createUploadWidget(
       {
         cloudName: "dl2yqrpfj",
-        uploadPreset: "ml_default", // 作成者様、Cloudinaryコンソールで「unsigned upload」を有効にしたプリセット名が必要です
+        uploadPreset: "hokkai gakuen news cloud", // 最高司令官の設定したプリセット名へ完全同期
         sources: ["local", "url", "camera"],
         multiple: false,
         cropping: false,
