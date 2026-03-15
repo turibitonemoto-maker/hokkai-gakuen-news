@@ -1,11 +1,6 @@
 
 "use client";
 
-/**
- * @fileOverview 会長挨拶管理コンポーネント
- * 題名、氏名、顔写真（精密調整付き）、本文を統合的に管理。
- */
-
 import { useDoc, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
@@ -90,7 +85,7 @@ export function PresidentMessageManager() {
     } finally {
       setIsProcessing(false);
     }
-  }, []);
+  }, [editor, toast]);
 
   const editor = useEditor({
     extensions: [

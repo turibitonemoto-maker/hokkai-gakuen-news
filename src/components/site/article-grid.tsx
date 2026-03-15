@@ -45,7 +45,7 @@ export function ArticleGrid({ articles }: { articles: any[] }) {
 function ArticleCard({ article }: { article: any }) {
   const hasImage = !!article.mainImageUrl && article.mainImageUrl.trim() !== "";
   const textSnippet = stripHtmlTags(article.content || "");
-  const transform = article.mainImageTransform || { scale: 1, x: 0, y: 0 };
+  const transform = article.mainImageTransform || { scale: 0, x: 0, y: 0 };
 
   return (
     <div className="group bg-white rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-slate-100 flex flex-col h-full">
@@ -58,7 +58,7 @@ function ArticleCard({ article }: { article: any }) {
               fill
               className="object-cover transition-transform duration-700"
               style={{
-                transform: `scale(${transform.scale}) translate(${transform.x}%, ${transform.y}%)`,
+                transform: `scale(${1 + transform.scale / 100}) translate(${transform.x}%, ${transform.y}%)`,
                 willChange: 'transform'
               }}
               unoptimized

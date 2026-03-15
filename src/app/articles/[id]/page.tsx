@@ -77,7 +77,7 @@ export default function ArticleDetailPage() {
   }
 
   const embedPdfUrl = getDriveEmbedUrl(article.pdfUrl || "");
-  const transform = article.mainImageTransform || { scale: 1, x: 0, y: 0 };
+  const transform = article.mainImageTransform || { scale: 0, x: 0, y: 0 };
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-body">
@@ -100,7 +100,7 @@ export default function ArticleDetailPage() {
                   fill 
                   className="object-cover"
                   style={{
-                    transform: `scale(${transform.scale}) translate(${transform.x}%, ${transform.y}%)`,
+                    transform: `scale(${1 + transform.scale / 100}) translate(${transform.x}%, ${transform.y}%)`,
                     willChange: 'transform'
                   }}
                   priority

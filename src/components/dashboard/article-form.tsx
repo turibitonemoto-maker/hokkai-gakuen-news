@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { ImageIcon, Type, Heading2, Loader2, Upload, FileType, MessageSquareText, Bold, Italic, List, Maximize, MoveHorizontal, MoveVertical } from "lucide-react";
+import { ImageIcon, Type, Heading2, Loader2, Upload, FileType, MessageSquareText, Bold, Italic, List, Maximize, MoveHorizontal, MoveVertical, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -92,7 +92,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     } finally {
       setIsProcessing(false);
     }
-  }, []);
+  }, [editor, toast]);
 
   const editor = useEditor({
     extensions: [
@@ -147,8 +147,8 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
   const handleMainImageUpload = async (e: React.ChangeEvent<HTMLInputElement> | React.DragEvent) => {
     let file: File | undefined;
     
-    if ('files' in e.target && e.target.files) {
-      file = e.target.files[0];
+    if ('files' in (e.target as any) && (e.target as any).files) {
+      file = (e.target as any).files[0];
     } else if ('dataTransfer' in e && e.dataTransfer.files) {
       file = e.dataTransfer.files[0];
     }
@@ -166,11 +166,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       setIsProcessing(false);
       setIsDraggingMain(false);
     }
-  };
-
-  const handleEditorImageButton = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) handleImageInsert(file);
   };
 
   function onSubmit(values: ArticleFormValues) {
@@ -288,7 +283,10 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
               <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", editor?.isActive('heading', { level: 2 }) && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}><Heading2 className="h-4 w-4" /></Button>
               <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", editor?.isActive('bulletList') && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleBulletList().run()}><List className="h-4 w-4" /></Button>
               <div className="relative">
-                <input type="file" accept="image/*" className="hidden" id="editor-image-upload" onChange={handleEditorImageButton}/>
+                <input type="file" accept="image/*" className="hidden" id="editor-image-upload" onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleImageInsert(file);
+                }}/>
                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => document.getElementById('editor-image-upload')?.click()} disabled={isProcessing}>
                   {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
                 </Button>
@@ -361,7 +359,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
-                        <label className="text-[10px] font-bold text-slate-500">倍率 (標準: 0%)</label>
+                        <label className="text-[10px] font-bold text-slate-500">倍率 (中央: 0%)</label>
                         <span className="text-[10px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded">
                           {transform.scale.toFixed(0)}%
                         </span>
@@ -435,7 +433,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                   )}
                 </div>
                 <p className="text-[8px] text-slate-400 font-bold uppercase text-center tracking-widest mt-2">
-                  ※サイト上での実際の見え方です。スライダーを動かすとここが変わります。
+                  ※サイト上での実際の見え方です
                 </p>
               </div>
 
@@ -481,26 +479,4 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       </form>
     </Form>
   );
-}
-
-function RefreshCw(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
-      <path d="M21 3v5h-5" />
-      <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
-      <path d="M3 21v-5h5" />
-    </svg>
-  )
 }

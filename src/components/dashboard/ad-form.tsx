@@ -13,7 +13,7 @@ import { Slider } from "@/components/ui/slider";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useRef } from "react";
-import { Loader2, Upload, Maximize, MoveHorizontal, MoveVertical, ImageIcon } from "lucide-react";
+import { Loader2, Upload, Maximize, MoveHorizontal, MoveVertical } from "lucide-react";
 import Image from "next/image";
 
 const adSchema = z.object({
@@ -193,7 +193,7 @@ export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
 
           <div className="space-y-4">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">仕上がりプレビュー</label>
-            <div className="relative aspect-[3/1] rounded-2xl overflow-hidden bg-slate-100 border-4 border-white shadow-lg">
+            <div className="relative h-28 rounded-2xl overflow-hidden bg-slate-100 border-4 border-white shadow-lg">
               {imageUrl ? (
                 <Image 
                   src={imageUrl} 
