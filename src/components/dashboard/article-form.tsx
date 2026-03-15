@@ -298,22 +298,27 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
               {mainImageUrl && (
                 <div className="space-y-6 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm animate-in fade-in zoom-in duration-300">
                    <h4 className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-2">
-                    <Maximize className="h-3 w-3" /> 画像精密調整 🔒
+                    <Maximize className="h-3 w-3" /> 画像精密調整
                   </h4>
                   
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
-                        <label className="text-[10px] font-bold text-slate-500">拡大倍率 (Scale)</label>
-                        <span className="text-[10px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded">{transform.scale.toFixed(1)}x</span>
+                        <label className="text-[10px] font-bold text-slate-500">拡大・縮小 (Scale)</label>
+                        <span className="text-[10px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded">{transform.scale.toFixed(2)}x</span>
                       </div>
                       <Slider 
                         min={0.1} 
-                        max={3} 
-                        step={0.1} 
+                        max={1.9} 
+                        step={0.01} 
                         value={[transform.scale]} 
                         onValueChange={([val]) => form.setValue("mainImageTransform.scale", val)} 
                       />
+                      <div className="flex justify-between text-[8px] font-bold text-slate-300 uppercase tracking-widest">
+                        <span>縮小</span>
+                        <span>標準 (1.0)</span>
+                        <span>拡大</span>
+                      </div>
                     </div>
 
                     <div className="space-y-2">
