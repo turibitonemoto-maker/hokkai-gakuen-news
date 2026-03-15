@@ -1,3 +1,4 @@
+
 'use server';
 
 import Parser from 'rss-parser';
@@ -48,7 +49,6 @@ export async function fetchNoteArticles() {
       const formattedDate = pubDate.toISOString().split('T')[0];
 
       // 4. 本文の整形（改行を維持しながらHTMLを除去）
-      // <p>, <div>, <br> を改行文字に変換してからタグを削除することで、文章がひとかたまりになるのを防ぎます。
       const rawContent = item.contentEncoded || item.content || item.description || "";
       const snippet = rawContent
         .replace(/<\/p>|<\/div>|<br\s*\/?>/gi, '\n')

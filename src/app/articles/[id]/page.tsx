@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
@@ -10,11 +11,14 @@ import { Calendar, Tag, ChevronLeft, Share2, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import Link from 'next/link';
+import DOMPurify from 'dompurify';
+import { useState, useEffect } from 'react';
 
 export default function ArticleDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const firestore = useFirestore();
+  const [sanitizedHtml, setSanitizedHtml] = useState<string>('');
 
   const articleRef = useMemoFirebase(() => {
     if (!firestore || !id) return null;
@@ -22,6 +26,12 @@ export default function ArticleDetailPage() {
   }, [firestore, id]);
 
   const { data: article, isLoading } = useDoc(articleRef);
+
+  useEffect(() => {
+    if (article?.content) {
+      setSanitizedHtml(DOMPurify.sanitize(article.content));
+    }
+  }, [article]);
 
   if (isLoading) {
     return (
@@ -84,7 +94,7 @@ export default function ArticleDetailPage() {
             <div className="flex items-center justify-between pb-10 border-b border-slate-100 mb-10">
               <div className="flex items-center gap-4">
                 <div className="bg-slate-50 h-12 w-12 rounded-full flex items-center justify-center border border-slate-100">
-                  <Printer className="h-5 w-5 text-slate-400" />
+                  <Image src="/icon.png" alt="" width={24} height={24} className="opacity-40" />
                 </div>
                 <div>
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">執筆 / 提供</p>
@@ -92,18 +102,17 @@ export default function ArticleDetailPage() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" size="icon" className="rounded-full border-slate-200 hover:bg-slate-50">
-                  <Share2 className="h-4 w-4 text-slate-400" />
+                <Button variant="outline" size="icon" className="rounded-full border-slate-200 hover:bg-slate-50" onClick={() => window.print()}>
+                  <Printer className="h-4 w-4 text-slate-400" />
                 </Button>
               </div>
             </div>
 
-            {/* 本文：whitespace-pre-wrap により改行と空白を忠実に再現 */}
-            <div className="prose prose-slate max-w-none">
-              <div className="text-lg leading-relaxed text-slate-700 whitespace-pre-wrap font-medium">
-                {article.content}
-              </div>
-            </div>
+            {/* 本文：HTMLレンダリング */}
+            <div 
+              className="prose-custom max-w-none text-lg leading-relaxed text-slate-700 font-medium"
+              dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
+            />
 
             {article.tags && article.tags.length > 0 && (
               <div className="mt-16 pt-10 border-t border-slate-100 flex flex-wrap gap-2">

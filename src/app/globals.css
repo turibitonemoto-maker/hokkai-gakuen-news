@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -24,33 +25,12 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 210 50% 40%;
     --radius: 0.75rem;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
   }
 
   .dark {
     --background: 222 47% 11%;
     --foreground: 210 40% 98%;
-    --card: 222 47% 11%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 11%;
-    --popover-foreground: 210 40% 98%;
     --primary: 210 50% 50%;
-    --primary-foreground: 222 47% 11%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 180 70% 50%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
   }
 }
 
@@ -61,4 +41,66 @@
   body {
     @apply bg-background text-foreground font-body antialiased;
   }
+}
+
+/* note風のリッチテキストレンダリングスタイル */
+.prose-custom {
+  @apply space-y-6;
+}
+
+.prose-custom p {
+  @apply leading-relaxed mb-6;
+}
+
+.prose-custom h1 {
+  @apply text-3xl font-black mb-6 mt-10;
+}
+
+.prose-custom h2 {
+  @apply text-2xl font-black mb-4 mt-8 pb-2 border-b-2 border-slate-50;
+}
+
+.prose-custom h3 {
+  @apply text-xl font-bold mb-3 mt-6;
+}
+
+.prose-custom img {
+  @apply rounded-2xl shadow-lg my-8 max-w-full h-auto mx-auto;
+}
+
+.prose-custom ul, .prose-custom ol {
+  @apply ml-6 mb-6 list-outside;
+}
+
+.prose-custom ul {
+  @apply list-disc;
+}
+
+.prose-custom ol {
+  @apply list-decimal;
+}
+
+.prose-custom li {
+  @apply mb-2 pl-2;
+}
+
+.prose-custom a {
+  @apply text-primary font-bold underline hover:opacity-70 transition-opacity;
+}
+
+/* Quillエディタのカスタマイズ */
+.ql-container.ql-snow {
+  @apply border-none font-body text-lg;
+}
+
+.ql-toolbar.ql-snow {
+  @apply border-none bg-slate-50 border-b border-slate-100 py-4 px-6;
+}
+
+.ql-editor {
+  @apply p-10 leading-relaxed min-h-[500px];
+}
+
+.ql-editor.ql-blank::before {
+  @apply left-10 text-slate-300 font-bold italic;
 }

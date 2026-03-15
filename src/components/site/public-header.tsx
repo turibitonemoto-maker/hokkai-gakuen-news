@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -51,9 +52,6 @@ export function PublicHeader() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="text-slate-500">
-              <Search className="h-5 w-5" />
-            </Button>
             <Link href="/admin">
               <Button variant="outline" size="sm" className="hidden sm:flex gap-2 items-center border-primary/20 hover:bg-primary/5 text-primary font-bold">
                 <User className="h-4 w-4" />
