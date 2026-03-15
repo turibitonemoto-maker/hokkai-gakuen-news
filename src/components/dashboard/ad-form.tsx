@@ -141,31 +141,36 @@ export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <label className="text-[10px] font-bold text-slate-500">倍率 (基点: 0%)</label>
+                      <label className="text-[10px] font-bold text-slate-500">倍率 (中央: 0%)</label>
                       <span className="text-[10px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded">
                         {((transform.scale - 1) * 100).toFixed(0)}%
                       </span>
                     </div>
                     <Slider 
-                      min={-90} 
+                      min={-200} 
                       max={200} 
-                      step={0.1} 
+                      step={1} 
                       value={[(transform.scale - 1) * 100]} 
-                      onValueChange={([val]) => form.setValue("imageTransform.scale", 1 + val / 100)} 
+                      onValueChange={([val]) => form.setValue("imageTransform.scale", Math.max(0.1, 1 + val / 100))} 
                     />
+                    <div className="flex justify-between text-[8px] font-bold text-slate-300 uppercase tracking-widest">
+                      <span>縮小</span>
+                      <span className="text-primary/40">標準 (0%)</span>
+                      <span>拡大</span>
+                    </div>
                   </div>
 
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
                       <label className="text-[10px] font-bold text-slate-500 flex items-center gap-1">
-                        <MoveHorizontal className="h-3 w-3" /> 水平移動 (基点: 0)
+                        <MoveHorizontal className="h-3 w-3" /> 水平移動 (中央: 0)
                       </label>
-                      <span className="text-[10px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded">{transform.x.toFixed(1)}%</span>
+                      <span className="text-[10px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded">{transform.x.toFixed(0)}%</span>
                     </div>
                     <Slider 
-                      min={-100} 
+                      min={-200} 
                       max={200} 
-                      step={0.1} 
+                      step={1} 
                       value={[transform.x]} 
                       onValueChange={([val]) => form.setValue("imageTransform.x", val)} 
                     />
@@ -174,14 +179,14 @@ export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
                       <label className="text-[10px] font-bold text-slate-500 flex items-center gap-1">
-                        <MoveVertical className="h-3 w-3" /> 垂直移動 (基点: 0)
+                        <MoveVertical className="h-3 w-3" /> 垂直移動 (中央: 0)
                       </label>
-                      <span className="text-[10px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded">{transform.y.toFixed(1)}%</span>
+                      <span className="text-[10px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded">{transform.y.toFixed(0)}%</span>
                     </div>
                     <Slider 
-                      min={-100} 
+                      min={-200} 
                       max={200} 
-                      step={0.1} 
+                      step={1} 
                       value={[transform.y]} 
                       onValueChange={([val]) => form.setValue("imageTransform.y", val)} 
                     />
