@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useForm, useFieldArray } from "react-hook-form";
@@ -23,7 +22,7 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
-} from "@nd-kit/core";
+} from "@dnd-kit/core";
 import {
   arrayMove,
   SortableContext,
@@ -68,7 +67,7 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
     name: "pages",
   });
 
-  // watch を使用して最新の URL 状態を取得（プレビューの即時反映に必要）
+  // watch を使用して最新の URL 状態を取得
   const watchedPages = form.watch("pages");
 
   const sensors = useSensors(
