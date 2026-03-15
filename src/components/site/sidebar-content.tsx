@@ -44,6 +44,8 @@ export function SidebarContent({ ads }: { ads: any[] }) {
     updateDocumentNonBlocking(adRef, { clickCount: increment(1) });
   };
 
+  const transform = president?.authorImageTransform || { scale: 0, x: 0, y: 0 };
+
   return (
     <div className="space-y-10 sticky top-28">
       {president && (
@@ -56,13 +58,17 @@ export function SidebarContent({ ads }: { ads: any[] }) {
           </CardHeader>
           <CardContent className="pt-8">
             <div className="flex flex-col items-center mb-8">
-              <div className="relative h-24 w-24 rounded-[1.5rem] overflow-hidden shadow-xl mb-4 border-2 border-white bg-slate-50">
+              <div className="relative h-24 w-24 rounded-full overflow-hidden shadow-xl mb-4 border-2 border-white bg-slate-50">
                 {president.authorImageUrl ? (
                   <Image
                     src={president.authorImageUrl}
                     alt={president.authorName || "会長"}
                     fill
                     className="object-cover"
+                    style={{
+                      transform: `scale(${1 + transform.scale / 100}) translate(${transform.x}%, ${transform.y}%)`,
+                      willChange: 'transform'
+                    }}
                     sizes="96px"
                     unoptimized
                   />
@@ -79,10 +85,7 @@ export function SidebarContent({ ads }: { ads: any[] }) {
             <div className="relative">
               <MessageCircle className="absolute -top-4 -left-2 h-8 w-8 text-primary/10" />
               <div 
-                className="prose prose-slate prose-sm max-w-none 
-                           text-slate-600 font-medium
-                           prose-p:leading-7 prose-p:my-4
-                           text-center px-4"
+                className="article-content text-slate-600 font-medium text-center px-4 text-sm"
                 dangerouslySetInnerHTML={{ __html: sanitizedMessage }}
               />
             </div>
@@ -98,7 +101,7 @@ export function SidebarContent({ ads }: { ads: any[] }) {
           </div>
           <div className="space-y-4">
             {activeAds.map((ad) => {
-              const transform = ad.imageTransform || { scale: 1, x: 0, y: 0 };
+              const adTransform = ad.imageTransform || { scale: 0, x: 0, y: 0 };
               return (
                 <a 
                   key={ad.id} 
@@ -115,7 +118,7 @@ export function SidebarContent({ ads }: { ads: any[] }) {
                       fill
                       className="object-cover transition-transform"
                       style={{
-                        transform: `scale(${transform.scale}) translate(${transform.x}%, ${transform.y}%)`,
+                        transform: `scale(${1 + adTransform.scale / 100}) translate(${adTransform.x}%, ${adTransform.y}%)`,
                         willChange: 'transform'
                       }}
                       unoptimized
