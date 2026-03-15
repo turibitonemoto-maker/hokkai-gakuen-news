@@ -16,6 +16,14 @@
         "tags": { "type": "array", "items": { "type": "string" } },
         "publishDate": { "type": "string", "format": "date" },
         "mainImageUrl": { "type": "string", "format": "uri", "description": "表紙のJPEG画像データ（Base64）" },
+        "mainImageTransform": {
+          "type": "object",
+          "properties": {
+            "scale": { "type": "number" },
+            "x": { "type": "number" },
+            "y": { "type": "number" }
+          }
+        },
         "paperImages": {
           "type": "array",
           "items": { "type": "string", "format": "uri" },
