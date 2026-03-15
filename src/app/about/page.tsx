@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 /**
  * About Us 公開ページ
  * 管理画面の「About Us」司令部で編集された内容を、リアルタイムに取得して描画します。
+ * 全ての固定文を排除し、管理画面からの信号のみを映し出す「鏡」として機能します。
  */
 export default function AboutPage() {
   const firestore = useFirestore();

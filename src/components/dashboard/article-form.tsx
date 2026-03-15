@@ -28,7 +28,6 @@ const articleSchema = z.object({
   articleType: z.literal("Standard"),
   content: z.string().min(1, "本文を入力してください"),
   imageCaption: z.string().optional().or(z.literal("")),
-  pdfUrl: z.string().optional().or(z.literal("")),
   categoryId: z.enum(["Campus", "Event", "Interview", "Sports", "Column", "Opinion"]),
   publishDate: z.string(),
   mainImageUrl: z.string().optional().or(z.literal("")),
@@ -107,7 +106,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       articleType: "Standard",
       content: article?.content || "",
       imageCaption: article?.imageCaption || "",
-      pdfUrl: article?.pdfUrl || "",
       categoryId: (article?.categoryId === "Viewer" ? "Campus" : article?.categoryId) || "Campus",
       publishDate: article?.publishDate || new Date().toISOString().split("T")[0],
       mainImageUrl: article?.mainImageUrl || "",
@@ -115,15 +113,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       isPublished: article?.isPublished || false,
     },
   });
-
-  const convertToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = error => reject(error);
-    });
-  };
 
   const handleMainImageUpload = async (e: React.ChangeEvent<HTMLInputElement> | React.DragEvent) => {
     let file: File | undefined;
@@ -135,14 +124,16 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     if (!file || !file.type.startsWith('image/')) return;
     setIsProcessing(true);
     try {
-      const base64 = await convertToBase64(file);
-      form.setValue("mainImageUrl", base64);
-      toast({ title: "表紙画像を取り込みました" });
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        form.setValue("mainImageUrl", reader.result as string);
+        toast({ title: "表紙画像を取り込みました" });
+        setIsProcessing(false);
+      };
     } catch (error: any) {
-      toast({ variant: "destructive", title: "失敗", description: "画像の処理に失敗しました。" });
-    } finally {
+      toast({ variant: "destructive", title: "失敗" });
       setIsProcessing(false);
-      setIsDraggingMain(false);
     }
   };
 
