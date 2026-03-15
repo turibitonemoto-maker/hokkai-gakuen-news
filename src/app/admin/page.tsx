@@ -16,7 +16,8 @@ import {
   User,
   ShieldCheck,
   Megaphone,
-  BookOpen
+  BookOpen,
+  Info
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -193,10 +194,16 @@ export default function AdminDashboard() {
                 <span>紙面ビューアー管理</span>
               </Button>
             </Link>
-            <Link href="/admin/ads">
+            <Link href="/admin/president">
               <Button variant="outline" className="w-full justify-start gap-3 h-12 border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-sm rounded-xl">
-                <Megaphone className="h-5 w-5" />
-                <span>広告管理</span>
+                <User className="h-5 w-5" />
+                <span>会長挨拶編集</span>
+              </Button>
+            </Link>
+            <Link href="/admin/about">
+              <Button variant="outline" className="w-full justify-start gap-3 h-12 border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-sm rounded-xl">
+                <Info className="h-5 w-5" />
+                <span>新聞会について編集</span>
               </Button>
             </Link>
             <Link href="/admin/maintenance">

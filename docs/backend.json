@@ -86,6 +86,10 @@
     "/settings/president_greeting": {
       "schema": { "type": "object" },
       "description": "会長挨拶。Fields: title, authorName, authorImageUrl, authorImageTransform, content."
+    },
+    "/settings/about": {
+      "schema": { "type": "object" },
+      "description": "新聞会について。Fields: title, content, updatedAt."
     }
   }
 }
