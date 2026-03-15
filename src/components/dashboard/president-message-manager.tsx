@@ -12,7 +12,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Save, User as UserIcon, Lock, Bold, Italic, Heading2, List, Type, ImageIcon, Upload, Maximize, MoveHorizontal, MoveVertical } from "lucide-react";
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import ImageExtension from '@tiptap/extension-image';
@@ -63,28 +63,24 @@ export function PresidentMessageManager() {
     },
   });
 
-  const convertToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = error => reject(error);
-    });
-  };
-
-  const handleEditorImageInsert = useCallback(async (file: File) => {
+  // Hoisted function to handle editor image insertion
+  async function handleEditorImageInsert(file: File) {
     if (!file.type.startsWith('image/')) return;
     setIsProcessing(true);
     try {
-      const base64 = await convertToBase64(file);
-      editor?.chain().focus().setImage({ src: base64 }).run();
-      toast({ title: "画像を本文に埋め込みました" });
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const base64 = reader.result as string;
+        editor?.chain().focus().setImage({ src: base64 }).run();
+        toast({ title: "画像を本文に埋め込みました" });
+        setIsProcessing(false);
+      };
     } catch (error: any) {
       toast({ variant: "destructive", title: "失敗", description: "画像の処理に失敗しました。" });
-    } finally {
       setIsProcessing(false);
     }
-  }, [editor, toast]);
+  }
 
   const editor = useEditor({
     extensions: [
@@ -159,12 +155,16 @@ export function PresidentMessageManager() {
 
     setIsProcessing(true);
     try {
-      const base64 = await convertToBase64(file);
-      form.setValue("authorImageUrl", base64);
-      toast({ title: "顔写真を取り込みました" });
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const base64 = reader.result as string;
+        form.setValue("authorImageUrl", base64);
+        toast({ title: "顔写真を取り込みました" });
+        setIsProcessing(false);
+      };
     } catch (error: any) {
       toast({ variant: "destructive", title: "失敗", description: "画像の処理に失敗しました。" });
-    } finally {
       setIsProcessing(false);
     }
   };

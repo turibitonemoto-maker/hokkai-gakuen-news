@@ -17,8 +17,8 @@ import { cn } from "@/lib/utils";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import ImageExtension from '@tiptap/extension-image';
-import LinkExtension from '@radix-ui/react-link';
-import { useState, useRef, useCallback } from "react";
+import Link from '@tiptap/extension-link';
+import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 
@@ -70,28 +70,24 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     },
   });
 
-  const convertToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = error => reject(error);
-    });
-  };
-
-  const handleImageInsert = useCallback(async (file: File) => {
+  // Hoisted function to handle image insertion into the editor
+  async function handleImageInsert(file: File) {
     if (!file.type.startsWith('image/')) return;
     setIsProcessing(true);
     try {
-      const base64 = await convertToBase64(file);
-      editor?.chain().focus().setImage({ src: base64 }).run();
-      toast({ title: "画像を本文に埋め込みました" });
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const base64 = reader.result as string;
+        editor?.chain().focus().setImage({ src: base64 }).run();
+        toast({ title: "画像を本文に埋め込みました" });
+        setIsProcessing(false);
+      };
     } catch (error: any) {
       toast({ variant: "destructive", title: "失敗", description: "画像の処理に失敗しました。" });
-    } finally {
       setIsProcessing(false);
     }
-  }, [editor, toast]);
+  }
 
   const editor = useEditor({
     extensions: [
@@ -101,7 +97,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
           class: 'rounded-2xl shadow-xl my-8 mx-auto max-w-full h-auto',
         },
       }),
-      LinkExtension.configure({
+      Link.configure({
         openOnClick: false,
         HTMLAttributes: {
           class: 'text-primary font-bold underline',
@@ -142,6 +138,15 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       }
     },
   });
+
+  const convertToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  };
 
   const handleMainImageUpload = async (e: React.ChangeEvent<HTMLInputElement> | React.DragEvent) => {
     let file: File | undefined;
