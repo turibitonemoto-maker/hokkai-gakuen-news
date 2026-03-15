@@ -79,6 +79,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       }),
     ],
     content: article?.content || "",
+    immediatelyRender: false,
     onUpdate: ({ editor }) => {
       form.setValue("content", editor.getHTML());
     },
