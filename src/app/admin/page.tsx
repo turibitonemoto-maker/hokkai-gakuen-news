@@ -16,7 +16,8 @@ import {
   AlertCircle,
   User,
   ShieldCheck,
-  Lock
+  Lock,
+  ImageIcon
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
