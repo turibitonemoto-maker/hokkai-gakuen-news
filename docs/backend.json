@@ -3,15 +3,26 @@
   "entities": {
     "Article": {
       "title": "Article",
-      "description": "記事データ。表示用サイトは isPublished == true のもののみを取得すること。",
+      "description": "記事および紙面データ。",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
         "title": { "type": "string" },
         "articleType": { "type": "string", "enum": ["Standard"] },
         "content": { "type": "string" },
-        "imageCaption": { "type": "string", "description": "メイン画像の説明文（キャプション）" },
-        "pdfUrl": { "type": "string", "format": "uri", "description": "新聞紙面のPDF（Googleドライブ等）のURL" },
+        "imageCaption": { "type": "string" },
+        "pdfUrl": { "type": "string", "format": "uri", "description": "メインのPDF URL（下位互換用）" },
+        "pdfUrls": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": { "type": "string", "description": "例：本紙、別刷、号外" },
+              "url": { "type": "string", "format": "uri" }
+            }
+          }
+        },
+        "issueNumber": { "type": "number", "description": "第〇号" },
         "categoryId": { "type": "string", "enum": ["Campus", "Event", "Interview", "Sports", "Column", "Opinion", "Viewer"] },
         "tags": { "type": "array", "items": { "type": "string" } },
         "publishDate": { "type": "string", "format": "date" },
@@ -30,41 +41,6 @@
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "title", "articleType", "categoryId", "publishDate", "isPublished"]
-    },
-    "Ad": {
-      "title": "Ad",
-      "description": "バナー広告。",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "title": { "type": "string" },
-        "imageUrl": { "type": "string", "format": "uri" },
-        "imageTransform": {
-          "type": "object",
-          "properties": {
-            "scale": { "type": "number" },
-            "x": { "type": "number" },
-            "y": { "type": "number" }
-          }
-        },
-        "linkUrl": { "type": "string", "format": "uri" },
-        "clickCount": { "type": "number" },
-        "startDate": { "type": "string" },
-        "endDate": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" },
-        "updatedAt": { "type": "string", "format": "date-time" }
-      }
-    },
-    "MaintenanceConfig": {
-      "title": "MaintenanceConfig",
-      "description": "表示用サイトの制御フラグと伝令メッセージ。",
-      "type": "object",
-      "properties": {
-        "isMaintenanceMode": { "type": "boolean" },
-        "maintenanceMessage": { "type": "string" },
-        "systemStatusMessage": { "type": "string", "description": "表示サイトへの緊急伝令（例：インデックス作成中）" },
-        "updatedAt": { "type": "string", "format": "date-time" }
-      }
     }
   },
   "auth": {
@@ -73,23 +49,11 @@
   "firestore": {
     "/articles/{articleId}": {
       "schema": { "$ref": "#/backend/entities/Article" },
-      "description": "記事データ。"
-    },
-    "/ads/{adId}": {
-      "schema": { "$ref": "#/backend/entities/Ad" },
-      "description": "広告データ。"
-    },
-    "/settings/maintenance": {
-      "schema": { "$ref": "#/backend/entities/MaintenanceConfig" },
-      "description": "メンテナンスおよびシステム状況設定。"
-    },
-    "/settings/president_greeting": {
-      "schema": { "type": "object" },
-      "description": "会長挨拶。Fields: title, authorName, authorImageUrl, authorImageTransform, content."
+      "description": "記事および紙面データ。"
     },
     "/settings/about": {
       "schema": { "type": "object" },
-      "description": "About Us。Fields: content, updatedAt, updatedBy."
+      "description": "About Us 内容。"
     }
   }
 }
