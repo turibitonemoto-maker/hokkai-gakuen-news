@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useDoc, useFirestore, useMemoFirebase } from "@/firebase";
@@ -34,7 +35,7 @@ export default function AboutPage() {
     );
   }
 
-  if (!aboutData) {
+  if (!aboutData || !aboutData.content) {
     return (
       <div className="min-h-screen flex flex-col bg-white font-body">
         <PublicHeader />
@@ -54,12 +55,12 @@ export default function AboutPage() {
 
       <main className="flex-1">
         <div className="bg-slate-50 py-16 md:py-24 border-b">
-          <div className="max-w-4xl mx-auto px-6">
+          <div className="max-w-4xl mx-auto px-6 text-center md:text-left">
             <Badge variant="outline" className="mb-6 px-4 py-1 border-primary/20 text-primary font-black uppercase tracking-[0.3em] rounded-full">
               About Us
             </Badge>
             <h1 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter leading-tight">
-              {aboutData.title || "北海学園大学一部新聞会とは"}
+              北海学園大学一部新聞会とは
             </h1>
           </div>
         </div>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useDoc, useFirestore, useMemoFirebase, useUser } from "@/firebase";
@@ -11,16 +12,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Save, Info, Lock, Bold, Italic, Heading2, List, Type, ImageIcon, Upload } from "lucide-react";
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import ImageExtension from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
 import { cn } from "@/lib/utils";
-import Image from "next/image";
 
 const aboutSchema = z.object({
-  title: z.string().min(1, "題名を入力してください"),
+  // No fields needed for the form itself if we only use the editor
 });
 
 type AboutValues = z.infer<typeof aboutSchema>;
@@ -37,32 +37,6 @@ export function AboutManager() {
   const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
-
-  const docRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return doc(firestore, "settings", "about");
-  }, [firestore, user]);
-
-  const { data: aboutData, isLoading } = useDoc(docRef);
-
-  // Hoisted function to handle image insertion
-  async function handleImageInsert(file: File) {
-    if (!file.type.startsWith('image/')) return;
-    setIsProcessing(true);
-    try {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        const base64 = reader.result as string;
-        editor?.chain().focus().setImage({ src: base64 }).run();
-        toast({ title: "画像を本文に埋め込みました" });
-        setIsProcessing(false);
-      };
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "失敗", description: "画像の処理に失敗しました。" });
-      setIsProcessing(false);
-    }
-  }
 
   const editor = useEditor({
     extensions: [
@@ -109,23 +83,43 @@ export function AboutManager() {
     },
   });
 
+  const docRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, "settings", "about");
+  }, [firestore, user]);
+
+  const { data: aboutData, isLoading } = useDoc(docRef);
+
+  async function handleImageInsert(file: File) {
+    if (!file.type.startsWith('image/')) return;
+    setIsProcessing(true);
+    try {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const base64 = reader.result as string;
+        editor?.chain().focus().setImage({ src: base64 }).run();
+        toast({ title: "画像を本文に埋め込みました" });
+        setIsProcessing(false);
+      };
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "失敗", description: "画像の処理に失敗しました。" });
+      setIsProcessing(false);
+    }
+  }
+
   const form = useForm<AboutValues>({
     resolver: zodResolver(aboutSchema),
-    defaultValues: {
-      title: "",
-    },
+    defaultValues: {},
   });
 
   useEffect(() => {
     if (aboutData) {
-      form.reset({
-        title: aboutData.title || "About Us",
-      });
       if (editor && aboutData.content && editor.getHTML() !== aboutData.content) {
         editor.commands.setContent(aboutData.content);
       }
     }
-  }, [aboutData, form, editor]);
+  }, [aboutData, editor]);
 
   useEffect(() => {
     const storedLockout = localStorage.getItem("lockout_until");
@@ -164,14 +158,13 @@ export function AboutManager() {
     }
   };
 
-  async function onSubmit(values: AboutValues) {
+  async function onSubmit() {
     if (!firestore || !docRef || !editor) return;
 
     setIsSaving(true);
     try {
       const htmlContent = editor.getHTML();
       await setDoc(docRef, {
-        title: values.title,
         content: htmlContent, 
         updatedAt: serverTimestamp(),
         updatedBy: user?.email || "unknown"
@@ -251,25 +244,12 @@ export function AboutManager() {
 
       <Card className="shadow-sm border-slate-200 rounded-[2.5rem] bg-white overflow-hidden">
         <CardHeader className="bg-slate-50/50 border-b p-8 md:p-12">
-          <CardTitle className="text-xl font-black flex items-center gap-3"><Type className="h-6 w-6 text-primary" />情報の編集</CardTitle>
+          <CardTitle className="text-xl font-black flex items-center gap-3"><Type className="h-6 w-6 text-primary" />内容の編集</CardTitle>
+          <CardDescription className="font-bold">題名は不要です。本文のみで構成してください。</CardDescription>
         </CardHeader>
         <CardContent className="p-8 md:p-12">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12">
-              <FormField control={form.control} name="title" render={({ field }) => (
-                <FormItem className="border-b border-slate-100 pb-4">
-                  <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ページの題名</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="例：About Us" 
-                      className="h-auto py-4 text-3xl md:text-5xl font-black border-none bg-transparent shadow-none px-0 focus-visible:ring-0" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b pb-2">
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">

@@ -89,7 +89,7 @@
     },
     "/settings/about": {
       "schema": { "type": "object" },
-      "description": "新聞会について。Fields: title, content, updatedAt."
+      "description": "About Us。Fields: content, updatedAt, updatedBy."
     }
   }
 }
