@@ -12,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { FileText, Share2, ImageIcon, Type, Heading2, Loader2, Upload, FileType } from "lucide-react";
+import { FileText, ImageIcon, Type, Heading2, Loader2, Upload, FileType, ShieldCheck, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -20,6 +20,7 @@ import ImageExtension from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
 import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const articleSchema = z.object({
   title: z.string().min(1, "タイトルを入力してください"),
@@ -101,12 +102,11 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
   const handleMainImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     setIsProcessing(true);
     try {
       const base64 = await convertToBase64(file);
       form.setValue("mainImageUrl", base64);
-      toast({ title: "表紙画像を取り込みました（Base64）" });
+      toast({ title: "表紙画像を取り込みました" });
     } catch (error: any) {
       toast({ variant: "destructive", title: "失敗", description: "画像の処理に失敗しました。" });
     } finally {
@@ -117,7 +117,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
   const handleEditorImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !editor) return;
-
     setIsProcessing(true);
     try {
       const base64 = await convertToBase64(file);
@@ -132,13 +131,11 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
 
   function onSubmit(values: ArticleFormValues) {
     if (!firestore) return;
-
     const data = {
       ...values,
       updatedAt: serverTimestamp(),
       updatedBy: user?.email || "unknown"
     };
-
     if (article?.id) {
       const docRef = doc(firestore, "articles", article.id);
       setDocumentNonBlocking(docRef, data, { merge: true });
@@ -146,7 +143,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     } else {
       const colRef = collection(firestore, "articles");
       addDocumentNonBlocking(colRef, { ...data, createdAt: serverTimestamp() });
-      toast({ title: "記事を公開しました" });
+      toast({ title: "記事を作成しました" });
     }
     onSuccess();
   }
@@ -222,35 +219,43 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                     "h-12 flex items-center px-4 rounded-xl border text-xs font-black gap-2",
                     field.value === "Note" ? "bg-purple-50 text-purple-700 border-purple-100" : "bg-blue-50 text-blue-700 border-blue-100"
                   )}>
-                    {field.value === "Note" ? <Share2 className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
+                    {field.value === "Note" ? <FileType className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
                     {field.value === "Note" ? "note同期" : "学内オリジナル"}
                   </div>
                 </FormItem>
               )}
             />
-
-            <FormField
-              control={form.control}
-              name="pdfUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                    <FileType className="h-3 w-3" /> 新聞PDF (Googleドライブ等)
-                  </FormLabel>
-                  <FormControl>
-                    <Input placeholder="URLを貼り付け" className="h-12 rounded-xl border-slate-100 bg-slate-50/50" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
           </div>
+
+          <FormField
+            control={form.control}
+            name="pdfUrl"
+            render={({ field }) => (
+              <FormItem className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 mb-2">
+                  <FileType className="h-4 w-4 text-primary" /> 新聞紙面PDF (Googleドライブ共有リンク)
+                </FormLabel>
+                <FormControl>
+                  <Input placeholder="https://drive.google.com/file/d/..." className="h-12 rounded-xl border-slate-200 bg-white" {...field} />
+                </FormControl>
+                {field.value && field.value.includes("drive.google.com") && (
+                  <Alert className="mt-4 bg-blue-50 border-blue-100 text-blue-700 rounded-2xl">
+                    <ShieldCheck className="h-4 w-4" />
+                    <AlertDescription className="text-[10px] font-bold leading-relaxed">
+                      【重要】ドライブの設定で「閲覧者と閲覧者（コメント可）に、ダウンロード、印刷、コピーの項目を表示しない」のチェックをオンにしてください。これにより、ステルス表示のセキュリティが完成します。
+                    </AlertDescription>
+                  </Alert>
+                )}
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b border-slate-50 pb-2">
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-              <Type className="h-3 w-3" /> 本文執筆
+              <Type className="h-3 w-3" /> 本文執筆（画像は直接貼り付け可能）
             </span>
             <div className="flex items-center gap-1">
               <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}><Heading2 className="h-4 w-4" /></Button>
@@ -278,7 +283,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                 </FormLabel>
                 <div className="flex gap-2">
                   <FormControl>
-                    <Input placeholder="画像データが自動設定されます" className="h-12 rounded-xl border-slate-100 bg-white flex-1" {...field} />
+                    <Input placeholder="ファイルを選択してください" className="h-12 rounded-xl border-slate-100 bg-white flex-1" {...field} readOnly />
                   </FormControl>
                   <input type="file" accept="image/*" className="hidden" ref={mainImageInputRef} onChange={handleMainImageUpload} />
                   <Button 
@@ -313,7 +318,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
         <div className="flex justify-end gap-3 pt-10 border-t sticky bottom-6 z-20">
           <Button type="button" variant="outline" onClick={onSuccess} className="w-32 h-14 rounded-2xl font-bold">キャンセル</Button>
           <Button type="submit" className="w-48 h-14 shadow-2xl font-black rounded-2xl text-lg bg-primary hover:bg-primary/90">
-            記事を公開する
+            内容を確定する
           </Button>
         </div>
       </form>

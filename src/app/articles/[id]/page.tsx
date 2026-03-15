@@ -7,20 +7,24 @@ import { useParams, useRouter } from 'next/navigation';
 import { PublicHeader } from '@/components/site/public-header';
 import { PublicFooter } from '@/components/site/public-footer';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Tag, ChevronLeft, ImageOff, Share2, FileType } from 'lucide-react';
+import { Calendar, Tag, ChevronLeft, ImageOff, Share2, FileType, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import Link from 'next/link';
 import DOMPurify from 'dompurify';
 import { useState, useEffect } from 'react';
 
-// Googleドライブのリンクをプレビュー用に変換するヘルパー
+// Googleドライブのリンクをプレビュー用に変換し、UIを最小化する
 function getDriveEmbedUrl(url: string) {
   if (!url) return null;
   if (!url.includes('drive.google.com')) return url;
   
-  // /file/d/FILE_ID/view?usp=sharing 形式を /file/d/FILE_ID/preview へ変換
-  return url.replace(/\/view(\?.*)?$/, '/preview');
+  // ファイルIDの抽出
+  const fileIdMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (!fileIdMatch) return url;
+  
+  // /preview 形式へ強制変換
+  return `https://drive.google.com/file/d/${fileIdMatch[1]}/preview`;
 }
 
 export default function ArticleDetailPage() {
@@ -83,7 +87,7 @@ export default function ArticleDetailPage() {
                 fill 
                 className="object-cover"
                 priority
-                unoptimized={article.mainImageUrl.startsWith('data:')}
+                unoptimized
                 sizes="100vw"
               />
             </div>
@@ -108,7 +112,6 @@ export default function ArticleDetailPage() {
               {article.title}
             </h1>
 
-            {/* 本文エリア（日本仕様の黄金比適用） */}
             <div 
               className="prose prose-slate max-w-none 
                          text-slate-700 text-lg
@@ -119,30 +122,48 @@ export default function ArticleDetailPage() {
               dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
             />
 
-            {/* 新聞紙面PDFビューアー（道新スタイル） */}
+            {/* ステルス・デジタル紙面ビューアー */}
             {embedPdfUrl && (
               <div className="mt-16 space-y-6">
-                <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
-                  <div className="bg-red-50 p-2 rounded-lg text-red-600">
-                    <FileType className="h-6 w-6" />
+                <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-red-50 p-2 rounded-lg text-red-600">
+                      <FileType className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-black text-slate-800">新聞紙面（電子版）</h3>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Digital Edition Viewer</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-lg font-black text-slate-800">新聞紙面を閲覧</h3>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Digital Paper Viewer</p>
+                  <Badge variant="outline" className="hidden sm:flex items-center gap-2 border-slate-200 text-slate-400 text-[10px] font-bold px-3 py-1 rounded-full">
+                    <Shield className="h-3 w-3" /> 複製禁止・閲覧専用
+                  </Badge>
+                </div>
+                
+                <div className="relative group">
+                  <div className="aspect-[3/4] md:aspect-video w-full rounded-3xl overflow-hidden shadow-2xl border-4 border-slate-100 bg-slate-50">
+                    <iframe 
+                      src={embedPdfUrl} 
+                      className="w-full h-full border-none pointer-events-auto" 
+                      allow="autoplay"
+                      title="Newspaper View"
+                    ></iframe>
+                  </div>
+                  {/* 右クリックやドラッグを抑制するための透明な保護レイヤー（必要に応じて有効化） */}
+                  <div className="absolute inset-x-0 top-0 h-12 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex items-center justify-center">
+                    <span className="text-[8px] font-black text-slate-400 bg-white/80 px-4 py-1 rounded-full shadow-sm">
+                      北海学園大学一部新聞会 著作権保護コンテンツ
+                    </span>
                   </div>
                 </div>
-                <div className="aspect-[3/4] md:aspect-video w-full rounded-3xl overflow-hidden shadow-2xl border-4 border-slate-50 bg-slate-200">
-                  <iframe 
-                    src={embedPdfUrl} 
-                    className="w-full h-full border-none" 
-                    allow="autoplay"
-                    title="Newspaper View"
-                  ></iframe>
-                </div>
-                <div className="text-center">
+                
+                <div className="text-center pt-4">
+                  <p className="text-[10px] text-slate-400 font-medium mb-4">
+                    ※紙面のダウンロードは禁止されています。閲覧環境により表示が遅れる場合があります。
+                  </p>
                   <a href={article.pdfUrl} target="_blank" rel="noopener noreferrer">
-                    <Button variant="outline" className="rounded-full px-8 gap-2 font-bold text-slate-500 hover:text-primary">
-                      別タブで全画面表示
+                    <Button variant="outline" className="rounded-full px-8 gap-2 font-bold text-slate-500 hover:text-primary border-slate-200">
+                      外部ビューアーで開く
                     </Button>
                   </a>
                 </div>
