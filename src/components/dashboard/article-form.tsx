@@ -79,7 +79,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       }),
     ],
     content: article?.content || "",
-    immediatelyRender: false,
+    immediatelyRender: false, // SSR Hydrationエラー対策
     onUpdate: ({ editor }) => {
       form.setValue("content", editor.getHTML());
     },

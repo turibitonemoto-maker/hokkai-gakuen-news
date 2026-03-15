@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -126,7 +127,7 @@ export function NoteManager() {
     setDocumentNonBlocking(docRef, {
       ...article,
       isPublished: false,
-      updatedAt: new Date().toISOString(),
+      updatedAt: serverTimestamp(),
       updatedBy: user?.email || "unknown"
     }, { merge: true });
 

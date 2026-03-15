@@ -29,8 +29,17 @@ export default function ArticleDetailPage() {
 
   useEffect(() => {
     if (article?.content) {
-      // サーバーサイドから送られてきたHTMLを安全にサニタイズ
-      setSanitizedHtml(DOMPurify.sanitize(article.content));
+      // HTMLエディタからの入力（HTML）か、単なるテキストかを判断してサニタイズ
+      const isHtml = /<[a-z][\s\S]*>/i.test(article.content);
+      if (isHtml) {
+        setSanitizedHtml(DOMPurify.sanitize(article.content));
+      } else {
+        // テキストの場合は改行を<br>に変換
+        const escaped = article.content.replace(/[&<>"']/g, (m: string) => ({
+          '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[m] || m));
+        setSanitizedHtml(escaped.replace(/\n/g, '<br>'));
+      }
     }
   }, [article]);
 
@@ -122,9 +131,8 @@ export default function ArticleDetailPage() {
               </div>
             </div>
 
-            {/* 本文：Tailwind Typography (prose) を適用してリッチな構造を再現 */}
             <div 
-              className="prose prose-slate prose-img:rounded-3xl prose-img:shadow-2xl prose-img:my-12 prose-headings:font-black prose-headings:tracking-tighter prose-a:text-primary prose-a:font-black prose-a:no-underline hover:prose-a:underline max-w-none text-lg md:text-xl leading-relaxed text-slate-700"
+              className="prose prose-slate prose-img:rounded-3xl prose-img:shadow-2xl prose-img:my-12 prose-headings:font-black prose-headings:tracking-tighter prose-a:text-primary prose-a:font-black prose-a:no-underline hover:prose-a:underline max-w-none text-lg md:text-xl leading-relaxed text-slate-700 whitespace-pre-wrap"
               dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
             />
 
