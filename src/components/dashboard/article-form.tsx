@@ -237,7 +237,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                       <SelectItem value="Sports">スポーツ</SelectItem>
                       <SelectItem value="Column">コラム</SelectItem>
                       <SelectItem value="Opinion">オピニオン</SelectItem>
-                      {/* 紙面ビューアーは専用画面で管理するため、ここでは非表示 */}
                     </SelectContent>
                   </Select>
                 </FormItem>
@@ -374,11 +373,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                         value={[transform.scale]} 
                         onValueChange={([val]) => form.setValue("mainImageTransform.scale", val)} 
                       />
-                      <div className="flex justify-between text-[8px] font-bold text-slate-300 uppercase tracking-widest">
-                        <span>縮小</span>
-                        <span className="text-primary/40 font-black">標準 (0%)</span>
-                        <span>拡大</span>
-                      </div>
                     </div>
 
                     <div className="space-y-2">
@@ -440,6 +434,9 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                     <div className="w-full h-full flex items-center justify-center text-slate-300 italic text-sm">画像が未選択です</div>
                   )}
                 </div>
+                <p className="text-[8px] text-slate-400 font-bold uppercase text-center tracking-widest mt-2">
+                  ※サイト上での実際の見え方です。スライダーを動かすとここが変わります。
+                </p>
               </div>
 
               <FormField

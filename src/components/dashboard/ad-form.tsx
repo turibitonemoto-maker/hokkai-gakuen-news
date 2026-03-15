@@ -20,10 +20,10 @@ const adSchema = z.object({
   title: z.string().min(1, "広告名を入力してください"),
   imageUrl: z.string().min(1, "画像データが必要です"),
   imageTransform: z.object({
-    scale: z.number().default(1),
+    scale: z.number().default(0),
     x: z.number().default(0),
     y: z.number().default(0),
-  }).default({ scale: 1, x: 0, y: 0 }),
+  }).default({ scale: 0, x: 0, y: 0 }),
   linkUrl: z.string().url("有効な遷移先URLを入力してください"),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
@@ -48,7 +48,7 @@ export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
     defaultValues: {
       title: ad?.title || "",
       imageUrl: ad?.imageUrl || "",
-      imageTransform: ad?.imageTransform || { scale: 1, x: 0, y: 0 },
+      imageTransform: ad?.imageTransform || { scale: 0, x: 0, y: 0 },
       linkUrl: ad?.linkUrl || "",
       startDate: ad?.startDate || new Date().toISOString().slice(0, 16),
       endDate: ad?.endDate || "",
@@ -143,21 +143,16 @@ export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
                     <div className="flex justify-between items-center">
                       <label className="text-[10px] font-bold text-slate-500">倍率 (中央: 0%)</label>
                       <span className="text-[10px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded">
-                        {((transform.scale - 1) * 100).toFixed(0)}%
+                        {transform.scale.toFixed(0)}%
                       </span>
                     </div>
                     <Slider 
                       min={-200} 
                       max={200} 
-                      step={1} 
-                      value={[(transform.scale - 1) * 100]} 
-                      onValueChange={([val]) => form.setValue("imageTransform.scale", Math.max(0.1, 1 + val / 100))} 
+                      step={0.1} 
+                      value={[transform.scale]} 
+                      onValueChange={([val]) => form.setValue("imageTransform.scale", val)} 
                     />
-                    <div className="flex justify-between text-[8px] font-bold text-slate-300 uppercase tracking-widest">
-                      <span>縮小</span>
-                      <span className="text-primary/40">標準 (0%)</span>
-                      <span>拡大</span>
-                    </div>
                   </div>
 
                   <div className="space-y-2">
@@ -170,7 +165,7 @@ export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
                     <Slider 
                       min={-200} 
                       max={200} 
-                      step={1} 
+                      step={0.1} 
                       value={[transform.x]} 
                       onValueChange={([val]) => form.setValue("imageTransform.x", val)} 
                     />
@@ -186,7 +181,7 @@ export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
                     <Slider 
                       min={-200} 
                       max={200} 
-                      step={1} 
+                      step={0.1} 
                       value={[transform.y]} 
                       onValueChange={([val]) => form.setValue("imageTransform.y", val)} 
                     />
@@ -206,7 +201,7 @@ export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
                   fill 
                   className="object-cover"
                   style={{
-                    transform: `scale(${transform.scale}) translate(${transform.x}%, ${transform.y}%)`,
+                    transform: `scale(${1 + transform.scale / 100}) translate(${transform.x}%, ${transform.y}%)`,
                     transition: 'transform 0.1s linear',
                     willChange: 'transform'
                   }}
@@ -216,6 +211,9 @@ export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
                 <div className="w-full h-full flex items-center justify-center text-slate-300 italic text-xs">バナーを選択してください</div>
               )}
             </div>
+            <p className="text-[8px] text-slate-400 font-bold uppercase text-center tracking-widest mt-2">
+              ※広告枠での実際の見え方です
+            </p>
           </div>
         </div>
 

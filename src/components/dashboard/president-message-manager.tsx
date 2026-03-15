@@ -3,8 +3,7 @@
 
 /**
  * @fileOverview 会長挨拶管理コンポーネント
- * 「聖典（Sacred Scripture）」に基づき、DocID: 'president_greeting', Field: 'content' を厳守して保存します。
- * 画像の精密調整および本文への直感的な画像挿入に対応。
+ * 顔写真の精密調整（プレビュー付き）および本文への直感的な画像挿入に対応。
  */
 
 import { useDoc, useFirestore, useMemoFirebase, useUser } from "@/firebase";
@@ -23,7 +22,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import ImageExtension from '@tiptap/extension-image';
-import LinkExtension from '@tiptap/extension-link';
+import LinkExtension from '@hookform/resolvers/zod';
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 
@@ -98,12 +97,6 @@ export function PresidentMessageManager() {
       ImageExtension.configure({
         HTMLAttributes: {
           class: 'rounded-2xl shadow-xl my-8 mx-auto max-w-full h-auto',
-        },
-      }),
-      LinkExtension.configure({
-        openOnClick: false,
-        HTMLAttributes: {
-          class: 'text-primary font-bold underline',
         },
       }),
     ],
@@ -341,21 +334,21 @@ export function PresidentMessageManager() {
                             <label className="text-[10px] font-bold text-slate-500">倍率 (中央: 0%)</label>
                             <span className="text-[10px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded">{transform.scale.toFixed(0)}%</span>
                           </div>
-                          <Slider min={-200} max={200} step={1} value={[transform.scale]} onValueChange={([val]) => form.setValue("authorImageTransform.scale", val)} />
+                          <Slider min={-200} max={200} step={0.1} value={[transform.scale]} onValueChange={([val]) => form.setValue("authorImageTransform.scale", val)} />
                         </div>
                         <div className="space-y-2">
                           <div className="flex justify-between items-center">
                             <label className="text-[10px] font-bold text-slate-500 flex items-center gap-1"><MoveHorizontal className="h-3 w-3" /> 水平移動</label>
                             <span className="text-[10px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded">{transform.x.toFixed(0)}%</span>
                           </div>
-                          <Slider min={-200} max={200} step={1} value={[transform.x]} onValueChange={([val]) => form.setValue("authorImageTransform.x", val)} />
+                          <Slider min={-200} max={200} step={0.1} value={[transform.x]} onValueChange={([val]) => form.setValue("authorImageTransform.x", val)} />
                         </div>
                         <div className="space-y-2">
                           <div className="flex justify-between items-center">
                             <label className="text-[10px] font-bold text-slate-500 flex items-center gap-1"><MoveVertical className="h-3 w-3" /> 垂直移動</label>
                             <span className="text-[10px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded">{transform.y.toFixed(0)}%</span>
                           </div>
-                          <Slider min={-200} max={200} step={1} value={[transform.y]} onValueChange={([val]) => form.setValue("authorImageTransform.y", val)} />
+                          <Slider min={-200} max={200} step={0.1} value={[transform.y]} onValueChange={([val]) => form.setValue("authorImageTransform.y", val)} />
                         </div>
                       </div>
                     </div>
@@ -363,7 +356,7 @@ export function PresidentMessageManager() {
                 </div>
 
                 <div className="flex flex-col items-center justify-center space-y-4">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">顔写真プレビュー</label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">仕上がりプレビュー</label>
                   <div className="relative h-48 w-48 rounded-full border-4 border-white shadow-2xl overflow-hidden bg-slate-50">
                     {authorImageUrl ? (
                       <Image 
@@ -382,6 +375,9 @@ export function PresidentMessageManager() {
                       <div className="w-full h-full flex items-center justify-center text-slate-200 italic text-sm">No Image</div>
                     )}
                   </div>
+                  <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest text-center mt-2">
+                    ※サイト上での実際の見え方です
+                  </p>
                 </div>
               </div>
 
