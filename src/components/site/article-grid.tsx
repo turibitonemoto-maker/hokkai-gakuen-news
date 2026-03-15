@@ -45,19 +45,26 @@ export function ArticleGrid({ articles }: { articles: any[] }) {
 function ArticleCard({ article }: { article: any }) {
   const hasImage = !!article.mainImageUrl && article.mainImageUrl.trim() !== "";
   const textSnippet = stripHtmlTags(article.content || "");
+  const transform = article.mainImageTransform || { scale: 1, x: 50, y: 50 };
 
   return (
     <div className="group bg-white rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-slate-100 flex flex-col h-full">
       <div className="relative h-60 overflow-hidden bg-slate-50">
         {hasImage ? (
-          <Image
-            src={article.mainImageUrl}
-            alt={article.title}
-            fill
-            className="object-cover group-hover:scale-110 transition-transform duration-700"
-            unoptimized
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          />
+          <div className="relative w-full h-full overflow-hidden">
+            <Image
+              src={article.mainImageUrl}
+              alt={article.title}
+              fill
+              className="object-cover transition-transform duration-700"
+              style={{
+                objectPosition: `${transform.x}% ${transform.y}%`,
+                transform: `scale(${transform.scale})`,
+              }}
+              unoptimized
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />
+          </div>
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center text-slate-200 gap-2">
             <ImageOff className="h-12 w-12 opacity-10" />

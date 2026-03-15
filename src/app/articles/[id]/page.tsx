@@ -77,6 +77,7 @@ export default function ArticleDetailPage() {
   }
 
   const embedPdfUrl = getDriveEmbedUrl(article.pdfUrl || "");
+  const transform = article.mainImageTransform || { scale: 1, x: 50, y: 50 };
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-body">
@@ -92,12 +93,16 @@ export default function ArticleDetailPage() {
         <article className="bg-white rounded-[2.5rem] md:rounded-[4rem] shadow-2xl overflow-hidden border border-slate-100 mb-12">
           {article.mainImageUrl ? (
             <div className="w-full">
-              <div className="relative aspect-video w-full bg-slate-100">
+              <div className="relative aspect-video w-full bg-slate-100 overflow-hidden">
                 <Image 
                   src={article.mainImageUrl} 
                   alt={article.title} 
                   fill 
                   className="object-cover"
+                  style={{
+                    objectPosition: `${transform.x}% ${transform.y}%`,
+                    transform: `scale(${transform.scale})`,
+                  }}
                   priority
                   unoptimized
                   sizes="100vw"

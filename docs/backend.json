@@ -16,6 +16,14 @@
         "tags": { "type": "array", "items": { "type": "string" } },
         "publishDate": { "type": "string", "format": "date" },
         "mainImageUrl": { "type": "string", "format": "uri" },
+        "mainImageTransform": {
+          "type": "object",
+          "properties": {
+            "scale": { "type": "number" },
+            "x": { "type": "number" },
+            "y": { "type": "number" }
+          }
+        },
         "isPublished": { "type": "boolean" },
         "viewCount": { "type": "number" },
         "createdAt": { "type": "string", "format": "date-time" },
