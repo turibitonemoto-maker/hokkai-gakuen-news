@@ -308,7 +308,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                         <span className="text-[10px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded">{transform.scale.toFixed(1)}x</span>
                       </div>
                       <Slider 
-                        min={1} 
+                        min={0.1} 
                         max={3} 
                         step={0.1} 
                         value={[transform.scale]} 
