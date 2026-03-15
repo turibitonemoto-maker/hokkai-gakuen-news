@@ -66,9 +66,9 @@
       "schema": { "$ref": "#/backend/entities/MaintenanceConfig" },
       "description": "メンテナンスおよびシステム状況設定。"
     },
-    "/settings/president-message": {
+    "/settings/president_greeting": {
       "schema": { "type": "object" },
-      "description": "会長挨拶。"
+      "description": "会長挨拶。Sacred Scripture: DocID must be 'president_greeting', Field must be 'content'."
     },
     "/settings/note-sync": {
       "schema": { "type": "object" },

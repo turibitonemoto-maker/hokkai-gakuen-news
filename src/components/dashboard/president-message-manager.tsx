@@ -38,7 +38,7 @@ export function PresidentMessageManager() {
 
   const docRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return doc(firestore, "settings", "president-message");
+    return doc(firestore, "settings", "president_greeting");
   }, [firestore, user]);
 
   const { data: messageData, isLoading } = useDoc(docRef);
@@ -120,7 +120,7 @@ export function PresidentMessageManager() {
       await setDoc(docRef, {
         authorName: values.authorName,
         authorImageUrl: values.authorImageUrl,
-        content: htmlContent,
+        content: htmlContent, // Sacred Scripture: Field is 'content'
         updatedAt: serverTimestamp(),
       }, { merge: true });
 
@@ -232,7 +232,7 @@ export function PresidentMessageManager() {
               <div className="flex justify-end pt-8 border-t border-slate-100">
                 <Button type="submit" disabled={isSaving} className="px-12 h-14 font-black rounded-2xl shadow-xl shadow-primary/10">
                   {isSaving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5 mr-3" />}
-                  記事と同じ形式で保存
+                  保存する
                 </Button>
               </div>
             </form>
