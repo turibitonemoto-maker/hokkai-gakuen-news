@@ -1,10 +1,11 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc, orderBy, query, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Loader2, X, Filter, Tag as TagIcon, AlertCircle, Share2, FileText, Eye } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, X, Filter, Tag as TagIcon, AlertCircle, FileText, Eye } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -36,8 +37,6 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 const getTagColor = (tag: string, isActive: boolean) => {
   const colorMap: Record<string, string> = {
-    "学内記事": "bg-primary",
-    "note記事": "bg-purple-600",
     "学内ニュース": "bg-blue-500",
     "イベント": "bg-emerald-500",
     "インタビュー": "bg-violet-500",
@@ -74,15 +73,13 @@ export function ArticleManager() {
 
   const allTags = useMemo(() => {
     const tagsSet = new Set<string>();
-    tagsSet.add("学内記事");
-    tagsSet.add("note記事");
     Object.values(CATEGORY_LABELS).forEach(label => tagsSet.add(label));
     allArticles?.forEach(article => {
       article.tags?.forEach((tag: string) => {
         if (tag && tag.trim()) tagsSet.add(tag.trim());
       });
     });
-    return Array.from(tagsSet).filter(tag => tag !== "note" && tag !== "Note");
+    return Array.from(tagsSet);
   }, [allArticles]);
 
   const filteredArticles = useMemo(() => {
@@ -90,9 +87,7 @@ export function ArticleManager() {
     if (selectedTags.length === 0) return allArticles;
 
     return allArticles.filter(article => {
-      const typeLabel = article.articleType === "Note" ? "note記事" : "学内記事";
       const articleTags = [
-        typeLabel,
         CATEGORY_LABELS[article.categoryId] || article.categoryId,
         ...(article.tags || [])
       ];
@@ -137,7 +132,7 @@ export function ArticleManager() {
           <div>
             <CardTitle className="text-xl md:text-2xl font-black">{currentArticle ? "記事を編集" : "新規記事の作成"}</CardTitle>
             <CardDescription className="font-bold">
-              {currentArticle?.articleType === "Note" ? "note記事の公開設定を編集します。" : "学内のニュースやコラムを作成・編集します。"}
+              学内のニュースやコラムを作成・編集します。
             </CardDescription>
           </div>
           <Button variant="ghost" onClick={() => setIsEditing(false)} className="mt-4 md:mt-0 font-bold rounded-full">
@@ -156,11 +151,11 @@ export function ArticleManager() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">記事・公開管理</h2>
-          <p className="text-sm font-bold text-slate-500 mt-1">学内・note記事の公開・非公開を一括管理します。</p>
+          <p className="text-sm font-bold text-slate-500 mt-1">全ての記事を自社DBで一括管理します。</p>
         </div>
         <Button onClick={() => { setCurrentArticle(null); setIsEditing(true); }} className="w-full md:w-auto h-12 px-6 shadow-lg gap-2 font-black rounded-2xl">
           <Plus className="h-5 w-5" />
-          新規学内記事作成
+          新規記事作成
         </Button>
       </div>
 
@@ -217,8 +212,7 @@ export function ArticleManager() {
                 <TableHeader className="bg-slate-50/50">
                   <TableRow>
                     <TableHead className="w-[180px] font-black text-xs uppercase tracking-widest">公開状態</TableHead>
-                    <TableHead className="w-[120px] font-black text-xs uppercase tracking-widest">タイプ</TableHead>
-                    <TableHead className="min-w-[200px] font-black text-xs uppercase tracking-widest">タイトル / カテゴリー</TableHead>
+                    <TableHead className="min-w-[300px] font-black text-xs uppercase tracking-widest">タイトル / カテゴリー</TableHead>
                     <TableHead className="min-w-[120px] font-black text-xs uppercase tracking-widest">公開日</TableHead>
                     <TableHead className="w-[100px] font-black text-xs uppercase tracking-widest">閲覧数</TableHead>
                     <TableHead className="text-right font-black text-xs uppercase tracking-widest">操作</TableHead>
@@ -240,17 +234,6 @@ export function ArticleManager() {
                             <Badge variant="outline" className="text-slate-400 border-slate-200 bg-slate-50 font-bold text-[10px]">下書き</Badge>
                           )}
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        {article.articleType === "Note" ? (
-                          <Badge variant="secondary" className="bg-purple-600 text-white border-transparent gap-1 px-3 py-1 shadow-sm font-bold text-[10px]">
-                            <Share2 className="h-3 w-3" /> note
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary" className="bg-primary text-white border-transparent gap-1 px-3 py-1 shadow-sm font-bold text-[10px]">
-                            <FileText className="h-3 w-3" /> 学内
-                          </Badge>
-                        )}
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col min-w-0">

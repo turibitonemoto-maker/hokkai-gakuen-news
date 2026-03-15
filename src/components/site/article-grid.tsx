@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Share2, ArrowRight, ImageOff } from 'lucide-react';
+import { Calendar, ArrowRight, ImageOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -16,7 +16,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   Opinion: "オピニオン",
 };
 
-// HTMLタグを安全に除去して純粋なテキストスニペットを生成する（浄化処理）
 function stripHtmlTags(html: string) {
   if (!html) return "";
   return html
@@ -44,7 +43,6 @@ export function ArticleGrid({ articles }: { articles: any[] }) {
 }
 
 function ArticleCard({ article }: { article: any }) {
-  const isNote = article.articleType === 'Note';
   const hasImage = !!article.mainImageUrl && article.mainImageUrl.trim() !== "";
   const textSnippet = stripHtmlTags(article.content || "");
 
@@ -57,7 +55,7 @@ function ArticleCard({ article }: { article: any }) {
             alt={article.title}
             fill
             className="object-cover group-hover:scale-110 transition-transform duration-700"
-            unoptimized={isNote}
+            unoptimized
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         ) : (
@@ -66,21 +64,11 @@ function ArticleCard({ article }: { article: any }) {
             <span className="text-[10px] font-black uppercase tracking-widest opacity-20">No Image</span>
           </div>
         )}
-        <div className="absolute top-6 left-6 flex gap-2">
-          <Badge className={cn(
-            "font-black px-4 py-1.5 shadow-lg border-none rounded-full text-[10px] uppercase tracking-wider",
-            isNote ? "bg-purple-600" : "bg-primary"
-          )}>
-            {isNote ? "note" : CATEGORY_LABELS[article.categoryId] || article.categoryId}
+        <div className="absolute top-6 left-6">
+          <Badge className="font-black px-4 py-1.5 shadow-lg border-none rounded-full text-[10px] uppercase tracking-wider bg-primary">
+            {CATEGORY_LABELS[article.categoryId] || article.categoryId}
           </Badge>
         </div>
-        {isNote && (
-          <div className="absolute top-6 right-6">
-            <div className="bg-white/95 backdrop-blur-md p-2 rounded-full shadow-lg">
-              <Share2 className="h-4 w-4 text-purple-600" />
-            </div>
-          </div>
-        )}
       </div>
 
       <div className="p-8 md:p-10 flex-1 flex flex-col">
@@ -98,25 +86,13 @@ function ArticleCard({ article }: { article: any }) {
         </p>
 
         <div className="mt-auto">
-          {isNote ? (
-            <a 
-              href={article.noteUrl} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-3 text-xs font-black text-purple-600 hover:gap-5 transition-all uppercase tracking-widest"
-            >
-              Read on note
-              <ArrowRight className="h-4 w-4" />
-            </a>
-          ) : (
-            <Link 
-              href={`/articles/${article.id}`}
-              className="inline-flex items-center gap-3 text-xs font-black text-primary hover:gap-5 transition-all uppercase tracking-widest"
-            >
-              View Detail
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          )}
+          <Link 
+            href={`/articles/${article.id}`}
+            className="inline-flex items-center gap-3 text-xs font-black text-primary hover:gap-5 transition-all uppercase tracking-widest"
+          >
+            詳しく見る
+            <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
       </div>
     </div>

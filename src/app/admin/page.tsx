@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -8,7 +9,6 @@ import {
   Loader2, 
   ShieldAlert, 
   Globe, 
-  Share2,
   ChevronRight,
   Database,
   UserCheck,
@@ -31,7 +31,6 @@ const PUBLIC_SITE_URL = "/";
 
 export default function AdminDashboard() {
   const [currentTime, setCurrentTime] = useState<string | null>(null);
-  const [isFakeLoading, setIsFakeLoading] = useState(false);
   const firestore = useFirestore();
   const { user } = useUser();
 
@@ -48,14 +47,9 @@ export default function AdminDashboard() {
     return collection(firestore, "articles");
   }, [firestore, user]);
 
-  const syncLogDocRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return doc(firestore, "settings", "note-sync");
-  }, [firestore, user]);
-
   const recentActivityQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, "articles"), orderBy("updatedAt", "desc"), limit(6));
+    return query(collection(firestore, "articles"), orderBy("updatedAt", "desc"), limit(10));
   }, [firestore, user]);
   
   const maintenanceDocRef = useMemoFirebase(() => {
@@ -65,12 +59,10 @@ export default function AdminDashboard() {
 
   const { data: articles, isLoading: isArticlesLoading } = useCollection(articlesQuery);
   const { data: recentArticles, isLoading: isActivityLoading, error: activityError } = useCollection(recentActivityQuery);
-  const { data: syncLog } = useDoc(syncLogDocRef);
   const { data: maintenanceConfig } = useDoc(maintenanceDocRef);
 
   const stats = {
     total: articles?.length || 0,
-    note: articles?.filter(a => a.articleType === "Note").length || 0,
     published: articles?.filter(a => a.isPublished).length || 0,
   };
 
@@ -114,20 +106,20 @@ export default function AdminDashboard() {
           href="/admin/articles"
         />
         <QuickStatCard 
-          title="note連携記事" 
-          value={stats.note} 
-          delta="外部メディア管理数" 
-          icon={Share2} 
-          color="purple"
-          href="/admin/note"
-        />
-        <QuickStatCard 
-          title="最終note同期" 
-          value={syncLog?.lastSyncAt ? new Date(syncLog.lastSyncAt).toLocaleTimeString("ja-JP", { hour: '2-digit', minute: '2-digit' }) : "--:--"} 
-          delta={syncLog?.lastSyncAt ? new Date(syncLog.lastSyncAt).toLocaleDateString("ja-JP") : "履歴なし"} 
+          title="最終更新" 
+          value={recentArticles?.[0]?.updatedAt ? new Date(recentArticles[0].updatedAt).toLocaleTimeString("ja-JP", { hour: '2-digit', minute: '2-digit' }) : "--:--"} 
+          delta={recentArticles?.[0]?.updatedAt ? new Date(recentArticles[0].updatedAt).toLocaleDateString("ja-JP") : "履歴なし"} 
           icon={Clock} 
           color="green"
-          href="/admin/note"
+          href="/admin/articles"
+        />
+        <QuickStatCard 
+          title="システム状態" 
+          value={maintenanceConfig?.isMaintenanceMode ? "停止" : "稼働"} 
+          delta="サイト稼働ステータス" 
+          icon={ShieldCheck} 
+          color="purple"
+          href="/admin/maintenance"
         />
       </div>
 
@@ -145,7 +137,7 @@ export default function AdminDashboard() {
                 <div className="flex items-start gap-3">
                   <AlertCircle className="h-5 w-5 mt-0.5 shrink-0" />
                   <div>
-                    <p className="font-bold text-sm">インデックスの作成が必要です</p>
+                    <p className="font-bold text-sm">エラーが発生しました</p>
                     <p className="text-[10px] mt-1 opacity-80 break-all">{activityError.message}</p>
                   </div>
                 </div>
@@ -160,9 +152,6 @@ export default function AdminDashboard() {
                   <div key={article.id} className="p-5 hover:bg-slate-50 transition-colors flex items-center justify-between group">
                     <div className="flex flex-col">
                       <div className="flex items-center gap-2">
-                        <Badge className={article.articleType === "Note" ? "bg-purple-600 h-4 px-1 text-[8px]" : "bg-primary h-4 px-1 text-[8px]"}>
-                          {article.articleType === "Note" ? "note" : "学内"}
-                        </Badge>
                         <span className="text-sm font-bold text-slate-700 truncate max-w-[200px] group-hover:text-primary transition-colors">{article.title}</span>
                       </div>
                       <div className="flex items-center gap-2 mt-1.5">
@@ -182,7 +171,7 @@ export default function AdminDashboard() {
                   </div>
                 )
               )) : (
-                <div className="p-16 text-center text-slate-400 text-sm font-medium italic">アクティビティはまだありません。</div>
+                <div className="p-16 text-center text-slate-400 text-sm font-medium italic">記事はまだありません。</div>
               )}
             </div>
           </CardContent>
@@ -196,13 +185,13 @@ export default function AdminDashboard() {
             <Link href="/admin/articles">
               <Button className="w-full justify-start gap-3 h-12 shadow-sm font-bold text-sm rounded-xl">
                 <FileText className="h-5 w-5" />
-                <span>記事・公開管理</span>
+                <span>記事を新規作成・管理</span>
               </Button>
             </Link>
-            <Link href="/admin/note">
-              <Button variant="outline" className="w-full justify-start gap-3 h-12 border-purple-200 text-purple-700 hover:bg-purple-50 font-bold text-sm rounded-xl">
-                <Share2 className="h-5 w-5" />
-                <span>note管理</span>
+            <Link href="/admin/hero">
+              <Button variant="outline" className="w-full justify-start gap-3 h-12 border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-sm rounded-xl">
+                <ImageIcon className="h-5 w-5" />
+                <span>ヒーロー画像管理</span>
               </Button>
             </Link>
             <Link href="/admin/maintenance">

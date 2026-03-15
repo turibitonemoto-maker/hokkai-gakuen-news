@@ -24,11 +24,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const articleSchema = z.object({
   title: z.string().min(1, "タイトルを入力してください"),
-  articleType: z.enum(["Standard", "Note"]),
+  articleType: z.literal("Standard"),
   content: z.string().min(1, "本文を入力してください"),
   imageCaption: z.string().optional().or(z.literal("")),
   pdfUrl: z.string().optional().or(z.literal("")),
-  noteUrl: z.string().url("有効なURLを入力してください").optional().or(z.literal("")),
   categoryId: z.enum(["Campus", "Event", "Interview", "Sports", "Column", "Opinion"]),
   publishDate: z.string(),
   mainImageUrl: z.string().optional().or(z.literal("")),
@@ -53,11 +52,10 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     resolver: zodResolver(articleSchema),
     defaultValues: {
       title: article?.title || "",
-      articleType: article?.articleType || "Standard",
+      articleType: "Standard",
       content: article?.content || "",
       imageCaption: article?.imageCaption || "",
       pdfUrl: article?.pdfUrl || "",
-      noteUrl: article?.noteUrl || "",
       categoryId: article?.categoryId || "Campus",
       publishDate: article?.publishDate || new Date().toISOString().split("T")[0],
       mainImageUrl: article?.mainImageUrl || "",
@@ -172,7 +170,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
             )}
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField
               control={form.control}
               name="categoryId"
@@ -210,23 +208,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                 </FormItem>
               )}
             />
-
-            <FormField
-              control={form.control}
-              name="articleType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest">タイプ</FormLabel>
-                  <div className={cn(
-                    "h-12 flex items-center px-4 rounded-xl border text-xs font-black gap-2",
-                    field.value === "Note" ? "bg-purple-50 text-purple-700 border-purple-100" : "bg-blue-50 text-blue-700 border-blue-100"
-                  )}>
-                    {field.value === "Note" ? <FileType className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
-                    {field.value === "Note" ? "note同期" : "学内オリジナル"}
-                  </div>
-                </FormItem>
-              )}
-            />
           </div>
 
           <FormField
@@ -244,7 +225,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                   <Alert className="mt-4 bg-blue-50 border-blue-100 text-blue-700 rounded-2xl">
                     <ShieldCheck className="h-4 w-4" />
                     <AlertDescription className="text-[10px] font-bold leading-relaxed">
-                      【重要】ドライブの設定で「閲覧者と閲覧者（コメント可）に、ダウンロード、印刷、コピーの項目を表示しない」のチェックをオンにしてください。これにより、ステルス表示のセキュリティが完成します。
+                      【重要】ドライブの設定で「複製禁止」設定を必ず行ってください。
                     </AlertDescription>
                   </Alert>
                 )}
@@ -257,7 +238,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b border-slate-50 pb-2">
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-              <Type className="h-3 w-3" /> 本文執筆（画像は直接貼り付け可能）
+              <Type className="h-3 w-3" /> 本文執筆（人力入魂）
             </span>
             <div className="flex items-center gap-1">
               <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}><Heading2 className="h-4 w-4" /></Button>
@@ -314,7 +295,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                   <FormControl>
                     <Input placeholder="例：北海学園大学正門付近での撮影" className="h-12 rounded-xl border-slate-100 bg-white" {...field} />
                   </FormControl>
-                  <FormDescription className="text-[9px] font-bold">写真の下に控えめに表示されます。</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

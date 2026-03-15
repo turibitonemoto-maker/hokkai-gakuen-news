@@ -6,7 +6,8 @@
 
 ## プロジェクトの役割
 
-- **コンテンツ・マネジメント (CMS)**: 記事の執筆、編集、公開スイッチの制御。Tiptapエディタによる「note風」の執筆体験を提供。
+- **コンテンツ・マネジメント (CMS)**: 記事の執筆、編集、公開スイッチの制御。Tiptapエディタによる「人力入魂」の執筆体験を提供。
+- **完全自前主義（Independence）**: 外部プラットフォーム（note等）への依存を廃止。全ての記事を公式DB内で完結。
 - **聖典（Sacred Scripture）の遵守**: 全てのテキストデータは `content` フィールド（HTML形式）で統一管理。DocID: `president_greeting` および `articles/{id}` を厳守。
 - **報道写真ユニット・プロトコル**: 画像は Base64 方式で自己完結。キャプション（説明文）の付与と、黄金比（行間1.6倍）によるレスポンシブ表示を徹底。
 - **デジタル紙面管制（ステルス・ビューアー）**: Google ドライブを活用しつつ、独自の「Digital Paper Viewer」により、複製リスクを抑えたセキュアな紙面配信を実現。
@@ -14,17 +15,12 @@
 
 ## 現在の進捗状況 (2025/03)
 
+- [x] **note連携の完全解除**: 外部依存を排除し、完全自前主義への改革を完了。
 - [x] **文字更新の完全同期**: 会長挨拶および記事の `content` フィールド同期に成功。
 - [x] **日本仕様の黄金比**: 行間 `leading-7` (約1.6倍) および段落余白を全域で適用済み。
 - [x] **自己完結型画像システム**: Base64変換による外部ストレージ不要の画像埋め込みを実装完了。
 - [x] **ステルス・ビューアー稼働**: GoogleドライブのUIを隠蔽したセキュアな紙面配信機能を実装。
 - [x] **報道キャプション機能**: 画像説明文の追加とインテリジェント・リサイズ表示を実装完了。
-
-## 接続・プレビュー情報
-
-### 📡 開発・テスト用 (Firebase Studio)
-- **管理用サイト (ログイン)**: [https://6000-firebase-studio-1773136574841.cluster-y75up3teuvc62qmnwys4deqv6y.cloudworkstations.dev/admin](https://6000-firebase-studio-1773136574841.cluster-y75up3teuvc62qmnwys4deqv6y.cloudworkstations.dev/admin)
-- **表示用サイト (参照用)**: [https://6000-firebase-studio-1771906628521.cluster-osvg2nzmmzhzqqjio6oojllbg4.cloudworkstations.dev/](https://6000-firebase-studio-1771906628521.cluster-osvg2nzmmzhzqqjio6oojllbg4.cloudworkstations.dev/)
 
 ---
 © 2025 北海学園大学一部新聞会 / COMMANDING FOR THE FUTURE

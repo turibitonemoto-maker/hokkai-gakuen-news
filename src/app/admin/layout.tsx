@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -13,7 +14,6 @@ import {
   ShieldAlert,
   Globe,
   ExternalLink,
-  Share2,
   Loader2,
   Lock
 } from "lucide-react";
@@ -28,8 +28,6 @@ import { LoginForm } from "@/components/auth/login-form";
 import Image from "next/image";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-
-const PUBLIC_SITE_URL = "/articles";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
@@ -51,7 +49,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const menuItems = [
     { id: "/admin", label: "ダッシュボード", icon: LayoutDashboard },
     { id: "/admin/articles", label: "記事・公開管理", icon: FileText },
-    { id: "/admin/note", label: "note同期管理", icon: Share2 },
     { id: "/admin/hero", label: "ヒーロー画像", icon: ImageIcon },
     { id: "/admin/ads", label: "広告管理", icon: Megaphone, isProtected: true },
     { id: "/admin/president", label: "会長挨拶", icon: UserRound, isProtected: true },
@@ -167,7 +164,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen bg-slate-50 flex font-body overflow-x-hidden">
-      {/* Desktop Sidebar */}
       {!isMobile && (
         <aside 
           className={cn(
@@ -179,9 +175,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </aside>
       )}
 
-      {/* Mobile Drawer */}
       {isMobile && (
         <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+          <SheetTrigger asChild>
+            <div className="hidden" />
+          </SheetTrigger>
           <SheetContent side="left" className="p-0 w-72 bg-[#1e293b] border-none">
             <SheetHeader className="sr-only">
               <SheetTitle>ナビゲーションメニュー</SheetTitle>
