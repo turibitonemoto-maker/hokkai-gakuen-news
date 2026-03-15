@@ -1,35 +1,35 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useFirestore, useUser, useFirebase } from "@/firebase";
+import { useFirestore, useUser } from "@/firebase";
 import { collection, doc, serverTimestamp } from "firebase/firestore";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { FileText, Share2, Tag, ImageIcon, Type, Heading1, Heading2, List, Link as LinkIcon, Bold, Italic, Loader2, Upload } from "lucide-react";
+import { FileText, Share2, ImageIcon, Type, Heading2, Loader2, Upload, FileType } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import ImageExtension from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
-import { useState, useCallback, useRef } from "react";
+import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 const articleSchema = z.object({
   title: z.string().min(1, "タイトルを入力してください"),
   articleType: z.enum(["Standard", "Note"]),
   content: z.string().min(1, "本文を入力してください"),
+  pdfUrl: z.string().optional().or(z.literal("")),
   noteUrl: z.string().url("有効なURLを入力してください").optional().or(z.literal("")),
   categoryId: z.enum(["Campus", "Event", "Interview", "Sports", "Column", "Opinion"]),
-  tagsInput: z.string().optional(),
   publishDate: z.string(),
-  mainImageUrl: z.string().url("有効なURLを入力してください").optional().or(z.literal("")),
+  mainImageUrl: z.string().optional().or(z.literal("")),
   isPublished: z.boolean().default(false),
 });
 
@@ -43,9 +43,8 @@ interface ArticleFormProps {
 export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
   const firestore = useFirestore();
   const { user } = useUser();
-  const { firebaseApp } = useFirebase();
   const { toast } = useToast();
-  const [isUploading, setIsUploading] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const mainImageInputRef = useRef<HTMLInputElement>(null);
   
   const form = useForm<ArticleFormValues>({
@@ -54,9 +53,9 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       title: article?.title || "",
       articleType: article?.articleType || "Standard",
       content: article?.content || "",
+      pdfUrl: article?.pdfUrl || "",
       noteUrl: article?.noteUrl || "",
       categoryId: article?.categoryId || "Campus",
-      tagsInput: article?.tags?.join(", ") || "",
       publishDate: article?.publishDate || new Date().toISOString().split("T")[0],
       mainImageUrl: article?.mainImageUrl || "",
       isPublished: article?.isPublished || false,
@@ -90,29 +89,28 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     },
   });
 
-  const uploadFile = async (file: File, path: string) => {
-    if (!firebaseApp) return null;
-    const storage = getStorage(firebaseApp);
-    const storageRef = ref(storage, `${path}/${Date.now()}_${file.name}`);
-    await uploadBytes(storageRef, file);
-    return await getDownloadURL(storageRef);
+  const convertToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
   };
 
   const handleMainImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setIsUploading(true);
+    setIsProcessing(true);
     try {
-      const url = await uploadFile(file, 'articles/hero');
-      if (url) {
-        form.setValue("mainImageUrl", url);
-        toast({ title: "表紙画像をアップロードしました" });
-      }
+      const base64 = await convertToBase64(file);
+      form.setValue("mainImageUrl", base64);
+      toast({ title: "表紙画像を取り込みました（Base64）" });
     } catch (error: any) {
-      toast({ variant: "destructive", title: "アップロード失敗", description: error.message });
+      toast({ variant: "destructive", title: "失敗", description: "画像の処理に失敗しました。" });
     } finally {
-      setIsUploading(false);
+      setIsProcessing(false);
     }
   };
 
@@ -120,31 +118,23 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     const file = e.target.files?.[0];
     if (!file || !editor) return;
 
-    setIsUploading(true);
+    setIsProcessing(true);
     try {
-      const url = await uploadFile(file, 'articles/content');
-      if (url) {
-        editor.chain().focus().setImage({ src: url }).run();
-        toast({ title: "画像を挿入しました" });
-      }
+      const base64 = await convertToBase64(file);
+      editor.chain().focus().setImage({ src: base64 }).run();
+      toast({ title: "画像を本文に埋め込みました" });
     } catch (error: any) {
-      toast({ variant: "destructive", title: "挿入失敗", description: error.message });
+      toast({ variant: "destructive", title: "失敗", description: "画像の処理に失敗しました。" });
     } finally {
-      setIsUploading(false);
+      setIsProcessing(false);
     }
   };
 
   function onSubmit(values: ArticleFormValues) {
     if (!firestore) return;
 
-    const tags = values.tagsInput 
-      ? values.tagsInput.split(",").map(t => t.trim()).filter(t => t !== "") 
-      : [];
-
-    const { tagsInput, ...rest } = values;
     const data = {
-      ...rest,
-      tags,
+      ...values,
       updatedAt: serverTimestamp(),
       updatedBy: user?.email || "unknown"
     };
@@ -152,11 +142,11 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     if (article?.id) {
       const docRef = doc(firestore, "articles", article.id);
       setDocumentNonBlocking(docRef, data, { merge: true });
-      toast({ title: "更新しました" });
+      toast({ title: "記事を更新しました" });
     } else {
       const colRef = collection(firestore, "articles");
       addDocumentNonBlocking(colRef, { ...data, createdAt: serverTimestamp() });
-      toast({ title: "作成しました" });
+      toast({ title: "記事を公開しました" });
     }
     onSuccess();
   }
@@ -165,37 +155,35 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12 max-w-5xl mx-auto pb-20">
         <div className="space-y-6">
-          <div className="flex flex-col md:flex-row md:items-end gap-6 border-b border-slate-100 pb-10">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem className="flex-1">
-                  <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">見出し / タイトル</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="" 
-                      className="h-auto py-4 text-3xl md:text-5xl font-black border-none bg-transparent shadow-none px-0 focus-visible:ring-0 placeholder:opacity:20" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+          <FormField
+            control={form.control}
+            name="title"
+            render={({ field }) => (
+              <FormItem className="border-b border-slate-100 pb-4">
+                <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest">記事見出し</FormLabel>
+                <FormControl>
+                  <Input 
+                    className="h-auto py-4 text-3xl md:text-5xl font-black border-none bg-transparent shadow-none px-0 focus-visible:ring-0" 
+                    placeholder="ここにタイトルを入力..."
+                    {...field} 
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <FormField
               control={form.control}
               name="categoryId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">カテゴリー</FormLabel>
+                  <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest">カテゴリー</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger className="h-12 rounded-xl font-bold border-slate-100 bg-slate-50/50">
-                        <SelectValue placeholder="選択" />
+                      <SelectTrigger className="h-12 rounded-xl border-slate-100 bg-slate-50/50">
+                        <SelectValue />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -216,9 +204,9 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
               name="publishDate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">公開日</FormLabel>
+                  <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest">公開日</FormLabel>
                   <FormControl>
-                    <Input type="date" className="h-12 rounded-xl font-bold border-slate-100 bg-slate-50/50" {...field} />
+                    <Input type="date" className="h-12 rounded-xl border-slate-100 bg-slate-50/50" {...field} />
                   </FormControl>
                 </FormItem>
               )}
@@ -229,14 +217,30 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
               name="articleType"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">タイプ</FormLabel>
+                  <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest">タイプ</FormLabel>
                   <div className={cn(
-                    "h-12 flex items-center px-4 rounded-xl border font-black text-xs gap-2 transition-colors",
-                    field.value === "Note" ? "bg-purple-50 border-purple-100 text-purple-700" : "bg-blue-50 border-blue-100 text-primary"
+                    "h-12 flex items-center px-4 rounded-xl border text-xs font-black gap-2",
+                    field.value === "Note" ? "bg-purple-50 text-purple-700 border-purple-100" : "bg-blue-50 text-blue-700 border-blue-100"
                   )}>
                     {field.value === "Note" ? <Share2 className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
-                    {field.value === "Note" ? "note同期記事" : "学内オリジナル記事"}
+                    {field.value === "Note" ? "note同期" : "学内オリジナル"}
                   </div>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="pdfUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                    <FileType className="h-3 w-3" /> 新聞PDF (Googleドライブ等)
+                  </FormLabel>
+                  <FormControl>
+                    <Input placeholder="URLを貼り付け" className="h-12 rounded-xl border-slate-100 bg-slate-50/50" {...field} />
+                  </FormControl>
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -244,53 +248,50 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
         </div>
 
         <div className="space-y-4">
-          <div className="flex items-center justify-between gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50 pb-2">
-            <div className="flex items-center gap-2">
-              <Type className="h-3 w-3" />
-              本文執筆
-            </div>
+          <div className="flex items-center justify-between border-b border-slate-50 pb-2">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <Type className="h-3 w-3" /> 本文執筆
+            </span>
             <div className="flex items-center gap-1">
-              <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('bold') && "bg-slate-100")} onClick={() => editor?.chain().focus().toggleBold().run()}><Bold className="h-4 w-4" /></Button>
-              <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('heading', { level: 2 }) && "bg-slate-100")} onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}><Heading2 className="h-4 w-4" /></Button>
+              <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}><Heading2 className="h-4 w-4" /></Button>
               <div className="relative">
                 <input type="file" accept="image/*" className="hidden" id="editor-image-upload" onChange={handleEditorImageUpload}/>
-                <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => document.getElementById('editor-image-upload')?.click()} disabled={isUploading}>
-                  {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
+                <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => document.getElementById('editor-image-upload')?.click()} disabled={isProcessing}>
+                  {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
                 </Button>
               </div>
             </div>
           </div>
-          <div className="min-h-[600px] bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-inner">
+          <div className="min-h-[600px] bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm">
             <EditorContent editor={editor} className="outline-none" />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-slate-50/50 p-8 rounded-[2.5rem] border border-slate-100">
           <FormField
             control={form.control}
             name="mainImageUrl"
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 ml-1">
-                  <ImageIcon className="h-3 w-3" /> 表紙画像
+                  <ImageIcon className="h-3 w-3" /> 表紙画像 (Base64)
                 </FormLabel>
                 <div className="flex gap-2">
                   <FormControl>
-                    <Input placeholder="URLが自動設定されます" className="h-12 rounded-xl border-slate-100 bg-slate-50/30 flex-1" {...field} />
+                    <Input placeholder="画像データが自動設定されます" className="h-12 rounded-xl border-slate-100 bg-white flex-1" {...field} />
                   </FormControl>
                   <input type="file" accept="image/*" className="hidden" ref={mainImageInputRef} onChange={handleMainImageUpload} />
                   <Button 
                     type="button" 
                     variant="outline" 
-                    className="h-12 px-4 rounded-xl gap-2 font-bold"
+                    className="h-12 px-6 rounded-xl gap-2 font-bold bg-white"
                     onClick={() => mainImageInputRef.current?.click()}
-                    disabled={isUploading}
+                    disabled={isProcessing}
                   >
-                    {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                    アップロード
+                    {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    選択
                   </Button>
                 </div>
-                <FormMessage />
               </FormItem>
             )}
           />
@@ -298,20 +299,21 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
             control={form.control}
             name="isPublished"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-3xl border-2 border-primary/10 p-8 bg-primary/5">
-                <div className="space-y-1">
-                  <FormLabel className="text-xl font-black text-primary">公式サイトに公開</FormLabel>
+              <FormItem className="flex flex-row items-center justify-between rounded-2xl border-2 border-primary/10 p-6 bg-white">
+                <div className="space-y-0.5">
+                  <FormLabel className="text-lg font-black text-primary">公式サイトに公開</FormLabel>
+                  <FormDescription className="text-[10px] font-bold">有効にすると即座に掲載されます。</FormDescription>
                 </div>
-                <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} className="scale-150" /></FormControl>
+                <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} className="scale-125" /></FormControl>
               </FormItem>
             )}
           />
         </div>
 
-        <div className="flex flex-col-reverse md:flex-row justify-end gap-3 pt-10 border-t bg-white/95 backdrop-blur-md sticky bottom-0 pb-6 z-20">
-          <Button type="button" variant="outline" onClick={onSuccess} className="w-full md:w-32 h-14 rounded-2xl font-bold">破棄</Button>
-          <Button type="submit" className="w-full md:w-48 h-14 shadow-2xl font-black rounded-2xl text-lg bg-primary hover:bg-primary/90">
-            {article?.id ? "変更を公開" : "記事を創出"}
+        <div className="flex justify-end gap-3 pt-10 border-t sticky bottom-6 z-20">
+          <Button type="button" variant="outline" onClick={onSuccess} className="w-32 h-14 rounded-2xl font-bold">キャンセル</Button>
+          <Button type="submit" className="w-48 h-14 shadow-2xl font-black rounded-2xl text-lg bg-primary hover:bg-primary/90">
+            記事を公開する
           </Button>
         </div>
       </form>

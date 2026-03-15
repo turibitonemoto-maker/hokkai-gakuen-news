@@ -1,14 +1,14 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useFirestore, useFirebase } from "@/firebase";
+import { useFirestore } from "@/firebase";
 import { collection, doc, serverTimestamp } from "firebase/firestore";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useRef } from "react";
@@ -16,7 +16,7 @@ import { Loader2, Upload } from "lucide-react";
 
 const adSchema = z.object({
   title: z.string().min(1, "広告名を入力してください"),
-  imageUrl: z.string().url("有効な画像URLを入力してください"),
+  imageUrl: z.string().min(1, "画像データが必要です"),
   linkUrl: z.string().url("有効な遷移先URLを入力してください"),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
@@ -31,11 +31,9 @@ interface AdFormProps {
 }
 
 export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
-  const [isUploading, setIsUploading] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
   const firestore = useFirestore();
-  const { firebaseApp } = useFirebase();
   const { toast } = useToast();
   
   const form = useForm<AdFormValues>({
@@ -51,21 +49,16 @@ export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !firebaseApp) return;
+    if (!file) return;
 
-    setIsUploading(true);
-    try {
-      const storage = getStorage(firebaseApp);
-      const storageRef = ref(storage, `ads/${Date.now()}_${file.name}`);
-      await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(storageRef);
-      form.setValue("imageUrl", url);
-      toast({ title: "バナーをアップロードしました" });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "失敗", description: error.message });
-    } finally {
-      setIsUploading(false);
-    }
+    setIsProcessing(true);
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      form.setValue("imageUrl", reader.result as string);
+      toast({ title: "バナーを読み込みました（Base64）" });
+      setIsProcessing(false);
+    };
   };
 
   function onSubmit(values: AdFormValues) {
@@ -82,23 +75,21 @@ export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
         clickCount: 0,
         createdAt: serverTimestamp() 
       });
-      toast({ title: "追加完了" });
+      toast({ title: "広告を登録しました" });
     }
     onSuccess();
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>広告名</FormLabel>
-              <FormControl>
-                <Input placeholder="例：学内生協 特別キャンペーン" {...field} />
-              </FormControl>
+              <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">広告名</FormLabel>
+              <FormControl><Input className="h-12 rounded-xl font-bold" {...field} /></FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -109,24 +100,21 @@ export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
           name="imageUrl"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>バナー画像</FormLabel>
+              <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">バナー画像 (Base64)</FormLabel>
               <div className="flex gap-2">
-                <FormControl>
-                  <Input placeholder="URLが自動設定されます" {...field} />
-                </FormControl>
+                <FormControl><Input className="h-12 rounded-xl font-bold bg-slate-50" readOnly {...field} /></FormControl>
                 <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
                 <Button 
                   type="button" 
                   variant="outline" 
-                  className="gap-2 font-bold"
+                  className="h-12 px-6 rounded-xl gap-2 font-black"
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={isUploading}
+                  disabled={isProcessing}
                 >
-                  {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                  アップロード
+                  {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  画像選択
                 </Button>
               </div>
-              <FormMessage />
             </FormItem>
           )}
         />
@@ -136,48 +124,16 @@ export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
           name="linkUrl"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>遷移先URL</FormLabel>
-              <FormControl>
-                <Input placeholder="https://..." {...field} />
-              </FormControl>
+              <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">遷移先URL</FormLabel>
+              <FormControl><Input className="h-12 rounded-xl font-bold" {...field} /></FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="startDate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>表示開始日時</FormLabel>
-                <FormControl>
-                  <Input type="datetime-local" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="endDate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>表示終了日時</FormLabel>
-                <FormControl>
-                  <Input type="datetime-local" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="flex justify-end gap-3 pt-4 border-t">
-          <Button type="button" variant="outline" onClick={onCancel} className="rounded-xl">キャンセル</Button>
-          <Button type="submit" className="rounded-xl font-black">{ad ? "保存" : "登録"}</Button>
+        <div className="flex justify-end gap-3 pt-6 border-t">
+          <Button type="button" variant="outline" onClick={onCancel} className="rounded-xl h-12 font-bold">キャンセル</Button>
+          <Button type="submit" className="rounded-xl h-12 px-10 font-black bg-primary">保存する</Button>
         </div>
       </form>
     </Form>

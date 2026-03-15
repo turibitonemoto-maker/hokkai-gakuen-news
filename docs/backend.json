@@ -10,6 +10,7 @@
         "title": { "type": "string" },
         "articleType": { "type": "string", "enum": ["Standard", "Note"] },
         "content": { "type": "string" },
+        "pdfUrl": { "type": "string", "format": "uri", "description": "新聞紙面のPDF（Googleドライブ等）のURL" },
         "noteUrl": { "type": "string", "format": "uri" },
         "categoryId": { "type": "string" },
         "tags": { "type": "array", "items": { "type": "string" } },
@@ -69,10 +70,6 @@
     "/settings/president_greeting": {
       "schema": { "type": "object" },
       "description": "会長挨拶。Sacred Scripture: DocID must be 'president_greeting', Field must be 'content'."
-    },
-    "/settings/note-sync": {
-      "schema": { "type": "object" },
-      "description": "note同期ログ。"
     }
   }
 }
