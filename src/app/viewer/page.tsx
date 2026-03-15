@@ -51,7 +51,6 @@ export default function ViewerListPage() {
         ) : sortedArticles.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {sortedArticles.map((article) => {
-              const transform = article.mainImageTransform || { scale: 0, x: 0, y: 0 };
               return (
                 <Link key={article.id} href={`/viewer/${article.id}`} className="group">
                   <div className="bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-500 overflow-hidden flex flex-col h-full">
@@ -61,10 +60,7 @@ export default function ViewerListPage() {
                           src={article.mainImageUrl} 
                           alt={article.title} 
                           fill 
-                          className="object-cover transition-transform duration-700" 
-                          style={{
-                            transform: `scale(${Math.max(0.01, 1 + transform.scale / 100)}) translate(${transform.x}%, ${transform.y}%)`,
-                          }}
+                          className="object-cover transition-transform duration-700 group-hover:scale-105" 
                           unoptimized 
                         />
                       ) : (
