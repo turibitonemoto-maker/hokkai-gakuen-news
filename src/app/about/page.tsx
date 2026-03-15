@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useDoc, useFirestore, useMemoFirebase } from "@/firebase";
@@ -12,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 /**
  * About Us 公開ページ
  * settings/about の content フィールドを忠実に映し出します。
- * タイトルは排除し、1.6倍の行間で聖典を描画します。
+ * 1.6倍の行間で聖典を描画します。
  */
 export default function AboutPage() {
   const firestore = useFirestore();

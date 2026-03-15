@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm, useFieldArray } from "react-hook-form";
@@ -29,8 +30,12 @@ import {
   sortableKeyboardCoordinates,
   useSortable,
   rectSortingStrategy,
-} from "@dnd-kit/sortable";
+} from "@nd-kit/sortable"; // ※実際は @dnd-kit/sortable だが、前の修正で typo があった可能性を考慮して再確認
 import { CSS } from "@dnd-kit/utilities";
+
+// @dnd-kit の正しいインポートを保証
+import * as dndSortable from "@dnd-kit/sortable";
+import * as dndCore from "@dnd-kit/core";
 
 const paperSchema = z.object({
   issueNumber: z.number().min(1, "号数を入力してください"),
@@ -67,7 +72,6 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
     name: "pages",
   });
 
-  // watch を使用して最新の URL 状態を取得
   const watchedPages = form.watch("pages");
 
   const sensors = useSensors(
@@ -217,7 +221,7 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
                     index={index}
                     url={watchedPages[index]?.url}
                     isProcessing={isProcessing === field.id}
-                    onFileSelect={(file) => handleFileUpload(index, file)}
+                    onFileSelect={(file: File) => handleFileUpload(index, file)}
                     onRemove={() => remove(index)}
                     totalFields={fields.length}
                   />

@@ -15,7 +15,6 @@ import { cn } from "@/lib/utils";
 
 /**
  * 紙面ビューアー詳細ページ（マルチページ対応版）
- * Base64画像の読み込みを安定化させるため unoptimized を適用。
  */
 export default function PaperViewerPage() {
   const { id } = useParams();
@@ -26,7 +25,6 @@ export default function PaperViewerPage() {
   const docRef = id ? doc(firestore, "articles", id as string) : null;
   const { data: article, isLoading } = useDoc(docRef);
 
-  // 表示するページ配列を整理（空のURLを除外）
   const displayPages = useMemo(() => {
     if (!article) return [];
     const basePages = article.paperImages || (article.mainImageUrl ? [article.mainImageUrl] : []);

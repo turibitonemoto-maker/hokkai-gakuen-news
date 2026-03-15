@@ -1,11 +1,12 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection, doc, serverTimestamp } from "firebase/firestore";
+import { collection, doc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Loader2, RefreshCw, BookOpen, ImageIcon, CheckCircle2 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Plus, Pencil, Trash2, Loader2, BookOpen, ImageIcon, CheckCircle2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -37,7 +38,7 @@ export function ViewerManager() {
     return collection(firestore, "articles");
   }, [firestore, user]);
 
-  const { data: allArticles, isLoading, error } = useCollection(articlesQuery);
+  const { data: allArticles, isLoading } = useCollection(articlesQuery);
 
   const viewerArticles = useMemo(() => {
     if (!allArticles) return [];
@@ -93,7 +94,7 @@ export function ViewerManager() {
           </h2>
           <p className="text-sm font-bold text-slate-500 mt-1">電子版新聞の配信・アーカイブを統制します。</p>
         </div>
-        <Button onClick={() => { setCurrentPaper(null); setIsEditing(true); }} className="h-12 px-8 shadow-lg gap-2 font-black rounded-2xl bg-primary">
+        <Button onClick={() => { setCurrentPaper(null); setIsEditing(true); }} className="h-12 px-8 shadow-lg gap-2 font-black rounded-2xl bg-primary text-white hover:bg-primary/90">
           <Plus className="h-5 w-5" /> 紙面を追加
         </Button>
       </div>
