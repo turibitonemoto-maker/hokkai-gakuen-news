@@ -8,7 +8,6 @@ import {
   Clock, 
   Loader2, 
   ShieldAlert, 
-  Globe, 
   ChevronRight,
   Database,
   UserCheck,
@@ -27,8 +26,6 @@ import { cn } from "@/lib/utils";
 import { useCollection, useDoc, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query, orderBy, limit, doc } from "firebase/firestore";
 import Link from "next/link";
-
-const PUBLIC_SITE_URL = "/";
 
 export default function AdminDashboard() {
   const [currentTime, setCurrentTime] = useState<string | null>(null);
@@ -87,12 +84,12 @@ export default function AdminDashboard() {
           {maintenanceConfig?.isMaintenanceMode ? (
             <Badge variant="destructive" className="px-3 py-1 flex gap-2 items-center animate-pulse shadow-md">
               <ShieldAlert className="h-3 w-3" />
-              サイト: 停止中
+              管制: 制限中
             </Badge>
           ) : (
             <Badge variant="outline" className="bg-green-50 border-green-200 text-green-700 px-3 py-1 flex gap-2 items-center shadow-sm">
               <ShieldCheck className="h-3 w-3" />
-              サイト: 公開中
+              管制: 正常
             </Badge>
           )}
         </div>
@@ -102,7 +99,7 @@ export default function AdminDashboard() {
         <QuickStatCard 
           title="DB登録記事数" 
           value={isArticlesLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : stats.total} 
-          delta={`公開中: ${stats.published}`} 
+          delta={`公開設定中: ${stats.published}`} 
           icon={Database} 
           color="blue"
           href="/admin/articles"
@@ -110,15 +107,15 @@ export default function AdminDashboard() {
         <QuickStatCard 
           title="紙面ビューアー" 
           value={isArticlesLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : stats.viewer} 
-          delta="電子版発行数" 
+          delta="登録アーカイブ数" 
           icon={BookOpen} 
           color="green"
           href="/admin/viewer"
         />
         <QuickStatCard 
           title="システム状態" 
-          value={maintenanceConfig?.isMaintenanceMode ? "停止" : "稼働"} 
-          delta="サイト稼働ステータス" 
+          value={maintenanceConfig?.isMaintenanceMode ? "制限" : "正常"} 
+          delta="インフラ稼働ステータス" 
           icon={ShieldCheck} 
           color="purple"
           href="/admin/maintenance"
@@ -130,7 +127,7 @@ export default function AdminDashboard() {
           <CardHeader className="bg-white border-b border-slate-50 p-6">
             <CardTitle className="text-lg font-bold flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-primary" />
-              最新のアクティビティ
+              最新の管制アクティビティ
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
@@ -208,13 +205,6 @@ export default function AdminDashboard() {
                 <span>システム設定</span>
               </Button>
             </Link>
-            <Separator className="my-2" />
-            <a href={PUBLIC_SITE_URL} target="_blank" rel="noopener noreferrer">
-              <Button variant="secondary" className="w-full justify-center gap-2 font-bold h-10 shadow-sm rounded-xl">
-                <Globe className="h-4 w-4" />
-                <span>表示サイトを開く</span>
-              </Button>
-            </a>
           </CardContent>
         </Card>
       </div>

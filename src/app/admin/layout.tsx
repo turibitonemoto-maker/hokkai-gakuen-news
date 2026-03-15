@@ -11,8 +11,6 @@ import {
   Menu,
   LogOut,
   ShieldAlert,
-  Globe,
-  ExternalLink,
   Loader2,
   Lock,
   BookOpen
@@ -52,7 +50,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { id: "/admin/viewer", label: "紙面ビューアー", icon: BookOpen },
     { id: "/admin/ads", label: "広告管理", icon: Megaphone, isProtected: true },
     { id: "/admin/president", label: "会長挨拶", icon: UserRound, isProtected: true },
-    { id: "/admin/maintenance", label: "サイト制御", icon: ShieldAlert, isProtected: true },
+    { id: "/admin/maintenance", label: "システム制御", icon: ShieldAlert, isProtected: true },
   ];
 
   const handleLogout = async () => {
@@ -215,14 +213,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </h2>
           </div>
           <div className="flex items-center gap-2 md:gap-3">
-            <a href="/" target="_blank" rel="noopener noreferrer" className="hidden sm:block">
-              <Button variant="outline" size="sm" className="gap-2 border-primary/20 text-primary hover:bg-primary/5 font-bold rounded-xl h-9">
-                <Globe className="h-4 w-4" />
-                サイトを確認
-                <ExternalLink className="h-3 w-3" />
-              </Button>
-            </a>
-            <Badge variant="outline" className="hidden lg:flex bg-slate-50 text-slate-500 font-bold border-slate-200 px-3 py-1 rounded-full">
+            <Badge variant="outline" className="flex bg-slate-50 text-slate-500 font-bold border-slate-200 px-3 py-1 rounded-full">
               {user.email}
             </Badge>
           </div>
