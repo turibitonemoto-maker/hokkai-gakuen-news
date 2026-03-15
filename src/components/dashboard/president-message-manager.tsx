@@ -3,7 +3,7 @@
 
 /**
  * @fileOverview 会長挨拶管理コンポーネント
- * 顔写真の精密調整（プレビュー付き）および本文への直感的な画像挿入に対応。
+ * 題名、氏名、顔写真（精密調整付き）、本文を統合的に管理。
  */
 
 import { useDoc, useFirestore, useMemoFirebase, useUser } from "@/firebase";
@@ -17,16 +17,16 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, User as UserIcon, Lock, Bold, Italic, Heading2, List, Type, ImageIcon, Upload, Maximize, MoveHorizontal, MoveVertical, RefreshCw } from "lucide-react";
+import { Loader2, Save, User as UserIcon, Lock, Bold, Italic, Heading2, List, Type, ImageIcon, Upload, Maximize, MoveHorizontal, MoveVertical } from "lucide-react";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import ImageExtension from '@tiptap/extension-image';
-import LinkExtension from '@hookform/resolvers/zod';
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 
 const presidentMessageSchema = z.object({
+  title: z.string().min(1, "題名を入力してください"),
   authorName: z.string().min(1, "会長の氏名を入力してください"),
   authorImageUrl: z.string().optional().or(z.literal("")),
   authorImageTransform: z.object({
@@ -62,6 +62,7 @@ export function PresidentMessageManager() {
   const form = useForm<PresidentMessageValues>({
     resolver: zodResolver(presidentMessageSchema),
     defaultValues: {
+      title: "",
       authorName: "",
       authorImageUrl: "",
       authorImageTransform: { scale: 0, x: 0, y: 0 },
@@ -135,6 +136,7 @@ export function PresidentMessageManager() {
   useEffect(() => {
     if (messageData) {
       form.reset({
+        title: messageData.title || "",
         authorName: messageData.authorName || "",
         authorImageUrl: messageData.authorImageUrl || "",
         authorImageTransform: messageData.authorImageTransform || { scale: 0, x: 0, y: 0 },
@@ -205,6 +207,7 @@ export function PresidentMessageManager() {
     try {
       const htmlContent = editor.getHTML();
       await setDoc(docRef, {
+        title: values.title,
         authorName: values.authorName,
         authorImageUrl: values.authorImageUrl,
         authorImageTransform: values.authorImageTransform,
@@ -293,6 +296,14 @@ export function PresidentMessageManager() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                 <div className="space-y-8">
+                  <FormField control={form.control} name="title" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">メッセージ題名</FormLabel>
+                      <FormControl><Input placeholder="例：創刊にあたって" className="h-12 font-bold rounded-xl" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+
                   <FormField control={form.control} name="authorName" render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">会長氏名</FormLabel>

@@ -84,6 +84,11 @@ export function SidebarContent({ ads }: { ads: any[] }) {
             
             <div className="relative">
               <MessageCircle className="absolute -top-4 -left-2 h-8 w-8 text-primary/10" />
+              {president.title && (
+                <h5 className="font-black text-slate-800 text-center mb-4 text-sm border-b pb-2 border-slate-100">
+                  {president.title}
+                </h5>
+              )}
               <div 
                 className="article-content text-slate-600 font-medium text-center px-4 text-sm"
                 dangerouslySetInnerHTML={{ __html: sanitizedMessage }}

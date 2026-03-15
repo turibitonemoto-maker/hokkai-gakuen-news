@@ -85,7 +85,7 @@
     },
     "/settings/president_greeting": {
       "schema": { "type": "object" },
-      "description": "会長挨拶。Sacred Scripture: DocID must be 'president_greeting', Field must be 'content'."
+      "description": "会長挨拶。Fields: title, authorName, authorImageUrl, authorImageTransform, content."
     }
   }
 }
