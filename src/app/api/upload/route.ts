@@ -3,30 +3,34 @@ import { NextResponse } from "next/server";
 
 /**
  * サーバー側で画像を Cloudinary へアップロードする API ルート
- * セキュリティのため秘密鍵は環境変数からのみ取得します。
+ * インフラの健全性をターミナルに叫びます。
  */
 export async function POST(request: Request) {
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+  const apiKey = process.env.CLOUDINARY_API_KEY;
+  const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
   // --- INFRASTRUCTURE CHECK (地上管制ログ) ---
   console.log("--- INFRASTRUCTURE CHECK ---");
-  console.log("CLOUDINARY_CLOUD_NAME:", process.env.CLOUDINARY_CLOUD_NAME ? "✅ OK" : "❌ NG");
-  console.log("CLOUDINARY_API_KEY:", process.env.CLOUDINARY_API_KEY ? "✅ OK" : "❌ NG");
-  console.log("CLOUDINARY_API_SECRET:", process.env.CLOUDINARY_API_SECRET ? "✅ OK" : "❌ NG (Check .env.local location)");
+  console.log("TARGET_CLOUD_NAME:", cloudName || "❌ MISSING");
+  console.log("CLOUDINARY_API_KEY:", apiKey ? "✅ OK" : "❌ MISSING");
+  console.log("CLOUDINARY_API_SECRET:", apiSecret ? "✅ OK" : "❌ MISSING (Check .env.local)");
   console.log("-----------------------------");
 
   try {
-    // API Secret が未設定の場合は、具体的な解決策を返す
-    if (!process.env.CLOUDINARY_API_SECRET) {
+    // 必須情報の欠落チェック
+    if (!cloudName || !apiKey || !apiSecret) {
       return NextResponse.json({ 
-        error: "API Secretが未設定です", 
-        details: ".env.local がプロジェクトのルート（srcの外）にあるか確認し、サーバーを再起動してください。" 
+        error: "Cloudinary設定が不完全です", 
+        details: ".env.local が正しい階層（プロジェクトルート）にあるか、変数が定義されているか確認してください。" 
       }, { status: 500 });
     }
 
     // 設定の適用
     cloudinary.config({
-      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-      api_key: process.env.CLOUDINARY_API_KEY,
-      api_secret: process.env.CLOUDINARY_API_SECRET, 
+      cloud_name: cloudName,
+      api_key: apiKey,
+      api_secret: apiSecret, 
     });
 
     const formData = await request.formData();
@@ -39,7 +43,7 @@ export async function POST(request: Request) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // サーバーサイドからの直接アップロード（署名エラーを物理的に回避）
+    // サーバーサイドからの直接アップロード
     const result = await new Promise((resolve, reject) => {
       cloudinary.uploader.upload_stream(
         {
@@ -63,7 +67,7 @@ export async function POST(request: Request) {
     console.error("Upload API Route Error:", error);
     return NextResponse.json({ 
       error: error.message || "Internal server error",
-      details: "Cloudinary への物理接続に失敗しました。"
+      details: `Cloudinary への接続に失敗しました。Cloud Name [${cloudName}] が正しいか、Cloudinaryダッシュボードで再確認してください。`
     }, { status: 500 });
   }
 }
