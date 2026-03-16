@@ -96,7 +96,6 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
       const formData = new FormData();
       formData.append("file", file);
       
-      // 署名生成などはすべてサーバー側（APIルート）で行うため、ファイルのみを送信
       const res = await fetch("/api/upload", { 
         method: "POST", 
         body: formData 
@@ -115,7 +114,7 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
       toast({ 
         variant: "destructive", 
         title: "アップロード失敗", 
-        description: error.message || "API設定を確認してください。" 
+        description: error.message || "設定を確認してください。" 
       });
     } finally {
       setIsUploading(null);

@@ -6,28 +6,29 @@ import { NextResponse } from "next/server";
  * 秘密鍵は環境変数からのみ取得し、セキュリティを最大化します。
  */
 export async function POST(request: Request) {
-  // 認証チェック（サーバーのターミナルに表示されます）
-  console.log("Cloudinary Auth Check:", {
-    cloud: !!process.env.CLOUDINARY_CLOUD_NAME,
-    key: !!process.env.CLOUDINARY_API_KEY,
-    secret: !!process.env.CLOUDINARY_API_SECRET
-  });
+  // --- INFRASTRUCTURE CHECK ---
+  // サーバーのターミナルに実行結果が表示されます。
+  console.log("--- INFRASTRUCTURE CHECK ---");
+  console.log("CLOUDINARY_CLOUD_NAME:", process.env.CLOUDINARY_CLOUD_NAME ? "✅ OK" : "❌ NG");
+  console.log("CLOUDINARY_API_KEY:", process.env.CLOUDINARY_API_KEY ? "✅ OK" : "❌ NG");
+  console.log("CLOUDINARY_API_SECRET:", process.env.CLOUDINARY_API_SECRET ? "✅ OK" : "❌ NG (Check .env.local and restart server)");
+  console.log("-----------------------------");
 
   try {
+    // API Secret が未設定の場合は明確なエラーを返す
+    if (!process.env.CLOUDINARY_API_SECRET) {
+      return NextResponse.json({ 
+        error: "API Secretが未設定です", 
+        details: ".env.local のファイル名（ドットの有無）を確認し、サーバーを再起動してください。" 
+      }, { status: 500 });
+    }
+
     // 設定の適用
     cloudinary.config({
       cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
       api_key: process.env.CLOUDINARY_API_KEY,
       api_secret: process.env.CLOUDINARY_API_SECRET, 
     });
-
-    // API Secret が未設定の場合は明確なエラーを返す
-    if (!process.env.CLOUDINARY_API_SECRET) {
-      return NextResponse.json({ 
-        error: "API Secretが未設定です", 
-        details: ".env.local に CLOUDINARY_API_SECRET を設定し、サーバーを再起動してください。" 
-      }, { status: 500 });
-    }
 
     const formData = await request.formData();
     const file = formData.get("file") as File;
@@ -39,7 +40,7 @@ export async function POST(request: Request) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // サーバーサイドからの直接アップロード（署名エラーを物理的に回避）
+    // サーバーサイドからの直接アップロード
     const result = await new Promise((resolve, reject) => {
       cloudinary.uploader.upload_stream(
         {
@@ -62,7 +63,7 @@ export async function POST(request: Request) {
     console.error("Upload API Route Error:", error);
     return NextResponse.json({ 
       error: error.message || "Internal server error",
-      details: "環境変数の設定またはネットワーク設定を確認してください。"
+      details: "Cloudinary への接続に失敗しました。"
     }, { status: 500 });
   }
 }
