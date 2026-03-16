@@ -7,9 +7,10 @@ import { NextResponse } from "next/server";
  * 不一致がある場合はターミナルへ詳細な診断ログを出力します。
  */
 export async function POST(request: Request) {
-  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-  const apiKey = process.env.CLOUDINARY_API_KEY;
-  const apiSecret = process.env.CLOUDINARY_API_SECRET;
+  // 環境変数の取得（不可視のスペースを物理排除するため .trim() を適用）
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME?.trim();
+  const apiKey = process.env.CLOUDINARY_API_KEY?.trim();
+  const apiSecret = process.env.CLOUDINARY_API_SECRET?.trim();
 
   // --- INFRASTRUCTURE CHECK (地上管制診断ログ) ---
   console.log("--- INFRASTRUCTURE CHECK ---");
@@ -23,7 +24,7 @@ export async function POST(request: Request) {
     if (!cloudName || !apiKey || !apiSecret) {
       return NextResponse.json({ 
         error: "Cloudinary設定が不完全です", 
-        details: `.env.local の値が正しいか、Cloudinaryダッシュボードで再確認してください。設定後はサーバー（npm run dev）の再起動が必要です。` 
+        details: `.env.local の値を確認してください。設定後はサーバーの再起動が必要です。` 
       }, { status: 500 });
     }
 
