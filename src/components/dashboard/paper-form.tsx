@@ -34,7 +34,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 
 /**
- * 紙面アーカイブ（articlesコレクションへ categoryId: "Viewer" として保存）
+ * 紙面アーカイブ（聖典に従い articles コレクションへ categoryId: "Viewer" として保存）
  */
 const paperSchema = z.object({
   issueNumber: z.number().min(1, "号数を入力してください"),
@@ -131,7 +131,7 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
     const paperImages = values.pages.map(p => p.url).filter(url => url !== "");
     const mainImageUrl = paperImages[0] || "";
 
-    // 聖典の約束: 紙面データも articles コレクションへ保存
+    // 聖典の約束: 紙面データも articles コレクションへ保存（papersへの書き込みは廃止）
     const data = {
       issueNumber: values.issueNumber,
       title: values.title,
@@ -140,7 +140,7 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
       mainImageUrl,
       paperImages,
       articleType: "Standard",
-      categoryId: "Viewer", // 表示時にこれでフィルタリングする
+      categoryId: "Viewer", 
       updatedAt: serverTimestamp(),
       updatedBy: user?.email || "unknown"
     };

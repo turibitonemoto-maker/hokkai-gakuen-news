@@ -8,6 +8,7 @@ export type ImagePlaceholder = {
   imageHint: string;
 };
 
+// Casing fix: PlaceholderImages (lowercase h)
 export const PlaceholderImages: ImagePlaceholder[] = data.placeholderImages;
 
 export function getPlaceholderById(id: string): ImagePlaceholder {
