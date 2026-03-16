@@ -2,46 +2,53 @@
 "use client";
 
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, where } from "firebase/firestore";
+import { collection } from "firebase/firestore";
 import Link from "next/link";
 import Image from "next/image";
 import { useMemo } from "react";
-import { Loader2, BookOpen, Calendar, ArrowRight } from "lucide-react";
+import { Loader2, BookOpen, Calendar, ArrowRight, Newspaper } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { PublicHeader } from "@/components/site/public-header";
 import { PublicFooter } from "@/components/site/public-footer";
 
+/**
+ * 紙面アーカイブ一覧公開ページ
+ * デネブより：インデックス作成を待たずに即時反映させる「インデックス・フリー描画」を採用。
+ */
 export default function ViewerListPage() {
   const firestore = useFirestore();
 
+  // インデックス不要のため articles コレクションを全取得
   const viewerQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    return query(
-      collection(firestore, "papers"),
-      where("isPublished", "==", true)
-    );
+    return collection(firestore, "articles");
   }, [firestore]);
 
-  const { data: papers, isLoading } = useCollection(viewerQuery);
+  const { data: allArticles, isLoading } = useCollection(viewerQuery);
 
+  // フロント側で公開設定済みかつ Viewer カテゴリのものを抽出・グループ化
   const groupedPapers = useMemo(() => {
-    if (!papers) return {};
+    if (!allArticles) return {};
     
+    const papers = allArticles.filter(a => a.categoryId === "Viewer" && a.isPublished === true);
+
     const sorted = [...papers].sort((a, b) => {
-      const dateCompare = b.publishDate.localeCompare(a.publishDate);
+      const dateA = a.publishDate || "0000-00-00";
+      const dateB = b.publishDate || "0000-00-00";
+      const dateCompare = dateB.localeCompare(dateA);
       if (dateCompare !== 0) return dateCompare;
       return (b.issueNumber || 0) - (a.issueNumber || 0);
     });
 
     const groups: Record<string, typeof papers> = {};
     sorted.forEach(paper => {
-      const date = paper.publishDate;
+      const date = paper.publishDate || "不明な日付";
       if (!groups[date]) groups[date] = [];
       groups[date].push(paper);
     });
     
     return groups;
-  }, [papers]);
+  }, [allArticles]);
 
   const dates = useMemo(() => Object.keys(groupedPapers).sort((a, b) => b.localeCompare(a)), [groupedPapers]);
 
@@ -73,7 +80,7 @@ export default function ViewerListPage() {
                   <div className="h-px flex-1 bg-slate-200" />
                   <h3 className="text-xl font-black text-slate-400 flex items-center gap-3 bg-slate-50 px-6 py-2 rounded-full border">
                     <Calendar className="h-5 w-5" />
-                    {new Date(date).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    {date !== "不明な日付" ? new Date(date).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' }) : "日付未設定"}
                   </h3>
                   <div className="h-px flex-1 bg-slate-200" />
                 </div>
@@ -94,7 +101,9 @@ export default function ViewerListPage() {
                                 unoptimized 
                               />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center text-slate-200"><BookOpen className="h-16 w-16 opacity-20" /></div>
+                              <div className="w-full h-full flex items-center justify-center text-slate-200">
+                                <Newspaper className="h-16 w-16 opacity-20" />
+                              </div>
                             )}
                             <div className="absolute top-6 left-6">
                               <Badge className="bg-primary/90 backdrop-blur-md text-white font-black px-4 py-1.5 shadow-xl border-none rounded-full text-xs">
@@ -125,6 +134,7 @@ export default function ViewerListPage() {
             <div className="py-40 text-center space-y-6">
               <BookOpen className="h-24 w-24 mx-auto text-slate-200 opacity-20" />
               <p className="text-slate-300 font-black italic text-xl tracking-[0.2em] uppercase">No Archives Available</p>
+              <p className="text-slate-400 font-bold text-sm">公開設定されている紙面がまだありません。</p>
             </div>
           )}
         </div>

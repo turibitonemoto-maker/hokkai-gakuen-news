@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useDoc, useFirestore } from "@/firebase";
@@ -12,13 +13,18 @@ import Image from "next/image";
 import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 
+/**
+ * 紙面アーカイブ個別表示ページ
+ * デネブより：住所を統一するため、articles コレクションから読み込みます。
+ */
 export default function PaperViewerPage() {
   const { id } = useParams();
   const router = useRouter();
   const firestore = useFirestore();
   const [isZoomed, setIsZoomed] = useState(false);
 
-  const docRef = id ? doc(firestore, "papers", id as string) : null;
+  // 聖典の約束: 紙面データも articles コレクションに保存されている
+  const docRef = id ? doc(firestore, "articles", id as string) : null;
   const { data: paper, isLoading } = useDoc(docRef);
 
   const displayPages = useMemo(() => {
@@ -34,7 +40,8 @@ export default function PaperViewerPage() {
     );
   }
 
-  if (!paper) {
+  // categoryId が Viewer でない場合、または非公開の場合は「見つからない」とする
+  if (!paper || paper.categoryId !== "Viewer" || !paper.isPublished) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 font-body">
         <BookOpen className="h-16 w-16 text-slate-200 mb-4" />

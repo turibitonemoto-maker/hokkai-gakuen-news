@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm, useFieldArray } from "react-hook-form";
@@ -11,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CloudUpload, Image as LucideImage, RefreshCw, Plus, Trash2, GripVertical, Upload } from "lucide-react";
+import { Loader2, CloudUpload, RefreshCw, Plus, Trash2, GripVertical, Upload } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import {
@@ -32,6 +33,9 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
+/**
+ * 紙面アーカイブ（articlesコレクションへ categoryId: "Viewer" として保存）
+ */
 const paperSchema = z.object({
   issueNumber: z.number().min(1, "号数を入力してください"),
   title: z.string().min(1, "タイトルを入力してください"),
@@ -127,6 +131,7 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
     const paperImages = values.pages.map(p => p.url).filter(url => url !== "");
     const mainImageUrl = paperImages[0] || "";
 
+    // 聖典の約束: 紙面データも articles コレクションへ保存
     const data = {
       issueNumber: values.issueNumber,
       title: values.title,
@@ -134,16 +139,18 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
       isPublished: values.isPublished,
       mainImageUrl,
       paperImages,
+      articleType: "Standard",
+      categoryId: "Viewer", // 表示時にこれでフィルタリングする
       updatedAt: serverTimestamp(),
       updatedBy: user?.email || "unknown"
     };
 
     if (paper?.id) {
-      const docRef = doc(firestore, "papers", paper.id);
+      const docRef = doc(firestore, "articles", paper.id);
       setDocumentNonBlocking(docRef, data, { merge: true });
       toast({ title: "更新完了", description: `第 ${values.issueNumber} 号を更新しました。` });
     } else {
-      const colRef = collection(firestore, "papers");
+      const colRef = collection(firestore, "articles");
       addDocumentNonBlocking(colRef, { ...data, createdAt: serverTimestamp(), viewCount: 0 });
       toast({ title: "登録完了", description: `第 ${values.issueNumber} 号をアーカイブに登録しました。` });
     }

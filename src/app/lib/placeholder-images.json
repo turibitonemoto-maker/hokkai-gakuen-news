@@ -1,16 +1,22 @@
 {
   "placeholderImages": [
     {
-      "id": "hero-static-1",
+      "id": "hero-1",
       "description": "北海学園大学のキャンパス風景",
-      "imageUrl": "https://picsum.photos/seed/newspaper-static-1/1200/600",
+      "imageUrl": "https://picsum.photos/seed/hokkai1/1200/600",
       "imageHint": "university campus"
     },
     {
-      "id": "hero-static-2",
+      "id": "hero-2",
       "description": "新聞会の編集会議の様子",
-      "imageUrl": "https://picsum.photos/seed/newspaper-static-2/1200/600",
+      "imageUrl": "https://picsum.photos/seed/hokkai2/1200/600",
       "imageHint": "newsroom meeting"
+    },
+    {
+      "id": "ad-sample",
+      "description": "学内生協の広告サンプル",
+      "imageUrl": "https://picsum.photos/seed/ad1/600/200",
+      "imageHint": "advertising banner"
     }
   ]
 }

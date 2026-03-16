@@ -1,8 +1,9 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection, doc } from "firebase/firestore";
+import { collection, doc, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil, Trash2, Loader2, BookOpen, Image as LucideImage, CheckCircle2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,32 +35,39 @@ export function ViewerManager() {
 
   const papersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return collection(firestore, "papers");
+    // インデックス不要のため articles コレクションを全取得してフロントでフィルタ
+    return collection(firestore, "articles");
   }, [firestore, user]);
 
-  const { data: allPapers, isLoading } = useCollection(papersQuery);
+  const { data: allArticles, isLoading } = useCollection(papersQuery);
 
   const viewerPapers = useMemo(() => {
-    if (!allPapers) return [];
-    return [...allPapers].sort((a, b) => {
-      const dateA = a.publishDate || "";
-      const dateB = b.publishDate || "";
-      const dateCompare = dateB.localeCompare(dateA);
-      if (dateCompare !== 0) return dateCompare;
-      return (b.issueNumber || 0) - (a.issueNumber || 0);
-    });
-  }, [allPapers]);
+    if (!allArticles) return [];
+    // categoryId: "Viewer" のみを抽出し、発行日順にソート
+    return allArticles
+      .filter(a => a.categoryId === "Viewer")
+      .sort((a, b) => {
+        const dateA = a.publishDate || "";
+        const dateB = b.publishDate || "";
+        const dateCompare = dateB.localeCompare(dateA);
+        if (dateCompare !== 0) return dateCompare;
+        return (b.issueNumber || 0) - (a.issueNumber || 0);
+      });
+  }, [allArticles]);
 
   const handleTogglePublish = (paper: any) => {
     if (!firestore) return;
-    const docRef = doc(firestore, "papers", paper.id);
-    updateDocumentNonBlocking(docRef, { isPublished: !paper.isPublished });
+    const docRef = doc(firestore, "articles", paper.id);
+    updateDocumentNonBlocking(docRef, { 
+      isPublished: !paper.isPublished,
+      updatedAt: serverTimestamp() 
+    });
     toast({ title: paper.isPublished ? "非公開にしました" : "公開しました" });
   };
 
   const confirmDelete = () => {
     if (!paperToDelete || !firestore) return;
-    deleteDocumentNonBlocking(doc(firestore, "papers", paperToDelete.id));
+    deleteDocumentNonBlocking(doc(firestore, "articles", paperToDelete.id));
     toast({ title: "削除しました" });
     setPaperToDelete(null);
   };

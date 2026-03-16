@@ -4,32 +4,31 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // 管理対象コレクションの統制
+    // ニュース記事および紙面アーカイブ（articlesに集約）
     match /articles/{articleId} {
       allow read: if true;
       allow write: if request.auth != null;
     }
     
-    match /papers/{paperId} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-    
+    // 設定（About, 会長挨拶, メンテナンス, ログ等）
     match /settings/{settingId} {
       allow read: if true;
       allow write: if request.auth != null;
     }
 
+    // 広告
     match /ads/{adId} {
       allow read: if true;
       allow write: if request.auth != null;
     }
 
+    // ヒーロー画像
     match /hero-images/{imageId} {
       allow read: if true;
       allow write: if request.auth != null;
     }
     
+    // お問い合わせ（一般公開）
     match /inquiries/{inquiryId} {
       allow create: if true;
       allow read, update, delete: if request.auth != null;
