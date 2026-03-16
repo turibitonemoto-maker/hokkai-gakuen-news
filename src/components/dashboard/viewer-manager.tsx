@@ -5,7 +5,7 @@ import { useState, useMemo } from "react";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Loader2, BookOpen, Image as ImageIcon, CheckCircle2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, BookOpen, Image as LucideImage, CheckCircle2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -139,7 +139,7 @@ export function ViewerManager() {
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge variant="outline" className="font-black text-[10px] gap-1 px-3 py-1 bg-slate-50 border-slate-200">
-                        <ImageIcon className="h-3 w-3" /> {(paper.paperImages?.length || 0)} ページ
+                        <LucideImage className="h-3 w-3" /> {(paper.paperImages?.length || 0)} ページ
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right px-8">

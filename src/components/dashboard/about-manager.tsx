@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, Info, Lock, Bold, Italic, Heading2, List, Type, ImageIcon } from "lucide-react";
+import { Loader2, Save, Info, Lock, Bold, Italic, Heading2, List, Type, Image as LucideImage } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -205,7 +205,7 @@ export function AboutManager() {
                   if (file) handleImageInsert(file);
                 }}/>
                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => document.getElementById('about-image-upload')?.click()} disabled={isProcessing}>
-                  {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
+                  {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <LucideImage className="h-4 w-4" />}
                 </Button>
               </div>
             </div>
