@@ -7,7 +7,7 @@ import { NextResponse } from "next/server";
  */
 export async function POST(request: Request) {
   // --- INFRASTRUCTURE CHECK ---
-  // サーバーのターミナルに実行結果が表示されます。
+  // サーバーのターミナル（地上管制）に実行結果が表示されます。
   console.log("--- INFRASTRUCTURE CHECK ---");
   console.log("CLOUDINARY_CLOUD_NAME:", process.env.CLOUDINARY_CLOUD_NAME ? "✅ OK" : "❌ NG");
   console.log("CLOUDINARY_API_KEY:", process.env.CLOUDINARY_API_KEY ? "✅ OK" : "❌ NG");
@@ -52,6 +52,7 @@ export async function POST(request: Request) {
             console.error("Cloudinary SDK Error:", error);
             reject(error);
           } else {
+            console.log("Cloudinary Upload Success!");
             resolve(result);
           }
         }
