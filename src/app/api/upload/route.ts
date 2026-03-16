@@ -4,15 +4,16 @@ import { NextResponse } from "next/server";
 
 /**
  * サーバー側で画像を Cloudinary へアップロードする API ルート
- * Turbopack の環境変数読み込み不良を回避するため、物理的に鍵を注入。
+ * 署名エラー（Invalid Signature）を物理的に排除するため、最高司令官の鍵をダイレクトに接続します。
  */
 export async function POST(request: Request) {
   try {
-    // 物理的な鍵の注入（最高司令官より受領した真の通行証）
+    // 【最高司令官（作成者様）へ】
+    // 下記の api_secret の値を、Cloudinary 管理画面の「API Secret」に書き換えてください。
+    // 目のアイコンをクリックして表示される文字列をコピー＆ペーストしてください。
     cloudinary.config({
       cloud_name: "dl2yqrpfj",
       api_key: "217388631115892",
-      // ★最高司令官へ：以下のダブルクォーテーションの中に、ご自身の API Secret を貼り付けてください
       api_secret: "ここにAPI_SECRETを直接貼り付けてください", 
     });
 
@@ -28,16 +29,16 @@ export async function POST(request: Request) {
     const buffer = Buffer.from(arrayBuffer);
 
     // Cloudinary へストリームアップロード
+    // 署名エラー回避のため、署名対象となるオプションを最小限に。
     const result = await new Promise((resolve, reject) => {
       cloudinary.uploader.upload_stream(
         {
           folder: "newspaper_archive",
           resource_type: "auto",
-          transformation: [{ quality: "auto", fetch_format: "auto" }]
         },
         (error, result) => {
           if (error) {
-            console.error("Cloudinary Upload Error:", error);
+            console.error("Cloudinary SDK Error:", error);
             reject(error);
           } else {
             resolve(result);
@@ -49,6 +50,10 @@ export async function POST(request: Request) {
     return NextResponse.json(result);
   } catch (error: any) {
     console.error("Upload API Route Error:", error);
-    return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
+    // 詳細なエラー原因をフロントエンドへ返送
+    return NextResponse.json({ 
+      error: error.message || "Internal server error",
+      details: "API Secretが正しく入力されているか確認してください。"
+    }, { status: 500 });
   }
 }

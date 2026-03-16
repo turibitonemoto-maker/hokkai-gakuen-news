@@ -102,17 +102,21 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
         body: formData 
       });
 
+      const responseData = await res.json();
+
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "アップロードに失敗しました");
+        throw new Error(responseData.error || responseData.details || "アップロードに失敗しました");
       }
       
-      const cloudinaryData = await res.json();
-      form.setValue(`pages.${index}.url`, cloudinaryData.secure_url);
+      form.setValue(`pages.${index}.url`, responseData.secure_url);
       toast({ title: `${index + 1}ページの読み込みに成功しました` });
     } catch (error: any) {
       console.error(error);
-      toast({ variant: "destructive", title: "アップロード失敗", description: error.message });
+      toast({ 
+        variant: "destructive", 
+        title: "アップロード失敗", 
+        description: error.message || "API Secretの設定を確認してください。" 
+      });
     } finally {
       setIsUploading(null);
     }
