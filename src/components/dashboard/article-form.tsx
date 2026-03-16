@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -12,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { ImageIcon, Type, Heading2, Loader2, Upload, MessageSquareText, Bold, Italic, List, Maximize, MoveHorizontal, MoveVertical, RefreshCw } from "lucide-react";
+import { Image as ImageLucide, Type, Heading2, Loader2, Upload, MessageSquareText, Bold, Italic, List, Maximize, MoveHorizontal, MoveVertical, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -47,7 +48,6 @@ interface ArticleFormProps {
 
 /**
  * ニュース記事作成フォーム
- * 「紙面ビューアー」カテゴリーは専用フォームで扱うためここには含みません。
  */
 export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
   const firestore = useFirestore();
@@ -241,7 +241,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                   if (file) handleImageInsert(file);
                 }}/>
                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => document.getElementById('editor-image-upload')?.click()} disabled={isProcessing}>
-                  {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
+                  {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageLucide className="h-4 w-4" />}
                 </Button>
               </div>
             </div>
@@ -260,7 +260,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 ml-1">
-                      <ImageIcon className="h-3 w-3" /> 表紙画像
+                      <ImageLucide className="h-3 w-3" /> 表紙画像
                     </FormLabel>
                     <div 
                       className={cn(

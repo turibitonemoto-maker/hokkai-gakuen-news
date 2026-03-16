@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useDoc, useFirestore, useMemoFirebase, useUser } from "@/firebase";
@@ -11,7 +12,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, User as UserIcon, Lock, Bold, Italic, Heading2, List, Type, ImageIcon, Upload, Maximize, MoveHorizontal, MoveVertical } from "lucide-react";
+import { Loader2, Save, User as UserIcon, Lock, Bold, Italic, Heading2, List, Type, Image as ImageLucide, Upload, Maximize, MoveHorizontal, MoveVertical } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -63,7 +64,6 @@ export function PresidentMessageManager() {
     },
   });
 
-  // Hoisted function to handle editor image insertion
   async function handleEditorImageInsert(file: File) {
     if (!file.type.startsWith('image/')) return;
     setIsProcessing(true);
@@ -97,29 +97,6 @@ export function PresidentMessageManager() {
       attributes: {
         class: 'ProseMirror outline-none min-h-[300px] p-8',
       },
-      handleDrop: (view, event, slice, moved) => {
-        if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]) {
-          const file = event.dataTransfer.files[0];
-          if (file.type.startsWith('image/')) {
-            handleEditorImageInsert(file);
-            return true;
-          }
-        }
-        return false;
-      },
-      handlePaste: (view, event) => {
-        const items = Array.from(event.clipboardData?.items || []);
-        for (const item of items) {
-          if (item.type.indexOf('image') === 0) {
-            const file = item.getAsFile();
-            if (file) {
-              handleEditorImageInsert(file);
-              return true;
-            }
-          }
-        }
-        return false;
-      }
     },
   });
 
@@ -136,18 +113,6 @@ export function PresidentMessageManager() {
       }
     }
   }, [messageData, form, editor]);
-
-  useEffect(() => {
-    const storedLockout = localStorage.getItem("lockout_until");
-    if (storedLockout) {
-      const until = parseInt(storedLockout);
-      if (until > Date.now()) {
-        setLockoutTime(until);
-      } else {
-        localStorage.removeItem("lockout_until");
-      }
-    }
-  }, []);
 
   const handleFacePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -218,56 +183,13 @@ export function PresidentMessageManager() {
     }
   }
 
-  if (isVerifying) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="font-black text-slate-400 animate-pulse">確認中...</p>
-      </div>
-    );
-  }
+  if (isVerifying) return <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4"><Loader2 className="h-12 w-12 animate-spin text-primary" /><p className="font-black text-slate-400">確認中...</p></div>;
 
-  if (lockoutTime && lockoutTime > Date.now()) {
-    return (
-      <div className="max-w-4xl mx-auto mt-10 animate-in fade-in zoom-in duration-500">
-        <Card className="shadow-2xl border-none bg-black text-white rounded-[3rem] overflow-hidden text-center p-0">
-          <div className="relative aspect-video w-full bg-slate-900">
-            <iframe src="https://drive.google.com/file/d/1Exd3NJVJ4KeS5PNI9IgZJEDsWgvjshBJ/preview" className="absolute inset-0 w-full h-full border-none" title="Trap Video" />
-          </div>
-          <div className="p-12 space-y-6">
-            <h2 className="text-3xl font-black mb-4 text-red-500">アクセス禁止 🔒</h2>
-            <p className="text-slate-400 font-bold text-lg">頭を冷やして出直してください。</p>
-            <Button variant="outline" className="border-slate-700 text-slate-400 h-12 px-8 rounded-2xl" onClick={() => window.location.reload()}>システム再起動</Button>
-          </div>
-        </Card>
-      </div>
-    );
-  }
+  if (lockoutTime && lockoutTime > Date.now()) return <div className="max-w-4xl mx-auto mt-10"><Card className="bg-black text-white p-12 text-center rounded-[3rem]"><h2 className="text-3xl font-black text-red-500 mb-4">アクセス禁止 🔒</h2><p className="text-slate-400">頭を冷やして出直してください。</p></Card></div>;
 
-  if (isLoading) {
-    return <div className="flex justify-center p-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
-  }
+  if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
-  if (!isUnlocked) {
-    return (
-      <div className="max-w-md mx-auto mt-20 animate-in fade-in zoom-in duration-500">
-        <Card className="shadow-2xl border-none bg-white rounded-3xl overflow-hidden">
-          <CardHeader className="text-center pt-10 pb-6 bg-slate-50/50">
-            <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner"><Lock className="h-10 w-10 text-primary" /></div>
-            <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">会長挨拶 🔒</CardTitle>
-            <CardDescription className="text-sm font-bold text-slate-500 px-6 mt-2">認証が必要です。</CardDescription>
-          </CardHeader>
-          <CardContent className="p-10 pt-4 space-y-6">
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">パスワード</label>
-              <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleUnlock()} className="text-center h-14 text-lg font-bold rounded-2xl" autoFocus />
-            </div>
-            <Button className="w-full h-14 font-black text-md rounded-2xl" onClick={handleUnlock}>認証する</Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  if (!isUnlocked) return <div className="max-w-md mx-auto mt-20"><Card className="shadow-2xl border-none bg-white rounded-3xl overflow-hidden"><CardHeader className="text-center bg-slate-50/50 py-10"><div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"><Lock className="h-10 w-10 text-primary" /></div><CardTitle className="text-2xl font-black">会長挨拶 🔒</CardTitle></CardHeader><CardContent className="p-10 space-y-6"><Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleUnlock()} className="text-center h-14 text-lg font-bold rounded-2xl" placeholder="パスワードを入力" autoFocus /><Button className="w-full h-14 font-black text-md rounded-2xl shadow-lg" onClick={handleUnlock}>認証する</Button></CardContent></Card></div>;
 
   const authorImageUrl = form.watch("authorImageUrl");
   const transform = form.watch("authorImageTransform");
@@ -389,13 +311,22 @@ export function PresidentMessageManager() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b pb-2">
                   <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                    <Type className="h-3 w-3" /> 挨拶本文 (画像ドラッグ＆ドロップ対応)
+                    <Type className="h-3 w-3" /> 挨拶本文
                   </FormLabel>
                   <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl">
                     <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('bold') && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleBold().run()}><Bold className="h-4 w-4" /></Button>
                     <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('italic') && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleItalic().run()}><Italic className="h-4 w-4" /></Button>
                     <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('heading') && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}><Heading2 className="h-4 w-4" /></Button>
                     <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8", editor?.isActive('bulletList') && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleBulletList().run()}><List className="h-4 w-4" /></Button>
+                    <div className="relative">
+                      <input type="file" accept="image/*" className="hidden" id="editor-image-upload-pres" onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleEditorImageInsert(file);
+                      }}/>
+                      <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => document.getElementById('editor-image-upload-pres')?.click()} disabled={isProcessing}>
+                        {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageLucide className="h-4 w-4" />}
+                      </Button>
+                    </div>
                   </div>
                 </div>
                 <div className="min-h-[400px] bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-inner relative">

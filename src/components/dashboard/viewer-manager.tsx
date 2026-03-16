@@ -5,7 +5,7 @@ import { useState, useMemo } from "react";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Loader2, BookOpen, ImageIcon, CheckCircle2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, BookOpen, Image as ImageIcon, CheckCircle2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";

@@ -11,10 +11,19 @@ export async function POST(request: Request) {
     // 【最高司令官（作成者様）へ】
     // 下記の api_secret の値を、Cloudinary 管理画面の「API Secret」に書き換えてください。
     // 目のアイコンをクリックして表示される文字列をコピー＆ペーストしてください。
+    const API_SECRET = "ここにAPI_SECRETを直接貼り付けてください";
+
+    if (API_SECRET === "ここにAPI_SECRETを直接貼り付けてください") {
+      return NextResponse.json({ 
+        error: "API Secretが未設定です", 
+        details: "src/app/api/upload/route.ts 内のプレースホルダーを実際のAPI Secretに書き換えてください。" 
+      }, { status: 500 });
+    }
+
     cloudinary.config({
       cloud_name: "dl2yqrpfj",
       api_key: "217388631115892",
-      api_secret: "ここにAPI_SECRETを直接貼り付けてください", 
+      api_secret: API_SECRET, 
     });
 
     const formData = await request.formData();
@@ -29,7 +38,6 @@ export async function POST(request: Request) {
     const buffer = Buffer.from(arrayBuffer);
 
     // Cloudinary へストリームアップロード
-    // 署名エラー回避のため、署名対象となるオプションを最小限に。
     const result = await new Promise((resolve, reject) => {
       cloudinary.uploader.upload_stream(
         {
@@ -50,7 +58,6 @@ export async function POST(request: Request) {
     return NextResponse.json(result);
   } catch (error: any) {
     console.error("Upload API Route Error:", error);
-    // 詳細なエラー原因をフロントエンドへ返送
     return NextResponse.json({ 
       error: error.message || "Internal server error",
       details: "API Secretが正しく入力されているか確認してください。"

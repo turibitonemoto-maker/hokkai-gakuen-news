@@ -12,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CloudUpload, ImageIcon, RefreshCw, Plus, Trash2, GripVertical, Upload } from "lucide-react";
+import { Loader2, CloudUpload, Image as ImageLucide, RefreshCw, Plus, Trash2, GripVertical, Upload } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import {
