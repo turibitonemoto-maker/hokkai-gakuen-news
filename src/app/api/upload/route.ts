@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 
 /**
  * サーバー側で画像を Cloudinary へアップロードする API ルート
- * 環境変数が読めないケースに備え、Cloud Name と API Key を物理的に注入。
+ * Turbopack の環境変数読み込み不良を回避するため、物理的に鍵を注入。
  */
 export async function POST(request: Request) {
   try {
@@ -12,15 +12,9 @@ export async function POST(request: Request) {
     cloudinary.config({
       cloud_name: "dl2yqrpfj",
       api_key: "217388631115892",
-      api_secret: process.env.CLOUDINARY_API_SECRET, // Secret は .env.local から取得
+      // ★最高司令官へ：以下のダブルクォーテーションの中に、ご自身の API Secret を貼り付けてください
+      api_secret: "ここにAPI_SECRETを直接貼り付けてください", 
     });
-
-    // APIキーの存在確認（最終防衛ライン）
-    if (!process.env.CLOUDINARY_API_SECRET) {
-      return NextResponse.json({ 
-        error: "CLOUDINARY_API_SECRET is missing in .env.local. サーバーを再起動してください。" 
-      }, { status: 500 });
-    }
 
     const formData = await request.formData();
     const file = formData.get("file") as File;

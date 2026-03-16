@@ -86,9 +86,6 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
     }
   };
 
-  /**
-   * システム内中継APIを経由した画像アップロード
-   */
   const handleInternalUpload = async (index: number, file: File) => {
     if (!file.type.startsWith('image/')) {
       toast({ variant: "destructive", title: "エラー", description: "画像ファイルを選択してください。" });
