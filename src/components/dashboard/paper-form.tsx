@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useForm, useFieldArray } from "react-hook-form";
@@ -115,7 +114,7 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
       toast({ 
         variant: "destructive", 
         title: "アップロード失敗", 
-        description: error.message || "API Secretの設定を確認してください。" 
+        description: error.message || "API設定を確認してください。" 
       });
     } finally {
       setIsUploading(null);

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useDoc, useFirestore, useMemoFirebase, useUser } from "@/firebase";
@@ -12,7 +11,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, User as UserIcon, Lock, Bold, Italic, Heading2, List, Type, Image as ImageLucide, Upload, Maximize, MoveHorizontal, MoveVertical } from "lucide-react";
+import { Loader2, Save, User as UserIcon, Lock, Bold, Italic, Heading2, List, Type, Image as LucideImage, Upload, Maximize, MoveHorizontal, MoveVertical } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -231,7 +230,7 @@ export function PresidentMessageManager() {
                   <FormField control={form.control} name="authorImageUrl" render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 ml-1">
-                        <UserIcon className="h-3 w-3" /> 顔写真
+                        <LucideImage className="h-3 w-3" /> 顔写真
                       </FormLabel>
                       <div className="flex gap-2">
                         <FormControl><Input className="h-12 rounded-xl font-bold bg-slate-50" readOnly {...field} /></FormControl>
@@ -324,7 +323,7 @@ export function PresidentMessageManager() {
                         if (file) handleEditorImageInsert(file);
                       }}/>
                       <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => document.getElementById('editor-image-upload-pres')?.click()} disabled={isProcessing}>
-                        {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageLucide className="h-4 w-4" />}
+                        {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <LucideImage className="h-4 w-4" />}
                       </Button>
                     </div>
                   </div>

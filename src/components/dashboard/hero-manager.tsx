@@ -1,11 +1,10 @@
-
 "use client";
 
 import { useState, useRef } from "react";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Loader2, AlertTriangle, Image as ImageLucide, Upload } from "lucide-react";
+import { Plus, Trash2, Loader2, AlertTriangle, Image as LucideImage, Upload } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import Image from "next/image";
@@ -108,7 +107,7 @@ export function HeroManager() {
               </div>
               <CardContent className="p-4 bg-white">
                 <div className="flex items-center gap-2 text-slate-300">
-                  <ImageLucide className="h-3 w-3" />
+                  <LucideImage className="h-3 w-3" />
                   <p className="text-[8px] font-bold truncate">Base64 Encoded Data</p>
                 </div>
               </CardContent>
