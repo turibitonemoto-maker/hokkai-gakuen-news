@@ -104,6 +104,7 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
       const responseData = await res.json();
 
       if (!res.ok) {
+        // サーバー側で生成した詳細な理由（details）を優先して表示
         throw new Error(responseData.details || responseData.error || "アップロードに失敗しました");
       }
       
@@ -114,7 +115,7 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
       toast({ 
         variant: "destructive", 
         title: "アップロード失敗", 
-        description: error.message || "Cloudinary の設定（Cloud Name等）を確認してください。" 
+        description: error.message 
       });
     } finally {
       setIsUploading(null);

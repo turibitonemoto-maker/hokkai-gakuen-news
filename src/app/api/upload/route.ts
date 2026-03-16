@@ -66,10 +66,18 @@ export async function POST(request: Request) {
     return NextResponse.json(result);
   } catch (error: any) {
     console.error("Upload API Route Error:", error);
-    // Cloudinary からのエラーをより具体的に返却
+    
+    // Cloudinary からの具体的なエラー（Invalid cloud_name 等）を判定
+    let details = "サーバー側で Cloudinary の設定が正しく適用されていない可能性があります。";
+    if (error.message?.includes("Invalid cloud_name")) {
+      details = `Cloudinary 側で [${cloudName}] というクラウド名が認識されませんでした。ダッシュボードの名称と一字一句違わないか（アンダースコア _ とハイフン - の違いなど）確認してください。`;
+    } else if (error.http_code === 401) {
+      details = "API Key または API Secret が正しくありません。ダッシュボードから最新の値をコピーしてください。";
+    }
+
     return NextResponse.json({ 
       error: error.message || "Internal server error",
-      details: `Cloudinary 側で [${cloudName}] というクラウド名が認識されませんでした。ダッシュボードの名称と一字一句違わないか（アンダースコア _ とハイフン - の違いなど）確認してください。`
+      details
     }, { status: 500 });
   }
 }
