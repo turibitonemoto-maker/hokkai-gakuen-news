@@ -3,32 +3,30 @@ import { NextResponse } from "next/server";
 
 /**
  * サーバー側で画像を Cloudinary へアップロードする API ルート
- * 認証情報（Cloud Name, API Key, API Secret）の状態を厳密に監視し、
- * 不一致がある場合はターミナルへ詳細な診断ログを出力します。
+ * 認証情報の状態を厳密に監視し、浄化（.trim()）を行います。
  */
 export async function POST(request: Request) {
-  // 環境変数の取得（不可視のスペースを物理排除するため .trim() を適用）
+  // 環境変数の取得と浄化
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME?.trim();
   const apiKey = process.env.CLOUDINARY_API_KEY?.trim();
   const apiSecret = process.env.CLOUDINARY_API_SECRET?.trim();
 
   // --- INFRASTRUCTURE CHECK (地上管制診断ログ) ---
   console.log("--- INFRASTRUCTURE CHECK ---");
-  console.log("TARGET_CLOUD_NAME:", cloudName || "❌ MISSING");
-  console.log("CLOUDINARY_API_KEY:", apiKey ? "✅ OK" : "❌ MISSING");
-  console.log("CLOUDINARY_API_SECRET:", apiSecret ? "✅ OK" : "❌ MISSING");
+  console.log("[Upload API] TARGET_CLOUD_NAME:", cloudName || "❌ MISSING");
+  console.log("[Upload API] API_KEY_STATUS:", apiKey ? "✅ OK" : "❌ MISSING");
+  console.log("[Upload API] API_SECRET_STATUS:", apiSecret ? "✅ OK" : "❌ MISSING");
   console.log("-----------------------------");
 
   try {
-    // 必須情報の欠落チェック
     if (!cloudName || !apiKey || !apiSecret) {
       return NextResponse.json({ 
         error: "Cloudinary設定が不完全です", 
-        details: `.env.local の値を確認してください。設定後はサーバーの再起動が必要です。` 
+        details: `.env.local の値を確認し、サーバーを再起動してください。` 
       }, { status: 500 });
     }
 
-    // 設定の適用 (ハンドラー内で確実に実行)
+    // 設定の適用
     cloudinary.config({
       cloud_name: cloudName,
       api_key: apiKey,
@@ -45,7 +43,7 @@ export async function POST(request: Request) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // サーバーサイドからの直接アップロード (署名エラーを物理回避)
+    // サーバーサイドからの直接アップロード
     const result = await new Promise((resolve, reject) => {
       cloudinary.uploader.upload_stream(
         {
@@ -68,12 +66,11 @@ export async function POST(request: Request) {
   } catch (error: any) {
     console.error("Upload API Route Error:", error);
     
-    // Cloudinary からの具体的なエラー（Invalid cloud_name 等）を判定
-    let details = "サーバー側で Cloudinary の設定が正しく適用されていない可能性があります。";
+    let details = "Cloudinaryの認証に失敗しました。";
     if (error.message?.includes("Invalid cloud_name")) {
-      details = `Cloudinary 側で [${cloudName}] というクラウド名が認識されませんでした。ダッシュボードの名称と一字一句違わないか（アンダースコア _ とハイフン - の違いなど）確認してください。`;
+      details = `Cloudinary 側で [${cloudName}] という名称が認識されませんでした。ハイフンとアンダースコアの違いなどを再確認してください。`;
     } else if (error.http_code === 401) {
-      details = "API Key または API Secret が正しくありません。ダッシュボードから最新の値をコピーしてください。";
+      details = "API Key または Secret が正しくありません。最新の値をコピーしてください。";
     }
 
     return NextResponse.json({ 
