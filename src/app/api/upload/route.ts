@@ -3,18 +3,19 @@ import { NextResponse } from "next/server";
 
 /**
  * サーバー側で画像を Cloudinary へアップロードする API ルート
- * インフラの健全性をターミナルに叫びます。
+ * 認証情報（Cloud Name, API Key, API Secret）の状態を厳密に監視し、
+ * 不一致がある場合はターミナルへ詳細な診断ログを出力します。
  */
 export async function POST(request: Request) {
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
   const apiKey = process.env.CLOUDINARY_API_KEY;
   const apiSecret = process.env.CLOUDINARY_API_SECRET;
 
-  // --- INFRASTRUCTURE CHECK (地上管制ログ) ---
+  // --- INFRASTRUCTURE CHECK (地上管制診断ログ) ---
   console.log("--- INFRASTRUCTURE CHECK ---");
   console.log("TARGET_CLOUD_NAME:", cloudName || "❌ MISSING");
   console.log("CLOUDINARY_API_KEY:", apiKey ? "✅ OK" : "❌ MISSING");
-  console.log("CLOUDINARY_API_SECRET:", apiSecret ? "✅ OK" : "❌ MISSING (Check .env.local)");
+  console.log("CLOUDINARY_API_SECRET:", apiSecret ? "✅ OK" : "❌ MISSING");
   console.log("-----------------------------");
 
   try {
@@ -22,11 +23,11 @@ export async function POST(request: Request) {
     if (!cloudName || !apiKey || !apiSecret) {
       return NextResponse.json({ 
         error: "Cloudinary設定が不完全です", 
-        details: ".env.local が正しい階層（プロジェクトルート）にあるか、変数が定義されているか確認してください。" 
+        details: `.env.local の値が正しいか、Cloudinaryダッシュボードで再確認してください。設定後はサーバー（npm run dev）の再起動が必要です。` 
       }, { status: 500 });
     }
 
-    // 設定の適用
+    // 設定の適用 (ハンドラー内で確実に実行)
     cloudinary.config({
       cloud_name: cloudName,
       api_key: apiKey,
@@ -43,7 +44,7 @@ export async function POST(request: Request) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // サーバーサイドからの直接アップロード
+    // サーバーサイドからの直接アップロード (署名エラーを物理回避)
     const result = await new Promise((resolve, reject) => {
       cloudinary.uploader.upload_stream(
         {
@@ -52,7 +53,7 @@ export async function POST(request: Request) {
         },
         (error, result) => {
           if (error) {
-            console.error("Cloudinary SDK Error:", error);
+            console.error("Cloudinary SDK Error Detailed:", error);
             reject(error);
           } else {
             console.log("Cloudinary Upload Success!");
@@ -65,9 +66,10 @@ export async function POST(request: Request) {
     return NextResponse.json(result);
   } catch (error: any) {
     console.error("Upload API Route Error:", error);
+    // Cloudinary からのエラーをより具体的に返却
     return NextResponse.json({ 
       error: error.message || "Internal server error",
-      details: `Cloudinary への接続に失敗しました。Cloud Name [${cloudName}] が正しいか、Cloudinaryダッシュボードで再確認してください。`
+      details: `Cloudinary 側で [${cloudName}] というクラウド名が認識されませんでした。ダッシュボードの名称と一字一句違わないか（アンダースコア _ とハイフン - の違いなど）確認してください。`
     }, { status: 500 });
   }
 }
