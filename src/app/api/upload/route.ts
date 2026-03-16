@@ -6,15 +6,22 @@ import { NextResponse } from "next/server";
  * 秘密鍵は環境変数からのみ取得し、セキュリティを最大化します。
  */
 export async function POST(request: Request) {
+  // 認証チェック（サーバーのターミナルに表示されます）
+  console.log("Cloudinary Auth Check:", {
+    cloud: !!process.env.CLOUDINARY_CLOUD_NAME,
+    key: !!process.env.CLOUDINARY_API_KEY,
+    secret: !!process.env.CLOUDINARY_API_SECRET
+  });
+
   try {
-    // 環境変数からの設定読み込み
+    // 設定の適用
     cloudinary.config({
-      cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "dl2yqrpfj",
-      api_key: process.env.CLOUDINARY_API_KEY || "217388631115892",
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
       api_secret: process.env.CLOUDINARY_API_SECRET, 
     });
 
-    // API Secret が未設定の場合はエラーを返す
+    // API Secret が未設定の場合は明確なエラーを返す
     if (!process.env.CLOUDINARY_API_SECRET) {
       return NextResponse.json({ 
         error: "API Secretが未設定です", 
