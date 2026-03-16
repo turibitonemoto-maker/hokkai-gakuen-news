@@ -62,7 +62,7 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
     },
   });
 
-  const { fields, append, remove, move } = useFieldArray({
+  const { fields, remove, move, append } = useFieldArray({
     control: form.control,
     name: "pages",
   });
@@ -96,6 +96,7 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
       const formData = new FormData();
       formData.append("file", file);
       
+      // 署名生成などはすべてサーバー側（APIルート）で行うため、ファイルのみを送信
       const res = await fetch("/api/upload", { 
         method: "POST", 
         body: formData 
