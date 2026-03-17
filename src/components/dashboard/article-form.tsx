@@ -97,7 +97,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       const formData = new FormData();
       formData.append("file", file);
       // フラット化：newspaper_archive/タイトルの直下へ
-      formData.append("folder", `newspaper_archive/${subFolder}/embedded`);
+      formData.append("folder", `newspaper_archive/${subFolder}`);
       
       const res = await fetch("/api/upload", { method: "POST", body: formData });
       if (!res.ok) throw new Error("Upload failed");

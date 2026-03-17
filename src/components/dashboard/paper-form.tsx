@@ -12,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, RefreshCw, Plus, GripVertical, X } from "lucide-react";
+import { Loader2, Plus, GripVertical, X } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import {
@@ -191,7 +191,6 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
     }
     
     setIsSaving(true);
-    // フラット化：papers/ を削除し、newspaper_archive/タイトルの階層へ
     const subFolder = sanitizeFolderName(values.title);
     const finalUrls: string[] = [];
 
