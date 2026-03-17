@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { Image as LucideImage, Type, Heading2, Loader2, Bold, Italic, List, Maximize, RefreshCw, Trash2, Plus, Link as LinkIcon, Heading3 } from "lucide-react";
+import { Image as LucideImage, Heading2, Loader2, Bold, Italic, List, Maximize, RefreshCw, Trash2, Plus, Link as LinkIcon, Heading3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditor, EditorContent, NodeViewWrapper, ReactNodeViewRenderer, FloatingMenu } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -22,7 +22,6 @@ import LinkExtension from '@tiptap/extension-link';
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
-import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 /**
@@ -406,7 +405,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold text-slate-500">垂直位置: {transform.y.toFixed(0)}%</label>
-                  <Slider min={-200} max={200} step={1} value={[transform.y]} onValueChange={([val]) => form.setValue("mainImageTransform.y", val)} />
+                  <Slider min={-200} max={200} step = {1} value={[transform.y]} onValueChange={([val]) => form.setValue("mainImageTransform.y", val)} />
                 </div>
               </div>
             </div>
