@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -14,18 +15,16 @@ import {
   AlertCircle,
   User,
   ShieldCheck,
-  Megaphone,
   BookOpen,
   Info
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
 import { useCollection, useDoc, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query, orderBy, limit, doc } from "firebase/firestore";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function AdminDashboard() {
   const [currentTime, setCurrentTime] = useState<string | null>(null);
@@ -81,15 +80,10 @@ export default function AdminDashboard() {
             管理者: {user?.email}
           </Badge>
           
-          {maintenanceConfig?.isMaintenanceMode ? (
+          {maintenanceConfig?.isMaintenanceMode && (
             <Badge variant="destructive" className="px-3 py-1 flex gap-2 items-center animate-pulse shadow-md">
               <ShieldAlert className="h-3 w-3" />
               管制: 制限中
-            </Badge>
-          ) : (
-            <Badge variant="outline" className="bg-green-50 border-green-200 text-green-700 px-3 py-1 flex gap-2 items-center shadow-sm">
-              <ShieldCheck className="h-3 w-3" />
-              管制: 正常
             </Badge>
           )}
         </div>
@@ -99,13 +93,13 @@ export default function AdminDashboard() {
         <QuickStatCard 
           title="DB登録記事数" 
           value={isArticlesLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : stats.total} 
-          delta={`公開設定中: ${stats.published}`} 
+          delta={`公開中: ${stats.published}`} 
           icon={Database} 
           color="blue"
           href="/admin/articles"
         />
         <QuickStatCard 
-          title="紙面ビューアー" 
+          title="紙面アーカイブ" 
           value={isArticlesLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : stats.viewer} 
           delta="登録アーカイブ数" 
           icon={BookOpen} 
@@ -155,7 +149,7 @@ export default function AdminDashboard() {
                       </div>
                       <div className="flex items-center gap-2 mt-1.5">
                         <span className="text-[10px] text-slate-400 font-medium">
-                          最終更新: {new Date(article.updatedAt || "").toLocaleString("ja-JP")}
+                          最終更新: {new Date(article.updatedAt?.seconds * 1000 || Date.now()).toLocaleString("ja-JP")}
                         </span>
                         {article.updatedBy && (
                           <span className="text-[10px] text-primary flex items-center gap-1 font-bold bg-primary/5 px-1.5 py-0.5 rounded">
@@ -190,7 +184,7 @@ export default function AdminDashboard() {
             <Link href="/admin/viewer">
               <Button variant="outline" className="w-full justify-start gap-3 h-12 border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-sm rounded-xl">
                 <BookOpen className="h-5 w-5" />
-                <span>紙面ビューアー管理</span>
+                <span>紙面アーカイブ管理</span>
               </Button>
             </Link>
             <Link href="/admin/president">

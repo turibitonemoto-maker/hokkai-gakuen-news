@@ -8,20 +8,19 @@ import { useFirestore, useUser } from "@/firebase";
 import { collection, doc, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, FileText, CloudUpload, CheckCircle2, AlertCircle, RefreshCw, Trash2 } from "lucide-react";
+import { Loader2, FileImage, Upload, Trash2, Layers, CheckCircle2, RefreshCw, Plus } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 const paperSchema = z.object({
   title: z.string().min(1, "タイトルを入力してください"),
   publishDate: z.string().min(1, "発行日を選択してください"),
-  pdfUrl: z.string().min(1, "PDFファイルをアップロードしてください"),
+  paperImages: z.array(z.string()).min(1, "少なくとも1枚の紙面画像をアップロードしてください"),
   mainImageUrl: z.string().optional(),
-  isPublished: z.boolean().default(true),
 });
 
 type PaperFormValues = z.infer<typeof paperSchema>;
@@ -31,6 +30,7 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
   const { user } = useUser();
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const form = useForm<PaperFormValues>({
@@ -38,70 +38,77 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
     defaultValues: {
       title: paper?.title || "",
       publishDate: paper?.publishDate || new Date().toISOString().split("T")[0],
-      pdfUrl: paper?.pdfUrl || "",
+      paperImages: paper?.paperImages || [],
       mainImageUrl: paper?.mainImageUrl || "",
-      isPublished: paper?.isPublished ?? true,
     },
   });
 
-  const watchedPdfUrl = form.watch("pdfUrl");
-  const watchedMainImageUrl = form.watch("mainImageUrl");
+  const watchedImages = form.watch("paperImages");
+  const watchedMainImage = form.watch("mainImageUrl");
 
-  const handlePdfUpload = async (file: File) => {
-    if (file.type !== 'application/pdf' && !file.name.endsWith('.pdf')) {
-      toast({ variant: "destructive", title: "エラー", description: "PDFファイルを選択してください。" });
-      return;
-    }
-
+  const handleFilesUpload = async (files: FileList) => {
+    const fileArray = Array.from(files);
     setIsUploading(true);
+    setUploadProgress({ current: 0, total: fileArray.length });
+
+    const newUrls: string[] = [...watchedImages];
+
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      
-      const res = await fetch("/api/upload", { 
-        method: "POST", 
-        body: formData 
-      });
+      for (let i = 0; i < fileArray.length; i++) {
+        const file = fileArray[i];
+        if (!file.type.startsWith('image/')) continue;
 
-      const responseData = await res.json();
+        setUploadProgress(prev => ({ ...prev, current: i + 1 }));
 
-      if (!res.ok) {
-        throw new Error(responseData.details || responseData.error || "アップロードに失敗しました");
+        const formData = new FormData();
+        formData.append("file", file);
+        
+        const res = await fetch("/api/upload", { 
+          method: "POST", 
+          body: formData 
+        });
+
+        if (!res.ok) throw new Error("アップロードに失敗しました");
+        const data = await res.json();
+        newUrls.push(data.secure_url);
       }
-      
-      // CloudinaryのPDF URLをセット
-      const pdfUrl = responseData.secure_url;
-      form.setValue("pdfUrl", pdfUrl);
 
-      // CloudinaryはPDFのURLの拡張子を.jpgに変えるだけで1ページ目のサムネイルを取得できる
-      const thumbnailUrl = pdfUrl.replace(/\.pdf$/, ".jpg");
-      form.setValue("mainImageUrl", thumbnailUrl);
+      form.setValue("paperImages", newUrls);
+      if (!watchedMainImage && newUrls.length > 0) {
+        form.setValue("mainImageUrl", newUrls[0]);
+      }
 
-      toast({ title: "PDFの取り込みに成功しました" });
+      toast({ title: `${fileArray.length}枚の画像を取り込みました` });
     } catch (error: any) {
-      console.error(error);
-      toast({ 
-        variant: "destructive", 
-        title: "アップロード失敗", 
-        description: error.message 
-      });
+      toast({ variant: "destructive", title: "エラー", description: error.message });
     } finally {
-      setIsUploading(null as any);
       setIsUploading(false);
     }
+  };
+
+  const removeImage = (index: number) => {
+    const newUrls = [...watchedImages];
+    const removedUrl = newUrls.splice(index, 1)[0];
+    form.setValue("paperImages", newUrls);
+    
+    if (watchedMainImage === removedUrl) {
+      form.setValue("mainImageUrl", newUrls[0] || "");
+    }
+  };
+
+  const setAsMain = (url: string) => {
+    form.setValue("mainImageUrl", url);
+    toast({ title: "表紙に設定しました" });
   };
 
   const onSubmit = (values: PaperFormValues) => {
     if (!firestore) return;
     
     const data = {
-      title: values.title,
-      publishDate: values.publishDate,
-      pdfUrl: values.pdfUrl,
-      mainImageUrl: values.mainImageUrl,
+      ...values,
       articleType: "Standard",
       categoryId: "Viewer", 
-      isPublished: values.isPublished,
+      isPublished: paper?.isPublished ?? true,
       updatedAt: serverTimestamp(),
       updatedBy: user?.email || "unknown"
     };
@@ -120,7 +127,7 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10 max-w-4xl mx-auto pb-20">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10 max-w-5xl mx-auto pb-20">
         <div className="bg-slate-50/50 p-8 rounded-[2.5rem] border border-slate-100 shadow-sm grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}
@@ -153,100 +160,99 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
         <div className="space-y-6">
           <div className="flex items-center justify-between border-b pb-4">
             <h3 className="font-black text-slate-800 flex items-center gap-2">
-              <FileText className="h-5 w-5 text-primary" />
-              PDFアーカイブ・ファイル
+              <Layers className="h-5 w-5 text-primary" />
+              紙面ページ構成（全 {watchedImages.length} ページ）
             </h3>
-          </div>
-
-          <div 
-            className={cn(
-              "relative min-h-[300px] border-4 border-dashed rounded-[3rem] transition-all flex flex-col items-center justify-center p-10 group cursor-pointer overflow-hidden",
-              watchedPdfUrl ? "border-green-100 bg-green-50/30" : "border-slate-200 bg-white hover:border-primary/30"
-            )}
-            onClick={() => !isUploading && fileInputRef.current?.click()}
-          >
+            <Button 
+              type="button" 
+              variant="outline" 
+              className="rounded-full gap-2 border-primary/20 text-primary font-bold hover:bg-primary/5"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+            >
+              {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              画像を追加
+            </Button>
             <input 
               type="file" 
-              accept=".pdf,application/pdf" 
+              multiple 
+              accept="image/*" 
               className="hidden" 
               ref={fileInputRef} 
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) handlePdfUpload(file);
-              }}
+              onChange={(e) => e.target.files && handleFilesUpload(e.target.files)} 
             />
+          </div>
 
-            {isUploading ? (
-              <div className="flex flex-col items-center gap-4">
-                <div className="relative">
-                  <div className="h-20 w-20 rounded-full border-4 border-primary/10 border-t-primary animate-spin" />
-                  <CloudUpload className="absolute inset-0 m-auto h-8 w-8 text-primary animate-bounce" />
-                </div>
-                <div className="text-center">
-                  <p className="text-lg font-black text-primary uppercase tracking-tighter">Uploading PDF...</p>
-                  <p className="text-[10px] font-bold text-slate-400 mt-1">サーバー管制室へ送信中。しばらくお待ちください。</p>
+          {isUploading && (
+            <div className="bg-primary/5 border border-primary/10 p-6 rounded-3xl animate-pulse flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <RefreshCw className="h-6 w-6 text-primary animate-spin" />
+                <div>
+                  <p className="text-sm font-black text-primary uppercase">Uploading Pages...</p>
+                  <p className="text-[10px] font-bold text-slate-400">一括転送中： {uploadProgress.current} / {uploadProgress.total}</p>
                 </div>
               </div>
-            ) : watchedPdfUrl ? (
-              <div className="flex flex-col md:flex-row items-center gap-10 w-full max-w-2xl animate-in fade-in zoom-in duration-500">
-                <div className="relative h-64 w-44 rounded-2xl shadow-2xl border-4 border-white overflow-hidden bg-white shrink-0 group-hover:scale-105 transition-transform">
-                  {watchedMainImageUrl ? (
-                    <Image src={watchedMainImageUrl} alt="Preview" fill className="object-cover" unoptimized />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-slate-50"><FileText className="h-12 w-12 text-slate-200" /></div>
+            </div>
+          )}
+
+          {watchedImages.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {watchedImages.map((url, index) => (
+                <div key={url + index} className={cn(
+                  "relative aspect-[1/1.4] rounded-2xl overflow-hidden border-2 transition-all group",
+                  watchedMainImage === url ? "border-primary shadow-lg ring-4 ring-primary/10" : "border-slate-100 hover:border-slate-300"
+                )}>
+                  <Image src={url} alt={`Page ${index + 1}`} fill className="object-cover" unoptimized />
+                  <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md text-white text-[8px] font-black px-2 py-0.5 rounded-full">
+                    P.{index + 1}
+                  </div>
+                  {watchedMainImage === url && (
+                    <div className="absolute top-2 right-2 bg-primary text-white p-1 rounded-full shadow-lg">
+                      <CheckCircle2 className="h-3 w-3" />
+                    </div>
                   )}
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
-                    <RefreshCw className="h-8 w-8 text-white" />
-                    <span className="text-white text-[10px] font-black uppercase">ファイルを入れ替え</span>
+                    <Button 
+                      type="button" 
+                      variant="secondary" 
+                      size="sm" 
+                      className="h-7 text-[8px] font-black rounded-full"
+                      onClick={() => setAsMain(url)}
+                    >
+                      表紙にする
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant="destructive" 
+                      size="icon" 
+                      className="h-7 w-7 rounded-full"
+                      onClick={() => removeImage(index)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
                 </div>
-                <div className="flex-1 space-y-4">
-                  <div className="flex items-center gap-3 text-green-600">
-                    <CheckCircle2 className="h-6 w-6" />
-                    <span className="text-xl font-black tracking-tighter">Ready to Deploy</span>
-                  </div>
-                  <div className="bg-white p-4 rounded-2xl border border-green-100 shadow-sm">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">File Address</p>
-                    <p className="text-xs font-mono text-slate-500 break-all">{watchedPdfUrl}</p>
-                  </div>
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    className="text-destructive hover:bg-destructive/5 font-bold gap-2"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      form.setValue("pdfUrl", "");
-                      form.setValue("mainImageUrl", "");
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    選択を解除
-                  </Button>
-                </div>
+              ))}
+            </div>
+          ) : (
+            <div 
+              className="border-4 border-dashed border-slate-100 rounded-[3rem] p-20 text-center space-y-4 cursor-pointer hover:bg-slate-50/50 transition-colors"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Upload className="h-12 w-12 text-slate-200 mx-auto" />
+              <div>
+                <p className="text-xl font-black text-slate-300">画像をここにドロップ</p>
+                <p className="text-sm font-bold text-slate-200 uppercase tracking-widest mt-1">またはクリックして一括選択</p>
               </div>
-            ) : (
-              <div className="text-center space-y-6">
-                <div className="bg-slate-50 h-24 w-24 rounded-full flex items-center justify-center mx-auto group-hover:scale-110 transition-transform shadow-inner">
-                  <CloudUpload className="h-10 w-10 text-slate-300" />
-                </div>
-                <div className="space-y-2">
-                  <p className="text-xl font-black text-slate-800 tracking-tight">PDFファイルをドロップ、または選択</p>
-                  <p className="text-sm font-bold text-slate-400">1つのファイルで全てのページを網羅してください。</p>
-                </div>
-                <div className="flex items-center justify-center gap-2 text-[10px] font-black text-primary bg-primary/5 px-4 py-2 rounded-full mx-auto w-fit border border-primary/10">
-                  <AlertCircle className="h-3 w-3" />
-                  推奨: 50MB以下のPDFファイル
-                </div>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         <div className="pt-10 border-t sticky bottom-6 z-20">
           <Button 
             type="submit" 
-            disabled={!watchedPdfUrl || isUploading}
-            className="w-full h-16 shadow-2xl font-black rounded-2xl text-xl bg-primary hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-50 disabled:grayscale"
+            disabled={watchedImages.length === 0 || isUploading}
+            className="w-full h-16 shadow-2xl font-black rounded-2xl text-xl bg-primary hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-50"
           >
             紙面アーカイブを保存する
           </Button>

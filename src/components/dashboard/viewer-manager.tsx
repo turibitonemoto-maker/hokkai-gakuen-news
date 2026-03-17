@@ -5,7 +5,7 @@ import { useState, useMemo } from "react";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Loader2, BookOpen, FileText, CheckCircle2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, BookOpen, Layers, CheckCircle2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -74,7 +74,7 @@ export function ViewerManager() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-black text-slate-800">{currentPaper ? `「${currentPaper.title}」を編集` : "新しい紙面を登録"}</h2>
-            <p className="text-sm font-bold text-slate-500">PDFファイルをアップロードしてアーカイブを構築します。</p>
+            <p className="text-sm font-bold text-slate-500">全てのページの画像をアップロードしてアーカイブを構築します。</p>
           </div>
           <Button variant="ghost" onClick={() => setIsEditing(false)} className="font-bold rounded-full text-slate-400">キャンセル</Button>
         </div>
@@ -97,10 +97,10 @@ export function ViewerManager() {
             </div>
             紙面ビューアー管理
           </h2>
-          <p className="text-sm font-bold text-slate-500 mt-1 ml-1">PDF統合管理プロトコル：1950年からの歴史をデジタル化します。</p>
+          <p className="text-sm font-bold text-slate-500 mt-1 ml-1">マルチページ管理プロトコル：1950年からの歴史をデジタル化します。</p>
         </div>
         <Button onClick={() => { setCurrentPaper(null); setIsEditing(true); }} className="h-14 px-8 shadow-2xl gap-2 font-black rounded-2xl bg-primary text-white hover:bg-primary/90 hover:scale-105 transition-all">
-          <Plus className="h-5 w-5" /> 紙面PDFを追加
+          <Plus className="h-5 w-5" /> 紙面を追加
         </Button>
       </div>
 
@@ -113,7 +113,7 @@ export function ViewerManager() {
               <TableHeader className="bg-slate-50/50">
                 <TableRow>
                   <TableHead className="w-[100px] font-black text-[10px] uppercase text-center tracking-widest">公開</TableHead>
-                  <TableHead className="min-w-[300px] font-black text-[10px] uppercase tracking-widest">タイトル / フォーマット</TableHead>
+                  <TableHead className="min-w-[300px] font-black text-[10px] uppercase tracking-widest">タイトル / 構成</TableHead>
                   <TableHead className="w-[150px] font-black text-[10px] uppercase text-center tracking-widest">発行日</TableHead>
                   <TableHead className="w-[150px] font-black text-[10px] uppercase text-center tracking-widest">状態</TableHead>
                   <TableHead className="text-right font-black text-[10px] uppercase px-8 tracking-widest">操作</TableHead>
@@ -129,15 +129,9 @@ export function ViewerManager() {
                       <div className="flex flex-col py-2">
                         <span className="font-bold text-slate-800 text-base">{paper.title}</span>
                         <div className="flex items-center gap-2 mt-1">
-                          {paper.pdfUrl ? (
-                            <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-100 font-black text-[9px] gap-1 px-2 py-0">
-                              <FileText className="h-3 w-3" /> PDF DOCUMENT
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="bg-slate-100 text-slate-400 border-slate-200 font-black text-[9px] px-2 py-0">
-                              IMAGE CLUSTER
-                            </Badge>
-                          )}
+                          <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-100 font-black text-[9px] gap-1 px-2 py-0">
+                            <Layers className="h-3 w-3" /> {(paper.paperImages?.length || 0)} PAGES
+                          </Badge>
                           <span className="text-[9px] font-black text-green-500 uppercase flex items-center gap-1">
                             <CheckCircle2 className="h-2.5 w-2.5" /> Synced
                           </span>
@@ -148,11 +142,7 @@ export function ViewerManager() {
                       {paper.publishDate}
                     </TableCell>
                     <TableCell className="text-center">
-                      {paper.pdfUrl ? (
-                        <span className="text-[10px] font-black text-primary bg-primary/5 px-3 py-1 rounded-full uppercase">Unified</span>
-                      ) : (
-                        <span className="text-[10px] font-bold text-slate-300 uppercase italic">Legacy</span>
-                      )}
+                      <span className="text-[10px] font-black text-primary bg-primary/5 px-3 py-1 rounded-full uppercase">Archives</span>
                     </TableCell>
                     <TableCell className="text-right px-8">
                       <div className="flex justify-end gap-1">
