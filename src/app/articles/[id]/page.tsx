@@ -4,7 +4,7 @@
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc, updateDoc, increment } from 'firebase/firestore';
 import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { PublicHeader } from '@/components/site/public-header';
 import { PublicFooter } from '@/components/site/public-footer';
 import { SidebarContent } from '@/components/site/sidebar-content';
@@ -13,11 +13,13 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import DOMPurify from 'dompurify';
+import { Button } from '@/components/ui/button';
 
 export default function ArticleDetailPage() {
   const { id } = useParams();
   const firestore = useFirestore();
   const [sanitizedContent, setSanitizedContent] = useState<string>('');
+  const hasIncremented = useRef(false);
 
   const docRef = useMemoFirebase(() => {
     if (!firestore || !id) return null;
@@ -32,14 +34,18 @@ export default function ArticleDetailPage() {
     }
     
     // 閲覧数のインクリメント回路
-    if (firestore && id && article && !isLoading) {
+    if (firestore && id && article && !isLoading && !hasIncremented.current) {
       const incrementView = async () => {
-        const articleRef = doc(firestore, 'articles', id as string);
-        await updateDoc(articleRef, {
-          viewCount: increment(1)
-        });
+        try {
+          const articleRef = doc(firestore, 'articles', id as string);
+          await updateDoc(articleRef, {
+            viewCount: increment(1)
+          });
+          hasIncremented.current = true;
+        } catch (e) {
+          console.error("PV increment failed:", e);
+        }
       };
-      // 一度だけ実行（厳密にはセッション管理が必要だがMVPとして実装）
       incrementView();
     }
   }, [article, firestore, id, isLoading]);
