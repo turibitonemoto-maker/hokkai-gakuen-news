@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { Image as LucideImage, Type, Heading2, Loader2, MessageSquareText, Bold, Italic, List, Maximize, RefreshCw, PlusCircle } from "lucide-react";
+import { Image as LucideImage, Type, Heading2, Loader2, MessageSquareText, Bold, Italic, List, Maximize, RefreshCw, PlusCircle, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditor, EditorContent, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -129,7 +129,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [mainImageFile, setMainImageFile] = useState<File | null>(null);
   const [mainImagePreview, setMainImagePreview] = useState<string>("");
-  const [isDraggingMain, setIsDraggingMain] = useState(false);
   const mainImageInputRef = useRef<HTMLInputElement>(null);
   
   const editorRef = useRef<any>(null);
@@ -156,7 +155,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
   const handleEditorImageInsert = useCallback(async (file: File) => {
     if (!file.type.startsWith('image/')) return;
     
-    // 即座にアップロードせず、Base64プレビューとして挿入
     setIsProcessing(true);
     try {
       const reader = new FileReader();
@@ -221,13 +219,8 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     }
   }, [article]);
 
-  const handleMainImageSelect = (e: React.ChangeEvent<HTMLInputElement> | React.DragEvent) => {
-    let file: File | undefined;
-    if ('files' in (e.target as any) && (e.target as any).files) {
-      file = (e.target as any).files[0];
-    } else if ('dataTransfer' in e && e.dataTransfer.files) {
-      file = e.dataTransfer.files[0];
-    }
+  const handleMainImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (!file || !file.type.startsWith('image/')) return;
     
     setMainImageFile(file);
@@ -247,7 +240,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       const src = img.getAttribute('src');
       if (src && (src.startsWith('data:image') || src.startsWith('blob:'))) {
         try {
-          // Base64またはBlobからFileオブジェクトを擬似的に作成
           const response = await fetch(src);
           const blob = await response.blob();
           const file = new File([blob], "editor_image.jpg", { type: blob.type });
@@ -280,7 +272,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       
       let finalMainImageUrl = values.mainImageUrl;
 
-      // 1. メイン画像のアップロード（変更があれば）
       if (mainImageFile) {
         const formData = new FormData();
         formData.append("file", mainImageFile);
@@ -292,7 +283,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
         finalMainImageUrl = data.secure_url;
       }
 
-      // 2. 本文内の一括アップロードと置換
       const processedContent = await processEditorImages(values.content, folderPath);
 
       const data = {
@@ -326,72 +316,95 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-w-5xl mx-auto pb-20">
         
-        <div className="space-y-6">
-          <FormField
-            control={form.control}
-            name="title"
-            render={({ field }) => (
-              <FormItem className="border-b-2 border-slate-100 pb-2">
-                <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest">記事見出し</FormLabel>
-                <FormControl>
-                  <Input 
-                    className="h-auto py-4 text-3xl md:text-5xl font-black border-none bg-transparent shadow-none px-0 focus-visible:ring-0 placeholder:text-slate-200" 
-                    placeholder="タイトルを入力してください"
-                    {...field} 
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+        {/* タイトル & 見出し画像アイコン統合エリア */}
+        <div className="flex items-start gap-4 md:gap-6 border-b-2 border-slate-100 pb-6 group/title">
+          <div className="relative pt-4">
+            <input 
+              type="file" 
+              accept="image/*" 
+              className="hidden" 
+              ref={mainImageInputRef} 
+              onChange={handleMainImageSelect} 
+            />
+            <Button 
+              type="button" 
+              variant="ghost" 
+              className={cn(
+                "h-16 w-16 md:h-20 md:w-20 rounded-[1.5rem] border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all shrink-0",
+                mainImagePreview 
+                  ? "border-primary bg-primary/5 text-primary" 
+                  : "border-slate-200 bg-slate-50 text-slate-400 hover:border-slate-300 hover:bg-slate-100"
+              )}
+              onClick={() => mainImageInputRef.current?.click()}
+            >
+              {mainImagePreview ? (
+                <RefreshCw className="h-6 w-6" />
+              ) : (
+                <LucideImage className="h-6 w-6" />
+              )}
+              <span className="text-[8px] font-black uppercase tracking-tighter">Header</span>
+            </Button>
+            {mainImagePreview && (
+              <Button
+                type="button"
+                variant="destructive"
+                size="icon"
+                className="absolute -top-1 -right-1 h-6 w-6 rounded-full shadow-lg scale-0 group-hover/title:scale-100 transition-transform"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setMainImagePreview("");
+                  setMainImageFile(null);
+                  form.setValue("mainImageUrl", "");
+                }}
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
             )}
-          />
-        </div>
-
-        <div className="space-y-4">
-          <div 
-            className={cn(
-              "relative aspect-[21/9] w-full rounded-[2.5rem] border-4 border-dashed transition-all flex flex-col items-center justify-center gap-4 group cursor-pointer overflow-hidden",
-              isDraggingMain ? "border-primary bg-primary/5" : "border-slate-100 bg-slate-50/30 hover:border-slate-200"
-            )}
-            onDragOver={(e) => { e.preventDefault(); setIsDraggingMain(true); }}
-            onDragLeave={() => setIsDraggingMain(false)}
-            onDrop={(e) => { e.preventDefault(); handleMainImageSelect(e as any); }}
-            onClick={() => mainImageInputRef.current?.click()}
-          >
-            {mainImagePreview ? (
-              <div className="relative w-full h-full overflow-hidden">
-                <Image 
-                  src={mainImagePreview} 
-                  alt="Hero Preview" 
-                  fill 
-                  className="object-cover"
-                  style={{
-                    transform: `scale(${Math.max(0.01, 1 + transform.scale / 100)}) translate(${transform.x}%, ${transform.y}%)`,
-                    transition: 'transform 0.1s linear',
-                    willChange: 'transform'
-                  }}
-                  unoptimized
-                />
-                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
-                  <RefreshCw className="h-10 w-10 text-white" />
-                  <span className="text-xs font-black text-white uppercase tracking-widest">画像を入れ替え</span>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="bg-white p-6 rounded-full shadow-sm text-slate-300 group-hover:scale-110 transition-transform">
-                  <PlusCircle className="h-10 w-10" />
-                </div>
-                <div className="text-center">
-                  <p className="text-sm font-black text-slate-400">見出し画像を設定</p>
-                  <p className="text-[10px] font-bold text-slate-300 mt-1 uppercase tracking-widest">Drag & Drop or Click</p>
-                </div>
-              </>
-            )}
-            <input type="file" accept="image/*" className="hidden" ref={mainImageInputRef} onChange={handleMainImageSelect} />
           </div>
 
-          {mainImagePreview && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-top-2">
+          <div className="flex-1">
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem className="space-y-0">
+                  <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">記事見出し</FormLabel>
+                  <FormControl>
+                    <Input 
+                      className="h-auto py-2 text-3xl md:text-5xl font-black border-none bg-transparent shadow-none px-0 focus-visible:ring-0 placeholder:text-slate-200 leading-tight" 
+                      placeholder="タイトルを入力してください"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+
+        {/* 見出し画像が選択されている場合のみ表示される調整エリア */}
+        {mainImagePreview && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
+            <div className="relative aspect-[21/9] w-full rounded-[2.5rem] overflow-hidden border-4 border-white shadow-2xl bg-slate-100">
+              <Image 
+                src={mainImagePreview} 
+                alt="Header Preview" 
+                fill 
+                className="object-cover"
+                style={{
+                  transform: `scale(${Math.max(0.01, 1 + transform.scale / 100)}) translate(${transform.x}%, ${transform.y}%)`,
+                  transition: 'transform 0.1s linear',
+                  willChange: 'transform'
+                }}
+                unoptimized
+              />
+              <div className="absolute top-4 right-4">
+                <Badge className="bg-black/60 backdrop-blur-md border-none font-black text-[10px] uppercase tracking-widest px-3 py-1">Heading Image Preview</Badge>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 bg-slate-50/50 p-6 rounded-3xl border border-slate-100 space-y-4">
                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                   <Maximize className="h-3 w-3" /> 画像構図の調整
@@ -426,9 +439,10 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                 )}
               />
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
+        {/* カテゴリー & 公開日 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
           <FormField
             control={form.control}
@@ -469,6 +483,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
           />
         </div>
 
+        {/* 本文執筆エリア */}
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 pb-2">
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
@@ -507,6 +522,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
           </div>
         </div>
 
+        {/* フッターアクション */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 pt-10 border-t sticky bottom-6 z-20 bg-white/80 backdrop-blur-md p-6 rounded-[2.5rem] shadow-2xl border border-white">
           <FormField
             control={form.control}
