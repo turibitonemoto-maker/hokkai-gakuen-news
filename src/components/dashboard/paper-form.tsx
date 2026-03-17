@@ -12,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, Trash2, Layers, RefreshCw, Plus, GripVertical, Eye, X } from "lucide-react";
+import { Loader2, Upload, Trash2, Layers, RefreshCw, Plus, GripVertical, Eye, X, ImageIcon } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import {
@@ -28,16 +28,12 @@ import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-  rectSortingStrategy,
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
 
 const paperSchema = z.object({
@@ -201,7 +197,6 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
   const onSubmit = (values: PaperFormValues) => {
     if (!firestore) return;
     
-    // 並び替えた配列の最初の画像をメイン画像（表紙）として採用
     const data = {
       ...values,
       mainImageUrl: values.paperImages[0] || "",
@@ -267,28 +262,10 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
                 ドラッグで並び替え / 画像をクリックで内容を確認
               </p>
             </div>
-            <Button 
-              type="button" 
-              variant="outline" 
-              className="rounded-full gap-2 border-primary/20 text-primary font-bold hover:bg-primary/5"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploading}
-            >
-              {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-              画像を追加
-            </Button>
-            <input 
-              type="file" 
-              multiple 
-              accept="image/*" 
-              className="hidden" 
-              ref={fileInputRef} 
-              onChange={(e) => e.target.files && handleFilesUpload(e.target.files)} 
-            />
           </div>
 
           {isUploading && (
-            <div className="bg-primary/5 border border-primary/10 p-6 rounded-3xl animate-pulse flex items-center justify-between">
+            <div className="bg-primary/5 border border-primary/10 p-6 rounded-3xl animate-pulse flex items-center justify-between mb-6">
               <div className="flex items-center gap-4">
                 <RefreshCw className="h-6 w-6 text-primary animate-spin" />
                 <div>
@@ -306,34 +283,45 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
           >
             <SortableContext 
               items={watchedImages} 
-              strategy={rectSortingStrategy}
             >
-              {watchedImages.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 p-1">
-                  {watchedImages.map((url, index) => (
-                    <SortableImage 
-                      key={url} 
-                      url={url} 
-                      index={index} 
-                      onRemove={() => removeImage(index)}
-                      onPreview={() => setPreviewUrl(url)}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div 
-                  className="border-4 border-dashed border-slate-100 rounded-[3rem] p-20 text-center space-y-4 cursor-pointer hover:bg-slate-50/50 transition-colors"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <Upload className="h-12 w-12 text-slate-200 mx-auto" />
-                  <div>
-                    <p className="text-xl font-black text-slate-300">画像をここにドロップ</p>
-                    <p className="text-sm font-bold text-slate-200 uppercase tracking-widest mt-1">またはクリックして一括選択</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 p-1">
+                {/* 既存の画像を表示 */}
+                {watchedImages.map((url, index) => (
+                  <SortableImage 
+                    key={url} 
+                    url={url} 
+                    index={index} 
+                    onRemove={() => removeImage(index)}
+                    onPreview={() => setPreviewUrl(url)}
+                  />
+                ))}
+
+                {/* 追加ボタンを常にグリッドの最後に配置 */}
+                {!isUploading && (
+                  <div 
+                    className="aspect-[1/1.4] rounded-2xl border-4 border-dashed border-slate-100 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-slate-50 transition-colors group"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <div className="bg-slate-50 p-4 rounded-full text-slate-200 group-hover:scale-110 transition-transform">
+                      <Plus className="h-8 w-8" />
+                    </div>
+                    <div className="text-center px-4">
+                      <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-tight">Add<br />Page</p>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </SortableContext>
           </DndContext>
+          
+          <input 
+            type="file" 
+            multiple 
+            accept="image/*" 
+            className="hidden" 
+            ref={fileInputRef} 
+            onChange={(e) => e.target.files && handleFilesUpload(e.target.files)} 
+          />
         </div>
 
         <div className="pt-10 border-t sticky bottom-6 z-20">
@@ -347,19 +335,13 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
         </div>
       </form>
 
-      {/* 拡大プレビュー（検閲）ダイアログ */}
+      {/* 拡大プレビュー（純粋検閲）ダイアログ */}
       <Dialog open={!!previewUrl} onOpenChange={() => setPreviewUrl(null)}>
         <DialogContent className="max-w-[95vw] h-[90vh] p-0 overflow-hidden bg-slate-900 border-none">
-          <DialogHeader className="absolute top-4 left-4 z-50">
-            <DialogTitle className="text-white font-black bg-black/40 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 flex items-center gap-3">
-              <Eye className="h-5 w-5 text-primary" />
-              紙面検閲モード
-            </DialogTitle>
-          </DialogHeader>
           <Button 
             variant="ghost" 
             size="icon" 
-            className="absolute top-4 right-4 z-50 text-white hover:bg-white/20 rounded-full"
+            className="absolute top-4 right-4 z-50 text-white hover:bg-white/20 rounded-full bg-black/20 backdrop-blur-md"
             onClick={() => setPreviewUrl(null)}
           >
             <X className="h-6 w-6" />
