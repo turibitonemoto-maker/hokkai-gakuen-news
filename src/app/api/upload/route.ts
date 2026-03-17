@@ -36,6 +36,7 @@ export async function POST(request: Request) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
+    // 診断ログ
     console.log(`[Upload API] TARGET_CLOUD_NAME: ${cloudName}, FOLDER: ${folder}`);
 
     const result: any = await new Promise((resolve, reject) => {
@@ -49,6 +50,7 @@ export async function POST(request: Request) {
             console.error("Cloudinary SDK Error:", error);
             reject(error);
           } else {
+            console.log("Cloudinary Upload Success!");
             resolve(result);
           }
         }

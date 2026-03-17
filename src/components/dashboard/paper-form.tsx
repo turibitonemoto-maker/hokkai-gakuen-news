@@ -141,6 +141,11 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
   }, [paper, form]);
 
   const watchedImages = form.watch("paperImages");
+  const currentTitle = form.watch("title");
+
+  const sanitizeFolderName = (name: string) => {
+    return name.trim().replace(/[\/\?\s]/g, '_').slice(0, 50) || "untitled";
+  };
 
   const handleFilesUpload = async (files: FileList) => {
     const fileArray = Array.from(files);
@@ -148,6 +153,7 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
     setUploadProgress({ current: 0, total: fileArray.length });
 
     const newUrls: string[] = [...watchedImages];
+    const subFolder = sanitizeFolderName(currentTitle);
 
     try {
       for (let i = 0; i < fileArray.length; i++) {
@@ -158,7 +164,7 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
 
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("folder", "newspaper_archive/papers");
+        formData.append("folder", `newspaper_archive/papers/${subFolder}`);
         
         const res = await fetch("/api/upload", { method: "POST", body: formData });
         if (!res.ok) {

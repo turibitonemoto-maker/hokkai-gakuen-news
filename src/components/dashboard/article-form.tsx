@@ -53,6 +53,10 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDraggingMain, setIsDraggingMain] = useState(false);
   const mainImageInputRef = useRef<HTMLInputElement>(null);
+
+  const sanitizeFolderName = (name: string) => {
+    return name.trim().replace(/[\/\?\s]/g, '_').slice(0, 50) || "untitled";
+  };
   
   const editor = useEditor({
     extensions: [
@@ -85,9 +89,10 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     if (!file.type.startsWith('image/')) return;
     setIsProcessing(true);
     try {
+      const subFolder = sanitizeFolderName(form.getValues("title"));
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("folder", "newspaper_archive/articles/embedded");
+      formData.append("folder", `newspaper_archive/articles/${subFolder}/embedded`);
       
       const res = await fetch("/api/upload", { method: "POST", body: formData });
       if (!res.ok) throw new Error("Upload failed");
@@ -128,9 +133,10 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     
     setIsProcessing(true);
     try {
+      const subFolder = sanitizeFolderName(form.getValues("title"));
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("folder", "newspaper_archive/articles");
+      formData.append("folder", `newspaper_archive/articles/${subFolder}`);
       
       const res = await fetch("/api/upload", { method: "POST", body: formData });
       if (!res.ok) throw new Error("Upload failed");

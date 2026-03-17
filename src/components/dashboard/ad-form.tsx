@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -41,6 +42,10 @@ export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const firestore = useFirestore();
   const { toast } = useToast();
+
+  const sanitizeFolderName = (name: string) => {
+    return name.trim().replace(/[\/\?\s]/g, '_').slice(0, 50) || "untitled";
+  };
   
   const form = useForm<AdFormValues>({
     resolver: zodResolver(adSchema),
@@ -59,13 +64,23 @@ export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
     if (!file) return;
 
     setIsProcessing(true);
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => {
-      form.setValue("imageUrl", reader.result as string);
-      toast({ title: "バナーを読み込みました（Base64）" });
+    try {
+      const subFolder = sanitizeFolderName(form.getValues("title"));
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", `newspaper_archive/ads/${subFolder}`);
+      
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json();
+      
+      form.setValue("imageUrl", data.secure_url);
+      toast({ title: "バナーを取り込みました" });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "失敗" });
+    } finally {
       setIsProcessing(false);
-    };
+    }
   };
 
   function onSubmit(values: AdFormValues) {
@@ -112,7 +127,7 @@ export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
               name="imageUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">バナー画像 (Base64)</FormLabel>
+                  <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">バナー画像</FormLabel>
                   <div className="flex gap-2">
                     <FormControl><Input className="h-12 rounded-xl font-bold bg-slate-50" readOnly {...field} /></FormControl>
                     <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
