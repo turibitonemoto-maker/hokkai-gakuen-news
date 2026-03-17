@@ -12,18 +12,109 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, FileImage, Upload, Trash2, Layers, CheckCircle2, RefreshCw, Plus } from "lucide-react";
+import { Loader2, Upload, Trash2, Layers, RefreshCw, Plus, GripVertical, Eye, X } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  rectSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const paperSchema = z.object({
   title: z.string().min(1, "タイトルを入力してください"),
   publishDate: z.string().min(1, "発行日を選択してください"),
   paperImages: z.array(z.string()).min(1, "少なくとも1枚の紙面画像をアップロードしてください"),
-  mainImageUrl: z.string().optional(),
 });
 
 type PaperFormValues = z.infer<typeof paperSchema>;
+
+// 並び替え可能なアイテムコンポーネント
+function SortableImage({ url, index, onRemove, onPreview }: { url: string; index: number; onRemove: () => void; onPreview: () => void }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: url });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : 0,
+  };
+
+  return (
+    <div 
+      ref={setNodeRef} 
+      style={style} 
+      className={cn(
+        "relative aspect-[1/1.4] rounded-2xl overflow-hidden border-2 transition-all group bg-white",
+        isDragging ? "opacity-50 scale-95 border-primary" : "border-slate-100 hover:border-primary/50 shadow-sm"
+      )}
+    >
+      <Image src={url} alt={`Page ${index + 1}`} fill className="object-cover" unoptimized />
+      
+      {/* ページ番号バッジ */}
+      <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md text-white text-[10px] font-black px-2 py-0.5 rounded-full z-10">
+        P.{index + 1}
+      </div>
+
+      {/* ドラッグハンドル */}
+      <div 
+        {...attributes} 
+        {...listeners}
+        className="absolute top-2 right-2 p-1.5 bg-white/90 rounded-lg shadow-sm cursor-grab active:cursor-grabbing hover:bg-primary hover:text-white transition-colors z-10"
+      >
+        <GripVertical className="h-4 w-4" />
+      </div>
+
+      {/* ホバー時操作パネル */}
+      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3">
+        <Button 
+          type="button" 
+          variant="secondary" 
+          size="sm" 
+          className="h-9 px-4 rounded-full font-black gap-2 shadow-lg"
+          onClick={onPreview}
+        >
+          <Eye className="h-4 w-4" />
+          内容を確認
+        </Button>
+        <Button 
+          type="button" 
+          variant="destructive" 
+          size="icon" 
+          className="h-9 w-9 rounded-full shadow-lg"
+          onClick={onRemove}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => void }) {
   const firestore = useFirestore();
@@ -31,20 +122,30 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   const form = useForm<PaperFormValues>({
     resolver: zodResolver(paperSchema),
     defaultValues: {
       title: paper?.title || "",
       publishDate: paper?.publishDate || new Date().toISOString().split("T")[0],
       paperImages: paper?.paperImages || [],
-      mainImageUrl: paper?.mainImageUrl || "",
     },
   });
 
   const watchedImages = form.watch("paperImages");
-  const watchedMainImage = form.watch("mainImageUrl");
 
   const handleFilesUpload = async (files: FileList) => {
     const fileArray = Array.from(files);
@@ -74,10 +175,6 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
       }
 
       form.setValue("paperImages", newUrls);
-      if (!watchedMainImage && newUrls.length > 0) {
-        form.setValue("mainImageUrl", newUrls[0]);
-      }
-
       toast({ title: `${fileArray.length}枚の画像を取り込みました` });
     } catch (error: any) {
       toast({ variant: "destructive", title: "エラー", description: error.message });
@@ -88,24 +185,26 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
 
   const removeImage = (index: number) => {
     const newUrls = [...watchedImages];
-    const removedUrl = newUrls.splice(index, 1)[0];
+    newUrls.splice(index, 1);
     form.setValue("paperImages", newUrls);
-    
-    if (watchedMainImage === removedUrl) {
-      form.setValue("mainImageUrl", newUrls[0] || "");
-    }
   };
 
-  const setAsMain = (url: string) => {
-    form.setValue("mainImageUrl", url);
-    toast({ title: "表紙に設定しました" });
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = watchedImages.indexOf(active.id as string);
+      const newIndex = watchedImages.indexOf(over.id as string);
+      form.setValue("paperImages", arrayMove(watchedImages, oldIndex, newIndex));
+    }
   };
 
   const onSubmit = (values: PaperFormValues) => {
     if (!firestore) return;
     
+    // 並び替えた配列の最初の画像をメイン画像（表紙）として採用
     const data = {
       ...values,
+      mainImageUrl: values.paperImages[0] || "",
       articleType: "Standard",
       categoryId: "Viewer", 
       isPublished: paper?.isPublished ?? true,
@@ -159,10 +258,15 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
 
         <div className="space-y-6">
           <div className="flex items-center justify-between border-b pb-4">
-            <h3 className="font-black text-slate-800 flex items-center gap-2">
-              <Layers className="h-5 w-5 text-primary" />
-              紙面ページ構成（全 {watchedImages.length} ページ）
-            </h3>
+            <div className="space-y-1">
+              <h3 className="font-black text-slate-800 flex items-center gap-2">
+                <Layers className="h-5 w-5 text-primary" />
+                紙面構成管理
+              </h3>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">
+                ドラッグで並び替え / 画像をクリックで内容を確認
+              </p>
+            </div>
             <Button 
               type="button" 
               variant="outline" 
@@ -195,57 +299,41 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
             </div>
           )}
 
-          {watchedImages.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {watchedImages.map((url, index) => (
-                <div key={url + index} className={cn(
-                  "relative aspect-[1/1.4] rounded-2xl overflow-hidden border-2 transition-all group",
-                  watchedMainImage === url ? "border-primary shadow-lg ring-4 ring-primary/10" : "border-slate-100 hover:border-slate-300"
-                )}>
-                  <Image src={url} alt={`Page ${index + 1}`} fill className="object-cover" unoptimized />
-                  <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md text-white text-[8px] font-black px-2 py-0.5 rounded-full">
-                    P.{index + 1}
-                  </div>
-                  {watchedMainImage === url && (
-                    <div className="absolute top-2 right-2 bg-primary text-white p-1 rounded-full shadow-lg">
-                      <CheckCircle2 className="h-3 w-3" />
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
-                    <Button 
-                      type="button" 
-                      variant="secondary" 
-                      size="sm" 
-                      className="h-7 text-[8px] font-black rounded-full"
-                      onClick={() => setAsMain(url)}
-                    >
-                      表紙にする
-                    </Button>
-                    <Button 
-                      type="button" 
-                      variant="destructive" 
-                      size="icon" 
-                      className="h-7 w-7 rounded-full"
-                      onClick={() => removeImage(index)}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext 
+              items={watchedImages} 
+              strategy={rectSortingStrategy}
+            >
+              {watchedImages.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 p-1">
+                  {watchedImages.map((url, index) => (
+                    <SortableImage 
+                      key={url} 
+                      url={url} 
+                      index={index} 
+                      onRemove={() => removeImage(index)}
+                      onPreview={() => setPreviewUrl(url)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div 
+                  className="border-4 border-dashed border-slate-100 rounded-[3rem] p-20 text-center space-y-4 cursor-pointer hover:bg-slate-50/50 transition-colors"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload className="h-12 w-12 text-slate-200 mx-auto" />
+                  <div>
+                    <p className="text-xl font-black text-slate-300">画像をここにドロップ</p>
+                    <p className="text-sm font-bold text-slate-200 uppercase tracking-widest mt-1">またはクリックして一括選択</p>
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div 
-              className="border-4 border-dashed border-slate-100 rounded-[3rem] p-20 text-center space-y-4 cursor-pointer hover:bg-slate-50/50 transition-colors"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <Upload className="h-12 w-12 text-slate-200 mx-auto" />
-              <div>
-                <p className="text-xl font-black text-slate-300">画像をここにドロップ</p>
-                <p className="text-sm font-bold text-slate-200 uppercase tracking-widest mt-1">またはクリックして一括選択</p>
-              </div>
-            </div>
-          )}
+              )}
+            </SortableContext>
+          </DndContext>
         </div>
 
         <div className="pt-10 border-t sticky bottom-6 z-20">
@@ -258,6 +346,37 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
           </Button>
         </div>
       </form>
+
+      {/* 拡大プレビュー（検閲）ダイアログ */}
+      <Dialog open={!!previewUrl} onOpenChange={() => setPreviewUrl(null)}>
+        <DialogContent className="max-w-[95vw] h-[90vh] p-0 overflow-hidden bg-slate-900 border-none">
+          <DialogHeader className="absolute top-4 left-4 z-50">
+            <DialogTitle className="text-white font-black bg-black/40 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 flex items-center gap-3">
+              <Eye className="h-5 w-5 text-primary" />
+              紙面検閲モード
+            </DialogTitle>
+          </DialogHeader>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="absolute top-4 right-4 z-50 text-white hover:bg-white/20 rounded-full"
+            onClick={() => setPreviewUrl(null)}
+          >
+            <X className="h-6 w-6" />
+          </Button>
+          <div className="relative w-full h-full flex items-center justify-center p-4">
+            {previewUrl && (
+              <Image 
+                src={previewUrl} 
+                alt="Full Preview" 
+                fill 
+                className="object-contain" 
+                unoptimized 
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Form>
   );
 }
