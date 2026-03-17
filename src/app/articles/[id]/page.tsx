@@ -1,12 +1,140 @@
 
 'use client';
 
-import { redirect } from 'next/navigation';
+import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc, updateDoc, increment } from 'firebase/firestore';
+import { useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { PublicHeader } from '@/components/site/public-header';
+import { PublicFooter } from '@/components/site/public-footer';
+import { SidebarContent } from '@/components/site/sidebar-content';
+import { Loader2, Calendar, Eye, Tag as TagIcon, ArrowLeft } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { Badge } from '@/components/ui/badge';
+import DOMPurify from 'dompurify';
 
-/**
- * 公開ページは無効化されました。
- */
 export default function ArticleDetailPage() {
-  redirect('/admin');
-  return null;
+  const { id } = useParams();
+  const firestore = useFirestore();
+  const [sanitizedContent, setSanitizedContent] = useState<string>('');
+
+  const docRef = useMemoFirebase(() => {
+    if (!firestore || !id) return null;
+    return doc(firestore, 'articles', id as string);
+  }, [firestore, id]);
+
+  const { data: article, isLoading } = useDoc(docRef);
+
+  useEffect(() => {
+    if (article?.content) {
+      setSanitizedContent(DOMPurify.sanitize(article.content));
+    }
+    
+    // 閲覧数のインクリメント回路
+    if (firestore && id && article && !isLoading) {
+      const incrementView = async () => {
+        const articleRef = doc(firestore, 'articles', id as string);
+        await updateDoc(articleRef, {
+          viewCount: increment(1)
+        });
+      };
+      // 一度だけ実行（厳密にはセッション管理が必要だがMVPとして実装）
+      incrementView();
+    }
+  }, [article, firestore, id, isLoading]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!article) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center space-y-4">
+          <h2 className="text-2xl font-black text-slate-800">記事が見つかりません</h2>
+          <Link href="/articles"><Button variant="outline">記事一覧へ戻る</Button></Link>
+        </div>
+      </div>
+    );
+  }
+
+  const transform = article.mainImageTransform || { scale: 0, x: 0, y: 0 };
+
+  return (
+    <div className="min-h-screen bg-slate-50 font-body">
+      <PublicHeader />
+      
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+          
+          <div className="lg:col-span-8 space-y-10">
+            <Link href="/articles" className="inline-flex items-center gap-2 text-xs font-black text-slate-400 hover:text-primary transition-colors uppercase tracking-widest">
+              <ArrowLeft className="h-4 w-4" /> 記事一覧へ
+            </Link>
+
+            <article className="bg-white rounded-[3rem] shadow-sm border border-slate-100 overflow-hidden">
+              {article.mainImageUrl && (
+                <div className="relative aspect-[21/9] w-full bg-slate-100 overflow-hidden">
+                  <Image 
+                    src={article.mainImageUrl} 
+                    alt={article.title} 
+                    fill 
+                    className="transition-transform duration-700"
+                    style={{
+                      objectFit: "contain",
+                      transform: `translate(${transform.x}%, ${transform.y}%) scale(${Math.max(0.01, 1 + transform.scale / 100)})`,
+                    }}
+                    unoptimized
+                    priority
+                  />
+                </div>
+              )}
+
+              <div className="p-8 md:p-16">
+                <div className="flex flex-wrap items-center gap-4 mb-8">
+                  <Badge className="bg-primary text-white font-black px-4 py-1 rounded-full text-[10px] uppercase tracking-wider">
+                    {article.categoryId}
+                  </Badge>
+                  <div className="flex items-center gap-4 text-xs font-bold text-slate-400">
+                    <span className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> {article.publishDate}</span>
+                    <span className="flex items-center gap-1.5"><Eye className="h-3.5 w-3.5" /> {article.viewCount || 0} views</span>
+                  </div>
+                </div>
+
+                <h1 className="text-3xl md:text-5xl font-black text-slate-900 leading-tight mb-12 tracking-tighter">
+                  {article.title}
+                </h1>
+
+                <div 
+                  className="article-content"
+                  dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+                />
+
+                <div className="mt-16 pt-10 border-t border-slate-100">
+                  <div className="flex flex-wrap gap-2">
+                    {article.tags?.map((tag: string) => (
+                      <span key={tag} className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 bg-slate-50 px-3 py-1.5 rounded-full uppercase tracking-tight">
+                        <TagIcon className="h-3 w-3" /> {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          <aside className="lg:col-span-4 hidden lg:block">
+            <SidebarContent ads={[]} />
+          </aside>
+        </div>
+      </main>
+
+      <PublicFooter />
+    </div>
+  );
 }

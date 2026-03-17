@@ -165,7 +165,7 @@ export function PresidentMessageManager() {
         updatedBy: user?.email || "unknown"
       }, { merge: true });
       
-      toast({ title: "更新完了", description: "会長挨拶を永久保存しました。" });
+      toast({ title: "保存しました" });
     } catch (error: any) {
       toast({ variant: "destructive", title: "保存失敗", description: error.message });
     } finally {

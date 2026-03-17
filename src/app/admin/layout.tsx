@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -13,7 +14,6 @@ import {
   Loader2,
   Lock,
   BookOpen,
-  Globe,
   Info
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -148,12 +148,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </nav>
 
       <div className="p-4 border-t border-slate-700/50 flex flex-col gap-2">
-        <Link href="/viewer" target="_blank">
-          <Button variant="outline" className="w-full bg-slate-800 border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700 justify-start gap-3 px-3 rounded-xl h-12">
-            <Globe className="h-5 w-5" />
-            {(isSidebarOpen || isMobile) && <span className="text-sm font-bold">アーカイブ確認</span>}
-          </Button>
-        </Link>
         <Button 
           variant="ghost" 
           className="w-full text-slate-400 hover:text-white hover:bg-slate-800 justify-start gap-3 px-3 rounded-xl h-12"

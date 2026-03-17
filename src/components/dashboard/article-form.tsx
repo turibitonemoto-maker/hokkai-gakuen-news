@@ -13,9 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { Image as LucideImage, Type, Heading2, Loader2, Bold, Italic, List, Maximize, RefreshCw, Trash2 } from "lucide-react";
+import { Image as LucideImage, Type, Heading2, Loader2, Bold, Italic, List, Maximize, RefreshCw, Trash2, Plus, Link as LinkIcon, Heading3 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useEditor, EditorContent, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react';
+import { useEditor, EditorContent, NodeViewWrapper, ReactNodeViewRenderer, FloatingMenu } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import ImageExtension from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
@@ -23,6 +23,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 /**
  * 本文内：リサイズ ＆ キャプション機能付き画像コンポーネント
@@ -67,8 +68,6 @@ const ResizableImageComponent = ({ node, updateAttributes, selected }: any) => {
           alt={node.attrs.alt} 
           style={{ width: '100%', height: 'auto' }}
         />
-        
-        {/* Resize Handle */}
         <div 
           className="resize-handle resize-handle-bottom-right" 
           onMouseDown={onMouseDown}
@@ -166,7 +165,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     },
   });
 
-  // 画像変更時に座標を完全に初期化（強制リセット）
   useEffect(() => {
     if (mainImagePreview) {
       form.setValue("mainImageTransform", { scale: 0, x: 0, y: 0 });
@@ -298,11 +296,11 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       if (article?.id) {
         const docRef = doc(firestore, "articles", article.id);
         setDocumentNonBlocking(docRef, data, { merge: true });
-        toast({ title: "記事を更新しました" });
+        toast({ title: "保存しました" });
       } else {
         const colRef = collection(firestore, "articles");
         addDocumentNonBlocking(colRef, { ...data, createdAt: serverTimestamp(), viewCount: 0 });
-        toast({ title: "記事を作成しました" });
+        toast({ title: "保存しました" });
       }
       onSuccess();
     } catch (error: any) {
@@ -313,6 +311,16 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
   }
 
   const transform = form.watch("mainImageTransform");
+
+  const setLink = useCallback(() => {
+    const url = window.prompt('URLを入力してください');
+    if (url === null) return;
+    if (url === '') {
+      editor?.chain().focus().extendMarkRange('link').unsetLink().run();
+      return;
+    }
+    editor?.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+  }, [editor]);
 
   return (
     <Form {...form}>
@@ -355,7 +363,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
               name="title"
               render={({ field }) => (
                 <FormItem className="space-y-0">
-                  <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">記事見出し</FormLabel>
                   <FormControl>
                     <Input className="h-auto py-2 text-3xl md:text-5xl font-black border-none bg-transparent shadow-none px-0 focus-visible:ring-0 placeholder:text-slate-200 leading-tight" placeholder="タイトルを入力してください" {...field} />
                   </FormControl>
@@ -369,26 +376,19 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
         {mainImagePreview && (
           <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
             <div className="relative aspect-[21/9] w-full rounded-[2.5rem] overflow-hidden border-4 border-white shadow-2xl bg-slate-100">
-              <div 
-                className="relative w-full h-full flex items-center justify-center overflow-hidden"
-              >
+              <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
                 <Image 
                   src={mainImagePreview} 
                   alt="Header Preview" 
                   fill 
                   className="transition-transform duration-100 ease-linear"
                   style={{
-                    // 座標整合性プロトコル：translate(相対%) → scale の順序で計算
-                    // object-fit: contain 状態から開始し、はみ出しを防ぐ
                     objectFit: "contain",
                     transform: `translate(${transform.x}%, ${transform.y}%) scale(${Math.max(0.01, 1 + transform.scale / 100)})`,
                     willChange: 'transform'
                   }}
                   unoptimized
                 />
-              </div>
-              <div className="absolute top-4 right-4 pointer-events-none">
-                <Badge className="bg-black/60 backdrop-blur-md border-none font-black text-[10px] uppercase tracking-widest px-3 py-1">Header Preview</Badge>
               </div>
             </div>
             <div className="bg-slate-50/50 p-6 rounded-3xl border border-slate-100 space-y-4">
@@ -448,28 +448,62 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
           />
         </div>
 
-        <div className="space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><Type className="h-3 w-3" /> 本文執筆</span>
-            <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl">
-              <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", editor?.isActive('bold') && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleBold().run()}><Bold className="h-4 w-4" /></Button>
-              <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", editor?.isActive('italic') && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleItalic().run()}><Italic className="h-4 w-4" /></Button>
-              <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", editor?.isActive('heading', { level: 2 }) && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}><Heading2 className="h-4 w-4" /></Button>
-              <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", editor?.isActive('bulletList') && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleBulletList().run()}><List className="h-4 w-4" /></Button>
-              <div className="w-px h-4 bg-slate-200 mx-1" />
-              <div className="relative">
-                <input type="file" accept="image/*" className="hidden" id="editor-image-upload" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleEditorImageInsert(file); }}/>
-                <Button type="button" variant="ghost" className={cn("h-8 px-3 rounded-lg gap-2 text-[10px] font-black", isProcessing && "bg-white shadow-sm")} onClick={() => document.getElementById('editor-image-upload')?.click()} disabled={isProcessing}>
-                  {isProcessing ? <Loader2 className="h-3 w-3 animate-spin" /> : <LucideImage className="h-3 w-3" />}画像を挿入
-                </Button>
-              </div>
-            </div>
-          </div>
+        <div className="relative pt-10">
+          {editor && (
+            <FloatingMenu 
+              editor={editor} 
+              tippyOptions={{ duration: 100, placement: 'left-start' }}
+              className="flex items-center gap-1 -ml-12"
+            >
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button type="button" variant="ghost" size="icon" className="h-10 w-10 rounded-full bg-white shadow-md border border-slate-100 text-slate-400 hover:text-primary hover:scale-110 transition-all">
+                    <Plus className="h-5 w-5" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent side="right" className="w-48 p-2 rounded-2xl shadow-2xl border-none">
+                  <div className="grid gap-1">
+                    <button 
+                      type="button"
+                      onClick={() => document.getElementById('editor-image-upload')?.click()}
+                      className="flex items-center gap-3 w-full p-3 hover:bg-slate-50 rounded-xl text-left transition-colors group"
+                    >
+                      <LucideImage className="h-4 w-4 text-slate-400 group-hover:text-primary" />
+                      <span className="text-xs font-black text-slate-600">画像を挿入</span>
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+                      className="flex items-center gap-3 w-full p-3 hover:bg-slate-50 rounded-xl text-left transition-colors group"
+                    >
+                      <Heading2 className="h-4 w-4 text-slate-400 group-hover:text-primary" />
+                      <span className="text-xs font-black text-slate-600">大見出し</span>
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+                      className="flex items-center gap-3 w-full p-3 hover:bg-slate-50 rounded-xl text-left transition-colors group"
+                    >
+                      <Heading3 className="h-4 w-4 text-slate-400 group-hover:text-primary" />
+                      <span className="text-xs font-black text-slate-600">小見出し</span>
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={setLink}
+                      className="flex items-center gap-3 w-full p-3 hover:bg-slate-50 rounded-xl text-left transition-colors group"
+                    >
+                      <LinkIcon className="h-4 w-4 text-slate-400 group-hover:text-primary" />
+                      <span className="text-xs font-black text-slate-600">リンクを挿入</span>
+                    </button>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </FloatingMenu>
+          )}
+
           <div className="min-h-[600px] bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-inner relative group/editor">
             <EditorContent editor={editor} />
-            <div className="absolute top-4 right-4 opacity-0 group-hover/editor:opacity-100 transition-opacity pointer-events-none">
-              <Badge variant="outline" className="bg-white/80 backdrop-blur-sm text-[9px] font-bold text-slate-400">画像は角をドラッグしてサイズ調整、下に説明を入力できます</Badge>
-            </div>
+            <input type="file" accept="image/*" className="hidden" id="editor-image-upload" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleEditorImageInsert(file); }}/>
           </div>
         </div>
 
