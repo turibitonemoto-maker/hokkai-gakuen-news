@@ -111,13 +111,9 @@ export function ViewerManager() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-black text-slate-800 flex items-center gap-3">
-            <div className="bg-primary/10 p-2 rounded-2xl">
-              <BookOpen className="h-8 w-8 text-primary" />
-            </div>
+          <h2 className="text-3xl font-black text-slate-800 tracking-tight">
             紙面ビューアー管理
           </h2>
-          <p className="text-sm font-bold text-slate-500 mt-1 ml-1">マルチページ管理プロトコル：1950年からの歴史をデジタル化します。</p>
         </div>
         <Button onClick={() => { setCurrentPaper(null); setIsEditing(true); }} className="h-14 px-8 shadow-2xl gap-2 font-black rounded-2xl bg-primary text-white hover:bg-primary/90 hover:scale-105 transition-all">
           <Plus className="h-5 w-5" /> 紙面を追加
