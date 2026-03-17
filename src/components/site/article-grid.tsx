@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -55,9 +56,10 @@ function ArticleCard({ article }: { article: any }) {
               src={article.mainImageUrl}
               alt={article.title}
               fill
-              className="object-cover transition-transform duration-700"
+              className="object-cover"
               style={{
-                transform: `scale(${Math.max(0.01, 1 + transform.scale / 100)}) translate(${transform.x}%, ${transform.y}%)`,
+                // 座標整合性プロトコル：管理画面と全く同じ計算順序を適用
+                transform: `translate(${transform.x}%, ${transform.y}%) scale(${Math.max(0.01, 1 + transform.scale / 100)})`,
                 willChange: 'transform'
               }}
               unoptimized

@@ -74,7 +74,6 @@ export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
       const subFolder = sanitizeFolderName(titleValue);
       const formData = new FormData();
       formData.append("file", file);
-      // フラット化：newspaper_archive/タイトルの直下へ
       formData.append("folder", `newspaper_archive/${subFolder}`);
       
       const res = await fetch("/api/upload", { method: "POST", body: formData });
@@ -82,6 +81,8 @@ export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
       const data = await res.json();
       
       form.setValue("imageUrl", data.secure_url);
+      // 物理リセットプロトコル
+      form.setValue("imageTransform", { scale: 0, x: 0, y: 0 });
       toast({ title: "バナーを取り込みました" });
     } catch (error: any) {
       toast({ variant: "destructive", title: "失敗" });
@@ -222,7 +223,8 @@ export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
                   fill 
                   className="object-cover"
                   style={{
-                    transform: `scale(${Math.max(0.01, 1 + transform.scale / 100)}) translate(${transform.x}%, ${transform.y}%)`,
+                    // 座標整合性プロトコル
+                    transform: `translate(${transform.x}%, ${transform.y}%) scale(${Math.max(0.01, 1 + transform.scale / 100)})`,
                     transition: 'transform 0.1s linear',
                     willChange: 'transform'
                   }}

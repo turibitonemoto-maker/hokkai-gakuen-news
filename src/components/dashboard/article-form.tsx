@@ -109,7 +109,6 @@ const CustomResizableImage = ImageExtension.extend({
     return ReactNodeViewRenderer(ResizableImageComponent);
   },
   renderHTML({ HTMLAttributes }) {
-    // 保存時のHTML出力をカスタマイズ
     return [
       'div', 
       { class: 'resizable-image-container' }, 
@@ -123,7 +122,7 @@ const articleSchema = z.object({
   title: z.string().min(1, "タイトルを入力してください"),
   articleType: z.literal("Standard"),
   content: z.string().min(1, "本文を入力してください"),
-  imageCaption: z.string().optional(), // 内部的には保持するがUIからは排除
+  imageCaption: z.string().optional(),
   categoryId: z.enum(["Campus", "Event", "Interview", "Sports", "Column", "Opinion"]),
   publishDate: z.string(),
   mainImageUrl: z.string().optional().or(z.literal("")),
@@ -241,6 +240,9 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     setMainImageFile(file);
     const preview = URL.createObjectURL(file);
     setMainImagePreview(preview);
+    
+    // 物理リセットプロトコル：画像を差し替えた瞬間に座標を強制ゼロに戻す
+    form.setValue("mainImageTransform", { scale: 0, x: 0, y: 0 });
   };
 
   const processEditorImages = async (html: string, folder: string) => {
@@ -398,7 +400,8 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
               <div 
                 className="relative w-full h-full"
                 style={{
-                  transform: `scale(${Math.max(0.01, 1 + transform.scale / 100)}) translate(${transform.x}%, ${transform.y}%)`,
+                  // 座標整合性プロトコル：translate → scale の順序で厳密に計算
+                  transform: `translate(${transform.x}%, ${transform.y}%) scale(${Math.max(0.01, 1 + transform.scale / 100)})`,
                   transition: 'transform 0.1s linear',
                   willChange: 'transform'
                 }}

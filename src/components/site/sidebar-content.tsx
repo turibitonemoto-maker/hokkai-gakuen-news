@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
@@ -65,7 +66,8 @@ export function SidebarContent({ ads }: { ads: any[] }) {
                     fill
                     className="object-cover"
                     style={{
-                      transform: `scale(${Math.max(0.01, 1 + transform.scale / 100)}) translate(${transform.x}%, ${transform.y}%)`,
+                      // 座標整合性プロトコル
+                      transform: `translate(${transform.x}%, ${transform.y}%) scale(${Math.max(0.01, 1 + transform.scale / 100)})`,
                       willChange: 'transform'
                     }}
                     sizes="96px"
@@ -120,9 +122,10 @@ export function SidebarContent({ ads }: { ads: any[] }) {
                       src={ad.imageUrl}
                       alt={ad.title || "広告バナー"}
                       fill
-                      className="object-cover transition-transform"
+                      className="object-cover"
                       style={{
-                        transform: `scale(${Math.max(0.01, 1 + adTransform.scale / 100)}) translate(${adTransform.x}%, ${adTransform.y}%)`,
+                        // 座標整合性プロトコル
+                        transform: `translate(${adTransform.x}%, ${adTransform.y}%) scale(${Math.max(0.01, 1 + adTransform.scale / 100)})`,
                         willChange: 'transform'
                       }}
                       unoptimized

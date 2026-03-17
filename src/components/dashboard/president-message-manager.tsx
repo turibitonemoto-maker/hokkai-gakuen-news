@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useDoc, useFirestore, useMemoFirebase, useUser } from "@/firebase";
@@ -124,6 +125,8 @@ export function PresidentMessageManager() {
       reader.onload = () => {
         const base64 = reader.result as string;
         form.setValue("authorImageUrl", base64);
+        // 物理リセットプロトコル
+        form.setValue("authorImageTransform", { scale: 0, x: 0, y: 0 });
         toast({ title: "顔写真を取り込みました" });
         setIsProcessing(false);
       };
@@ -291,7 +294,8 @@ export function PresidentMessageManager() {
                         fill 
                         className="object-cover"
                         style={{
-                          transform: `scale(${Math.max(0.01, 1 + transform.scale / 100)}) translate(${transform.x}%, ${transform.y}%)`,
+                          // 座標整合性プロトコル
+                          transform: `translate(${transform.x}%, ${transform.y}%) scale(${Math.max(0.01, 1 + transform.scale / 100)})`,
                           transition: 'transform 0.1s linear',
                           willChange: 'transform'
                         }}
