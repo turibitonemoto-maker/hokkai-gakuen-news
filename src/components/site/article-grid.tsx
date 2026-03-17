@@ -49,23 +49,22 @@ function ArticleCard({ article }: { article: any }) {
 
   return (
     <div className="group bg-white rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-slate-100 flex flex-col h-full">
-      <div className="relative h-60 overflow-hidden bg-slate-50">
+      <div className="relative h-60 overflow-hidden bg-slate-100 flex items-center justify-center">
         {hasImage ? (
-          <div className="relative w-full h-full overflow-hidden">
-            <Image
-              src={article.mainImageUrl}
-              alt={article.title}
-              fill
-              className="object-cover"
-              style={{
-                // 座標整合性プロトコル：管理画面と全く同じ計算順序を適用
-                transform: `translate(${transform.x}%, ${transform.y}%) scale(${Math.max(0.01, 1 + transform.scale / 100)})`,
-                willChange: 'transform'
-              }}
-              unoptimized
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            />
-          </div>
+          <Image
+            src={article.mainImageUrl}
+            alt={article.title}
+            fill
+            className="transition-transform duration-500 ease-out"
+            style={{
+              // 座標整合性プロトコル：管理画面と完全に同一の正規化計算を適用
+              objectFit: "contain",
+              transform: `translate(${transform.x}%, ${transform.y}%) scale(${Math.max(0.01, 1 + transform.scale / 100)})`,
+              willChange: 'transform'
+            }}
+            unoptimized
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center text-slate-200 gap-2">
             <ImageOff className="h-12 w-12 opacity-10" />

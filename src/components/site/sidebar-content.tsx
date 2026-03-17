@@ -58,15 +58,16 @@ export function SidebarContent({ ads }: { ads: any[] }) {
           </CardHeader>
           <CardContent className="pt-8">
             <div className="flex flex-col items-center mb-8">
-              <div className="relative h-24 w-24 rounded-full overflow-hidden shadow-xl mb-4 border-2 border-white bg-slate-50">
+              <div className="relative h-24 w-24 rounded-full overflow-hidden shadow-xl mb-4 border-2 border-white bg-slate-50 flex items-center justify-center">
                 {president.authorImageUrl ? (
                   <Image
                     src={president.authorImageUrl}
                     alt={president.authorName || "会長"}
                     fill
-                    className="object-cover"
+                    className="transition-transform duration-500 ease-out"
                     style={{
-                      // 座標整合性プロトコル
+                      // 座標整合性プロトコル：中央基点の正規化計算
+                      objectFit: "contain",
                       transform: `translate(${transform.x}%, ${transform.y}%) scale(${Math.max(0.01, 1 + transform.scale / 100)})`,
                       willChange: 'transform'
                     }}
@@ -117,14 +118,15 @@ export function SidebarContent({ ads }: { ads: any[] }) {
                   onClick={() => handleAdClick(ad)}
                   className="block group"
                 >
-                  <div className="relative h-28 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-slate-100 bg-white">
+                  <div className="relative h-28 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-slate-100 bg-white flex items-center justify-center">
                     <Image
                       src={ad.imageUrl}
                       alt={ad.title || "広告バナー"}
                       fill
-                      className="object-cover"
+                      className="transition-transform duration-500 ease-out"
                       style={{
                         // 座標整合性プロトコル
+                        objectFit: "contain",
                         transform: `translate(${adTransform.x}%, ${adTransform.y}%) scale(${Math.max(0.01, 1 + adTransform.scale / 100)})`,
                         willChange: 'transform'
                       }}
