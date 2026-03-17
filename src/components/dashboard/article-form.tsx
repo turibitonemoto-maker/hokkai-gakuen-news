@@ -13,9 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { Image as LucideImage, Type, Heading2, Loader2, MessageSquareText, Bold, Italic, List, Maximize, RefreshCw, PlusCircle } from "lucide-react";
+import { Image as LucideImage, Type, Heading2, Loader2, MessageSquareText, Bold, Italic, List, Maximize, RefreshCw, PlusCircle, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useEditor, EditorContent } from '@tiptap/react';
+import { useEditor, EditorContent, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import ImageExtension from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
@@ -23,6 +23,83 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
+
+/**
+ * リサイズ可能な画像ノードビュー
+ */
+const ResizableImageComponent = ({ node, updateAttributes, selected }: any) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isResizing, setIsResizing] = useState(false);
+
+  const onMouseDown = (event: React.MouseEvent) => {
+    event.preventDefault();
+    setIsResizing(true);
+
+    const startX = event.clientX;
+    const startWidth = containerRef.current?.offsetWidth || 0;
+
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      const currentX = moveEvent.clientX;
+      const diffX = currentX - startX;
+      const newWidth = Math.max(100, startWidth + diffX);
+      updateAttributes({ width: `${newWidth}px` });
+    };
+
+    const onMouseUp = () => {
+      setIsResizing(false);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  };
+
+  return (
+    <NodeViewWrapper className={cn("resizable-image-container", selected && "is-selected")}>
+      <div 
+        ref={containerRef}
+        style={{ width: node.attrs.width || '100%', position: 'relative' }}
+      >
+        <img 
+          src={node.attrs.src} 
+          alt={node.attrs.alt} 
+          title={node.attrs.title}
+          style={{ width: '100%', height: 'auto' }}
+        />
+        
+        {/* Resize Handles (4 Corners) */}
+        <div className="resize-handle resize-handle-top-left" />
+        <div className="resize-handle resize-handle-top-right" />
+        <div className="resize-handle resize-handle-bottom-left" />
+        <div 
+          className="resize-handle resize-handle-bottom-right" 
+          onMouseDown={onMouseDown}
+        />
+      </div>
+    </NodeViewWrapper>
+  );
+};
+
+/**
+ * リサイズ機能付き画像拡張
+ */
+const CustomResizableImage = ImageExtension.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      width: {
+        default: '100%',
+        renderHTML: attributes => ({
+          style: `width: ${attributes.width}; height: auto;`,
+        }),
+      },
+    };
+  },
+  addNodeView() {
+    return ReactNodeViewRenderer(ResizableImageComponent);
+  },
+});
 
 const articleSchema = z.object({
   title: z.string().min(1, "タイトルを入力してください"),
@@ -58,12 +135,26 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
   const [isDraggingMain, setIsDraggingMain] = useState(false);
   const mainImageInputRef = useRef<HTMLInputElement>(null);
   
-  // エディタ参照用のRef（循環参照エラー回避用）
   const editorRef = useRef<any>(null);
 
   const sanitizeFolderName = (name: string) => {
     return name.trim().replace(/[\/\?\s]/g, '_').slice(0, 50) || "untitled";
   };
+
+  const form = useForm<ArticleFormValues>({
+    resolver: zodResolver(articleSchema),
+    defaultValues: {
+      title: article?.title || "",
+      articleType: "Standard",
+      content: article?.content || "",
+      imageCaption: article?.imageCaption || "",
+      categoryId: (article?.categoryId === "Viewer" ? "Campus" : article?.categoryId) || "Campus",
+      publishDate: article?.publishDate || new Date().toISOString().split("T")[0],
+      mainImageUrl: article?.mainImageUrl || "",
+      mainImageTransform: article?.mainImageTransform || { scale: 0, x: 0, y: 0 },
+      isPublished: article?.isPublished || false,
+    },
+  });
 
   const handleEditorImageInsert = useCallback(async (file: File) => {
     if (!file.type.startsWith('image/')) return;
@@ -86,16 +177,12 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     } finally {
       setIsProcessing(false);
     }
-  }, []); // eslint-disable-line
+  }, [form, toast]);
 
   const editor = useEditor({
     extensions: [
       StarterKit,
-      ImageExtension.configure({
-        HTMLAttributes: {
-          class: 'rounded-2xl shadow-xl my-8 mx-auto max-w-full h-auto',
-        },
-      }),
+      CustomResizableImage,
       LinkExtension.configure({
         openOnClick: false,
         HTMLAttributes: {
@@ -128,27 +215,11 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     },
   });
 
-  // エディタが更新されたらRefを更新
   useEffect(() => {
     if (editor) {
       editorRef.current = editor;
     }
   }, [editor]);
-
-  const form = useForm<ArticleFormValues>({
-    resolver: zodResolver(articleSchema),
-    defaultValues: {
-      title: article?.title || "",
-      articleType: "Standard",
-      content: article?.content || "",
-      imageCaption: article?.imageCaption || "",
-      categoryId: (article?.categoryId === "Viewer" ? "Campus" : article?.categoryId) || "Campus",
-      publishDate: article?.publishDate || new Date().toISOString().split("T")[0],
-      mainImageUrl: article?.mainImageUrl || "",
-      mainImageTransform: article?.mainImageTransform || { scale: 0, x: 0, y: 0 },
-      isPublished: article?.isPublished || false,
-    },
-  });
 
   useEffect(() => {
     if (article?.mainImageUrl) {
@@ -219,7 +290,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-w-5xl mx-auto pb-20">
         
-        {/* Title Section (note-like large heading) */}
         <div className="space-y-6">
           <FormField
             control={form.control}
@@ -240,7 +310,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
           />
         </div>
 
-        {/* Main Image Section (Hero image below title) */}
         <div className="space-y-4">
           <div 
             className={cn(
@@ -324,7 +393,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
           )}
         </div>
 
-        {/* Metadata Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
           <FormField
             control={form.control}
@@ -365,7 +433,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
           />
         </div>
 
-        {/* Editor Section */}
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 pb-2">
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
@@ -399,12 +466,11 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
           <div className="min-h-[600px] bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-inner relative group/editor">
             <EditorContent editor={editor} />
             <div className="absolute top-4 right-4 opacity-0 group-hover/editor:opacity-100 transition-opacity pointer-events-none">
-              <Badge variant="outline" className="bg-white/80 backdrop-blur-sm text-[9px] font-bold text-slate-400">画像はドラッグ＆ドロップでも追加できます</Badge>
+              <Badge variant="outline" className="bg-white/80 backdrop-blur-sm text-[9px] font-bold text-slate-400">画像は角をドラッグしてサイズ調整できます</Badge>
             </div>
           </div>
         </div>
 
-        {/* Footer Section */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 pt-10 border-t sticky bottom-6 z-20 bg-white/80 backdrop-blur-md p-6 rounded-[2.5rem] shadow-2xl border border-white">
           <FormField
             control={form.control}

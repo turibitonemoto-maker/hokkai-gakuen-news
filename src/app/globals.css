@@ -72,9 +72,38 @@
   @apply border-l-4 border-primary/20 pl-6 italic text-slate-500 my-8;
 }
 
-.ProseMirror img, .article-content img {
-  @apply rounded-2xl shadow-lg my-10 mx-auto max-w-full h-auto border-4 border-white transition-transform hover:scale-[1.01];
+/* リサイズハンドルのスタイリング */
+.resizable-image-container {
+  @apply relative inline-block my-8 max-w-full;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
+
+.resizable-image-container img {
+  @apply rounded-2xl shadow-lg border-4 border-white transition-shadow duration-300;
+  display: block;
+  height: auto;
+}
+
+.resizable-image-container.is-selected img {
+  @apply ring-4 ring-primary/50 shadow-2xl;
+}
+
+.resize-handle {
+  @apply absolute w-4 h-4 bg-primary border-2 border-white rounded-full shadow-lg opacity-0 transition-opacity;
+  z-index: 50;
+  cursor: nwse-resize;
+}
+
+.resizable-image-container.is-selected .resize-handle {
+  @apply opacity-100;
+}
+
+.resize-handle-top-left { top: -8px; left: -8px; }
+.resize-handle-top-right { top: -8px; right: -8px; cursor: nesw-resize; }
+.resize-handle-bottom-left { bottom: -8px; left: -8px; cursor: nesw-resize; }
+.resize-handle-bottom-right { bottom: -8px; right: -8px; }
 
 .ProseMirror p.is-editor-empty:first-child::before {
   content: "本文を入力してください...";
