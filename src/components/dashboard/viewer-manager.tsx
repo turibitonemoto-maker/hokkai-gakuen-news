@@ -5,7 +5,7 @@ import { useState, useMemo } from "react";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Loader2, BookOpen, Image as LucideImage, CheckCircle2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, BookOpen, FileText, CheckCircle2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -42,7 +42,6 @@ export function ViewerManager() {
 
   const viewerPapers = useMemo(() => {
     if (!allArticles) return [];
-    // categoryId: "Viewer" のみを抽出し、発行日順にソート。号数（issueNumber）によるソートは廃止。
     return allArticles
       .filter(a => a.categoryId === "Viewer")
       .sort((a, b) => {
@@ -75,11 +74,11 @@ export function ViewerManager() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-black text-slate-800">{currentPaper ? `「${currentPaper.title}」を編集` : "新しい紙面を登録"}</h2>
-            <p className="text-sm font-bold text-slate-500">紙面画像をアップロードしてアーカイブを構築します。</p>
+            <p className="text-sm font-bold text-slate-500">PDFファイルをアップロードしてアーカイブを構築します。</p>
           </div>
-          <Button variant="ghost" onClick={() => setIsEditing(false)} className="font-bold rounded-full">戻る</Button>
+          <Button variant="ghost" onClick={() => setIsEditing(false)} className="font-bold rounded-full text-slate-400">キャンセル</Button>
         </div>
-        <Card className="rounded-[2rem] border-none shadow-xl overflow-hidden">
+        <Card className="rounded-[3rem] border-none shadow-xl overflow-hidden bg-white">
           <CardContent className="p-10">
             <PaperForm paper={currentPaper} onSuccess={() => setIsEditing(false)} />
           </CardContent>
@@ -93,17 +92,19 @@ export function ViewerManager() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-black text-slate-800 flex items-center gap-3">
-            <BookOpen className="h-8 w-8 text-primary" />
+            <div className="bg-primary/10 p-2 rounded-2xl">
+              <BookOpen className="h-8 w-8 text-primary" />
+            </div>
             紙面ビューアー管理
           </h2>
-          <p className="text-sm font-bold text-slate-500 mt-1">電子版新聞の配信・アーカイブを統制します。</p>
+          <p className="text-sm font-bold text-slate-500 mt-1 ml-1">PDF統合管理プロトコル：1950年からの歴史をデジタル化します。</p>
         </div>
-        <Button onClick={() => { setCurrentPaper(null); setIsEditing(true); }} className="h-12 px-8 shadow-lg gap-2 font-black rounded-2xl bg-primary text-white hover:bg-primary/90">
-          <Plus className="h-5 w-5" /> 紙面を追加
+        <Button onClick={() => { setCurrentPaper(null); setIsEditing(true); }} className="h-14 px-8 shadow-2xl gap-2 font-black rounded-2xl bg-primary text-white hover:bg-primary/90 hover:scale-105 transition-all">
+          <Plus className="h-5 w-5" /> 紙面PDFを追加
         </Button>
       </div>
 
-      <Card className="shadow-sm overflow-hidden border-slate-200 rounded-[2rem] bg-white">
+      <Card className="shadow-sm overflow-hidden border-slate-200 rounded-[2.5rem] bg-white">
         <CardContent className="p-0">
           {isLoading ? (
             <div className="p-20 flex justify-center"><Loader2 className="h-10 w-10 animate-spin text-primary/50" /></div>
@@ -111,11 +112,11 @@ export function ViewerManager() {
             <Table>
               <TableHeader className="bg-slate-50/50">
                 <TableRow>
-                  <TableHead className="w-[100px] font-black text-xs uppercase text-center">公開</TableHead>
-                  <TableHead className="min-w-[300px] font-black text-xs uppercase">タイトル</TableHead>
-                  <TableHead className="w-[150px] font-black text-xs uppercase text-center">発行日</TableHead>
-                  <TableHead className="w-[150px] font-black text-xs uppercase text-center">ページ数</TableHead>
-                  <TableHead className="text-right font-black text-xs uppercase px-8">操作</TableHead>
+                  <TableHead className="w-[100px] font-black text-[10px] uppercase text-center tracking-widest">公開</TableHead>
+                  <TableHead className="min-w-[300px] font-black text-[10px] uppercase tracking-widest">タイトル / フォーマット</TableHead>
+                  <TableHead className="w-[150px] font-black text-[10px] uppercase text-center tracking-widest">発行日</TableHead>
+                  <TableHead className="w-[150px] font-black text-[10px] uppercase text-center tracking-widest">状態</TableHead>
+                  <TableHead className="text-right font-black text-[10px] uppercase px-8 tracking-widest">操作</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -125,29 +126,40 @@ export function ViewerManager() {
                       <Switch checked={paper.isPublished} onCheckedChange={() => handleTogglePublish(paper)} className="scale-90" />
                     </TableCell>
                     <TableCell>
-                      <div className="flex flex-col">
-                        <span className="font-bold text-slate-800">{paper.title}</span>
-                        {(paper.mainImageUrl || (paper.paperImages && paper.paperImages.length > 0)) && (
-                          <span className="text-[9px] font-black text-green-500 uppercase flex items-center gap-1 mt-1">
-                            <CheckCircle2 className="h-2 w-2" /> Storage Synced
+                      <div className="flex flex-col py-2">
+                        <span className="font-bold text-slate-800 text-base">{paper.title}</span>
+                        <div className="flex items-center gap-2 mt-1">
+                          {paper.pdfUrl ? (
+                            <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-100 font-black text-[9px] gap-1 px-2 py-0">
+                              <FileText className="h-3 w-3" /> PDF DOCUMENT
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="bg-slate-100 text-slate-400 border-slate-200 font-black text-[9px] px-2 py-0">
+                              IMAGE CLUSTER
+                            </Badge>
+                          )}
+                          <span className="text-[9px] font-black text-green-500 uppercase flex items-center gap-1">
+                            <CheckCircle2 className="h-2.5 w-2.5" /> Synced
                           </span>
-                        )}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell className="text-center font-bold text-slate-500 text-sm">
                       {paper.publishDate}
                     </TableCell>
                     <TableCell className="text-center">
-                      <Badge variant="outline" className="font-black text-[10px] gap-1 px-3 py-1 bg-slate-50 border-slate-200">
-                        <LucideImage className="h-3 w-3" /> {(paper.paperImages?.length || 0)} ページ
-                      </Badge>
+                      {paper.pdfUrl ? (
+                        <span className="text-[10px] font-black text-primary bg-primary/5 px-3 py-1 rounded-full uppercase">Unified</span>
+                      ) : (
+                        <span className="text-[10px] font-bold text-slate-300 uppercase italic">Legacy</span>
+                      )}
                     </TableCell>
                     <TableCell className="text-right px-8">
                       <div className="flex justify-end gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => { setCurrentPaper(paper); setIsEditing(true); }} className="rounded-full hover:bg-primary/10">
+                        <Button variant="ghost" size="icon" onClick={() => { setCurrentPaper(paper); setIsEditing(true); }} className="rounded-full hover:bg-primary/10 hover:text-primary transition-colors">
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 rounded-full" onClick={() => setPaperToDelete(paper)}>
+                        <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 rounded-full transition-colors" onClick={() => setPaperToDelete(paper)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -156,8 +168,11 @@ export function ViewerManager() {
                 ))}
                 {viewerPapers.length === 0 && !isLoading && (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-24 text-slate-300 font-black italic">
-                      登録されている紙面データがありません。
+                    <TableCell colSpan={5} className="text-center py-32 text-slate-300">
+                      <div className="flex flex-col items-center gap-4">
+                        <BookOpen className="h-12 w-12 opacity-10" />
+                        <p className="font-black text-lg italic opacity-50">アーカイブ・データがまだ刻まれていません。</p>
+                      </div>
                     </TableCell>
                   </TableRow>
                 )}
@@ -168,19 +183,21 @@ export function ViewerManager() {
       </Card>
 
       <AlertDialog open={!!paperToDelete} onOpenChange={(open) => !open && setPaperToDelete(null)}>
-        <AlertDialogContent className="rounded-3xl border-none p-10">
+        <AlertDialogContent className="rounded-[2rem] border-none p-10">
           <AlertDialogHeader>
             <div className="flex items-center gap-3 text-destructive mb-2">
-              <Trash2 className="h-6 w-6" />
-              <AlertDialogTitle className="text-2xl font-black">紙面データを消去しますか？</AlertDialogTitle>
+              <div className="bg-destructive/10 p-3 rounded-full">
+                <Trash2 className="h-8 w-8" />
+              </div>
+              <AlertDialogTitle className="text-2xl font-black tracking-tight text-slate-800">紙面アーカイブを永久抹消しますか？</AlertDialogTitle>
             </div>
-            <AlertDialogDescription className="font-bold text-slate-500">
-              この操作は取り消せません。データベースから完全に削除されます。
+            <AlertDialogDescription className="font-bold text-slate-500 py-4 leading-relaxed">
+              「{paperToDelete?.title}」のデータはデータベースから完全に削除されます。この操作は、物理的に取り消すことができません。
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="gap-2 mt-6">
-            <AlertDialogCancel className="rounded-xl font-bold h-12">キャンセル</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90 rounded-xl font-black h-12 px-8">削除を確定</AlertDialogAction>
+          <AlertDialogFooter className="gap-3 mt-4">
+            <AlertDialogCancel className="rounded-xl font-bold h-12 border-slate-200">作戦中止</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90 rounded-xl font-black h-12 px-8 shadow-lg shadow-destructive/20">抹消を確定する</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

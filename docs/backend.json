@@ -15,6 +15,7 @@
         "tags": { "type": "array", "items": { "type": "string" } },
         "publishDate": { "type": "string", "format": "date" },
         "mainImageUrl": { "type": "string", "format": "uri" },
+        "pdfUrl": { "type": "string", "format": "uri", "description": "紙面アーカイブのPDFファイルURL" },
         "mainImageTransform": {
           "type": "object",
           "properties": {
