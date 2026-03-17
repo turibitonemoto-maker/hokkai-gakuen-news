@@ -10,9 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, Trash2, Layers, RefreshCw, Plus, GripVertical, Eye, X, ImageIcon } from "lucide-react";
+import { Loader2, Upload, Trash2, Layers, RefreshCw, Plus, GripVertical, Eye, X } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import {
@@ -141,6 +141,17 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
     },
   });
 
+  // 編集時にデータを確実に反映させるためのリセット処理
+  useEffect(() => {
+    if (paper) {
+      form.reset({
+        title: paper.title || "",
+        publishDate: paper.publishDate || new Date().toISOString().split("T")[0],
+        paperImages: paper.paperImages || [],
+      });
+    }
+  }, [paper, form]);
+
   const watchedImages = form.watch("paperImages");
 
   const handleFilesUpload = async (files: FileList) => {
@@ -182,7 +193,7 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
   const removeImage = (index: number) => {
     const newUrls = [...watchedImages];
     newUrls.splice(index, 1);
-    form.setValue("paperImages", newUrls);
+    form.setValue("paperImages", newUrls, { shouldValidate: true, shouldDirty: true });
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -190,7 +201,7 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
     if (over && active.id !== over.id) {
       const oldIndex = watchedImages.indexOf(active.id as string);
       const newIndex = watchedImages.indexOf(over.id as string);
-      form.setValue("paperImages", arrayMove(watchedImages, oldIndex, newIndex));
+      form.setValue("paperImages", arrayMove(watchedImages, oldIndex, newIndex), { shouldDirty: true });
     }
   };
 
