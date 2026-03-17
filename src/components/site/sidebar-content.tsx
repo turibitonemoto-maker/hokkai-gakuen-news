@@ -49,7 +49,7 @@ export function SidebarContent({ ads }: { ads: any[] }) {
   return (
     <div className="space-y-10 sticky top-28">
       {president && (
-        <Card className="border-none shadow-2xl bg-white rounded-[2rem] overflow-hidden">
+        <Card className="border-none shadow-2xl bg-white rounded-[2.5rem] overflow-hidden">
           <CardHeader className="bg-primary/5 border-b border-primary/10 pb-4">
             <CardTitle className="text-sm font-black flex items-center gap-2 text-primary uppercase tracking-widest">
               <User className="h-4 w-4" />
@@ -58,7 +58,7 @@ export function SidebarContent({ ads }: { ads: any[] }) {
           </CardHeader>
           <CardContent className="pt-8">
             <div className="flex flex-col items-center mb-8">
-              <div className="relative h-24 w-24 rounded-full overflow-hidden shadow-xl mb-4 border-2 border-white bg-slate-50 flex items-center justify-center">
+              <div className="relative h-28 w-28 rounded-[2.5rem] overflow-hidden shadow-xl mb-4 border-2 border-white bg-slate-50 flex items-center justify-center">
                 {president.authorImageUrl ? (
                   <Image
                     src={president.authorImageUrl}
@@ -66,12 +66,12 @@ export function SidebarContent({ ads }: { ads: any[] }) {
                     fill
                     className="transition-transform duration-500 ease-out"
                     style={{
-                      // 座標整合性プロトコル：中央基点の正規化計算
+                      // 座標整合性プロトコル：管理画面と完全に同一の計算式を適用
                       objectFit: "contain",
                       transform: `translate(${transform.x}%, ${transform.y}%) scale(${Math.max(0.01, 1 + transform.scale / 100)})`,
                       willChange: 'transform'
                     }}
-                    sizes="96px"
+                    sizes="112px"
                     unoptimized
                   />
                 ) : (
@@ -89,10 +89,10 @@ export function SidebarContent({ ads }: { ads: any[] }) {
               {president.title && (
                 <h5 className="font-black text-slate-800 text-center mb-4 text-sm border-b pb-2 border-slate-100">
                   {president.title}
-                </h5>
+                h5>
               )}
               <div 
-                className="article-content text-slate-600 font-medium text-center px-4 text-sm"
+                className="article-content text-slate-600 font-medium text-center px-4 text-sm leading-relaxed"
                 dangerouslySetInnerHTML={{ __html: sanitizedMessage }}
               />
             </div>
@@ -125,7 +125,6 @@ export function SidebarContent({ ads }: { ads: any[] }) {
                       fill
                       className="transition-transform duration-500 ease-out"
                       style={{
-                        // 座標整合性プロトコル
                         objectFit: "contain",
                         transform: `translate(${adTransform.x}%, ${adTransform.y}%) scale(${Math.max(0.01, 1 + adTransform.scale / 100)})`,
                         willChange: 'transform'
