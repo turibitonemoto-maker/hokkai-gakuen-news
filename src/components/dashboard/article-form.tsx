@@ -13,13 +13,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { Image as LucideImage, Type, Heading2, Loader2, Upload, MessageSquareText, Bold, Italic, List, Maximize, MoveHorizontal, MoveVertical, RefreshCw } from "lucide-react";
+import { Image as LucideImage, Type, Heading2, Loader2, Upload, MessageSquareText, Bold, Italic, List, Maximize, MoveHorizontal, MoveVertical, RefreshCw, PlusCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import ImageExtension from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 
@@ -60,6 +60,29 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
   const sanitizeFolderName = (name: string) => {
     return name.trim().replace(/[\/\?\s]/g, '_').slice(0, 50) || "untitled";
   };
+
+  const handleEditorImageInsert = useCallback(async (file: File) => {
+    if (!file.type.startsWith('image/')) return;
+    setIsProcessing(true);
+    try {
+      const titleValue = form.getValues("title") || "editor_uploads";
+      const subFolder = sanitizeFolderName(titleValue);
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", `newspaper_archive/${subFolder}`);
+      
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json();
+      
+      editor?.chain().focus().setImage({ src: data.secure_url }).run();
+      toast({ title: "画像を挿入しました" });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "画像挿入に失敗しました" });
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [editor]); // eslint-disable-line
   
   const editor = useEditor({
     extensions: [
@@ -85,32 +108,18 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       attributes: {
         class: 'ProseMirror outline-none min-h-[600px] p-8 md:p-12',
       },
+      handleDrop: (view, event, slice, moved) => {
+        if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]) {
+          const file = event.dataTransfer.files[0];
+          if (file.type.startsWith('image/')) {
+            handleEditorImageInsert(file);
+            return true;
+          }
+        }
+        return false;
+      },
     },
   });
-
-  async function handleEditorImageInsert(file: File) {
-    if (!file.type.startsWith('image/')) return;
-    setIsProcessing(true);
-    try {
-      const titleValue = form.getValues("title");
-      const subFolder = sanitizeFolderName(titleValue);
-      const formData = new FormData();
-      formData.append("file", file);
-      // フラット化：newspaper_archive/タイトルの直下へ
-      formData.append("folder", `newspaper_archive/${subFolder}`);
-      
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      if (!res.ok) throw new Error("Upload failed");
-      const data = await res.json();
-      
-      editor?.chain().focus().setImage({ src: data.secure_url }).run();
-      toast({ title: "画像を本文に埋め込みました" });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "失敗" });
-    } finally {
-      setIsProcessing(false);
-    }
-  }
 
   const form = useForm<ArticleFormValues>({
     resolver: zodResolver(articleSchema),
@@ -158,7 +167,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
         const subFolder = sanitizeFolderName(values.title);
         const formData = new FormData();
         formData.append("file", mainImageFile);
-        // フラット化：newspaper_archive/タイトルの直下へ
         formData.append("folder", `newspaper_archive/${subFolder}`);
         
         const res = await fetch("/api/upload", { method: "POST", body: formData });
@@ -195,18 +203,20 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12 max-w-5xl mx-auto pb-20">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-w-5xl mx-auto pb-20">
+        
+        {/* Header Section: Title & Controls */}
         <div className="space-y-6">
           <FormField
             control={form.control}
             name="title"
             render={({ field }) => (
-              <FormItem className="border-b border-slate-100 pb-4">
+              <FormItem className="border-b-2 border-slate-100 pb-2">
                 <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest">記事見出し</FormLabel>
                 <FormControl>
                   <Input 
-                    className="h-auto py-4 text-3xl md:text-5xl font-black border-none bg-transparent shadow-none px-0 focus-visible:ring-0" 
-                    placeholder="ここにタイトルを入力..."
+                    className="h-auto py-4 text-3xl md:text-5xl font-black border-none bg-transparent shadow-none px-0 focus-visible:ring-0 placeholder:text-slate-200" 
+                    placeholder="タイトルを入力してください"
                     {...field} 
                   />
                 </FormControl>
@@ -215,7 +225,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
             )}
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
             <FormField
               control={form.control}
               name="categoryId"
@@ -224,7 +234,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                   <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest">カテゴリー</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger className="h-12 rounded-xl border-slate-100 bg-slate-50/50">
+                      <SelectTrigger className="h-12 rounded-xl border-slate-100 bg-slate-50/50 font-bold">
                         <SelectValue />
                       </SelectTrigger>
                     </FormControl>
@@ -248,7 +258,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                 <FormItem>
                   <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest">公開日</FormLabel>
                   <FormControl>
-                    <Input type="date" className="h-12 rounded-xl border-slate-100 bg-slate-50/50" {...field} />
+                    <Input type="date" className="h-12 rounded-xl border-slate-100 bg-slate-50/50 font-bold" {...field} />
                   </FormControl>
                 </FormItem>
               )}
@@ -256,8 +266,93 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
           </div>
         </div>
 
+        {/* Main Image (Hero) Section: Note-like big header image */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-50 pb-2">
+          <div 
+            className={cn(
+              "relative aspect-[21/9] w-full rounded-[2.5rem] border-4 border-dashed transition-all flex flex-col items-center justify-center gap-4 group cursor-pointer overflow-hidden",
+              isDraggingMain ? "border-primary bg-primary/5" : "border-slate-100 bg-slate-50/30 hover:border-slate-200"
+            )}
+            onDragOver={(e) => { e.preventDefault(); setIsDraggingMain(true); }}
+            onDragLeave={() => setIsDraggingMain(false)}
+            onDrop={(e) => { e.preventDefault(); handleMainImageSelect(e as any); }}
+            onClick={() => mainImageInputRef.current?.click()}
+          >
+            {mainImagePreview ? (
+              <div className="relative w-full h-full overflow-hidden">
+                <Image 
+                  src={mainImagePreview} 
+                  alt="Hero Preview" 
+                  fill 
+                  className="object-cover"
+                  style={{
+                    transform: `scale(${Math.max(0.01, 1 + transform.scale / 100)}) translate(${transform.x}%, ${transform.y}%)`,
+                    transition: 'transform 0.1s linear',
+                    willChange: 'transform'
+                  }}
+                  unoptimized
+                />
+                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+                  <RefreshCw className="h-10 w-10 text-white" />
+                  <span className="text-xs font-black text-white uppercase tracking-widest">画像を入れ替え</span>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="bg-white p-6 rounded-full shadow-sm text-slate-300 group-hover:scale-110 transition-transform">
+                  <PlusCircle className="h-10 w-10" />
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-black text-slate-400">見出し画像を設定</p>
+                  <p className="text-[10px] font-bold text-slate-300 mt-1 uppercase tracking-widest">Drag & Drop or Click</p>
+                </div>
+              </>
+            )}
+            <input type="file" accept="image/*" className="hidden" ref={mainImageInputRef} onChange={handleMainImageSelect} />
+          </div>
+
+          {mainImagePreview && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-top-2">
+              <div className="lg:col-span-2 bg-slate-50/50 p-6 rounded-3xl border border-slate-100 space-y-4">
+                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <Maximize className="h-3 w-3" /> 画像構図の調整
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-slate-500">ズーム: {transform.scale.toFixed(0)}%</label>
+                    <Slider min={-200} max={200} step={1} value={[transform.scale]} onValueChange={([val]) => form.setValue("mainImageTransform.scale", val)} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-slate-500">水平位置: {transform.x.toFixed(0)}%</label>
+                    <Slider min={-200} max={200} step={1} value={[transform.x]} onValueChange={([val]) => form.setValue("mainImageTransform.x", val)} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-slate-500">垂直位置: {transform.y.toFixed(0)}%</label>
+                    <Slider min={-200} max={200} step={1} value={[transform.y]} onValueChange={([val]) => form.setValue("mainImageTransform.y", val)} />
+                  </div>
+                </div>
+              </div>
+              <FormField
+                control={form.control}
+                name="imageCaption"
+                render={({ field }) => (
+                  <FormItem className="bg-slate-50/50 p-6 rounded-3xl border border-slate-100">
+                    <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                      <MessageSquareText className="h-3 w-3" /> 画像の説明
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="キャプションを入力..." className="border-none bg-transparent shadow-none px-0 font-bold placeholder:text-slate-300 focus-visible:ring-0" {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Body Editor Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
               <Type className="h-3 w-3" /> 本文執筆
             </span>
@@ -266,190 +361,54 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
               <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", editor?.isActive('italic') && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleItalic().run()}><Italic className="h-4 w-4" /></Button>
               <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", editor?.isActive('heading', { level: 2 }) && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}><Heading2 className="h-4 w-4" /></Button>
               <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", editor?.isActive('bulletList') && "bg-white shadow-sm")} onClick={() => editor?.chain().focus().toggleBulletList().run()}><List className="h-4 w-4" /></Button>
+              <div className="w-px h-4 bg-slate-200 mx-1" />
               <div className="relative">
                 <input type="file" accept="image/*" className="hidden" id="editor-image-upload" onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) handleEditorImageInsert(file);
                 }}/>
-                <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => document.getElementById('editor-image-upload')?.click()} disabled={isProcessing}>
-                  {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <LucideImage className="h-4 w-4" />}
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  className={cn("h-8 px-3 rounded-lg gap-2 text-[10px] font-black", isProcessing && "bg-white shadow-sm")}
+                  onClick={() => document.getElementById('editor-image-upload')?.click()} 
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? <Loader2 className="h-3 w-3 animate-spin" /> : <LucideImage className="h-3 w-3" />}
+                  画像を挿入
                 </Button>
               </div>
             </div>
           </div>
-          <div className="min-h-[600px] bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-inner relative">
+          
+          <div className="min-h-[600px] bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-inner relative group/editor">
             <EditorContent editor={editor} />
+            <div className="absolute top-4 right-4 opacity-0 group-hover/editor:opacity-100 transition-opacity pointer-events-none">
+              <Badge variant="outline" className="bg-white/80 backdrop-blur-sm text-[9px] font-bold text-slate-400">画像はドラッグ＆ドロップでも追加できます</Badge>
+            </div>
           </div>
         </div>
 
-        <div className="bg-slate-50/50 p-8 rounded-[2.5rem] border border-slate-100 space-y-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 ml-1">
-                  <LucideImage className="h-3 w-3" /> 表紙画像
-                </FormLabel>
-                <div 
-                  className={cn(
-                    "relative h-48 md:h-64 rounded-[2rem] border-4 border-dashed transition-all flex flex-col items-center justify-center gap-4 group cursor-pointer overflow-hidden",
-                    isDraggingMain ? "border-primary bg-primary/5 scale-[0.98]" : "border-slate-200 bg-white hover:border-primary/50"
-                  )}
-                  onDragOver={(e) => { e.preventDefault(); setIsDraggingMain(true); }}
-                  onDragLeave={() => setIsDraggingMain(false)}
-                  onDrop={(e) => { e.preventDefault(); handleMainImageSelect(e as any); }}
-                  onClick={() => mainImageInputRef.current?.click()}
-                >
-                  {mainImagePreview ? (
-                    <div className="relative w-full h-full">
-                        <Image 
-                        src={mainImagePreview} 
-                        alt="" 
-                        fill 
-                        className="object-cover opacity-20"
-                        unoptimized
-                      />
-                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                        <RefreshCw className="h-8 w-8 text-primary/40" />
-                        <span className="text-[10px] font-black text-primary/40 uppercase tracking-widest">画像を入れ替え</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="bg-slate-50 p-6 rounded-full text-slate-300 group-hover:scale-110 transition-transform">
-                        <Upload className="h-8 w-8" />
-                      </div>
-                      <div className="text-center">
-                        <p className="text-sm font-black text-slate-400">ファイルをドロップ</p>
-                        <p className="text-[10px] font-bold text-slate-300 mt-1 uppercase tracking-widest">またはクリックして選択</p>
-                      </div>
-                    </>
-                  )}
-                  <input type="file" accept="image/*" className="hidden" ref={mainImageInputRef} onChange={handleMainImageSelect} />
-                </div>
-              </div>
-
-              {mainImagePreview && (
-                <div className="space-y-6 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm animate-in fade-in zoom-in duration-300">
-                   <h4 className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-2">
-                    <Maximize className="h-3 w-3" /> 画像構図管制
-                  </h4>
-                  
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <label className="text-[10px] font-bold text-slate-500">倍率 (中央: 0%)</label>
-                        <span className="text-[10px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded">
-                          {transform.scale.toFixed(0)}%
-                        </span>
-                      </div>
-                      <Slider 
-                        min={-200} 
-                        max={200} 
-                        step={0.1} 
-                        value={[transform.scale]} 
-                        onValueChange={([val]) => form.setValue("mainImageTransform.scale", val)} 
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <label className="text-[10px] font-bold text-slate-500 flex items-center gap-1">
-                          <MoveHorizontal className="h-3 w-3" /> 水平移動 (中央: 0)
-                        </label>
-                        <span className="text-[10px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded">{transform.x.toFixed(0)}%</span>
-                      </div>
-                      <Slider 
-                        min={-200} 
-                        max={200} 
-                        step={0.1} 
-                        value={[transform.x]} 
-                        onValueChange={([val]) => form.setValue("mainImageTransform.x", val)} 
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <label className="text-[10px] font-bold text-slate-500 flex items-center gap-1">
-                          <MoveVertical className="h-3 w-3" /> 垂直移動 (中央: 0)
-                        </label>
-                        <span className="text-[10px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded">{transform.y.toFixed(0)}%</span>
-                      </div>
-                      <Slider 
-                        min={-200} 
-                        max={200} 
-                        step={0.1} 
-                        value={[transform.y]} 
-                        onValueChange={([val]) => form.setValue("mainImageTransform.y", val)} 
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">仕上がりプレビュー</label>
-                <div className="relative aspect-video rounded-3xl overflow-hidden bg-slate-100 border-4 border-white shadow-xl">
-                  {mainImagePreview ? (
-                    <div className="relative w-full h-full overflow-hidden">
-                      <Image 
-                        src={mainImagePreview} 
-                        alt="Preview" 
-                        fill 
-                        className="object-cover"
-                        style={{
-                          transform: `scale(${Math.max(0.01, 1 + transform.scale / 100)}) translate(${transform.x}%, ${transform.y}%)`,
-                          transition: 'transform 0.1s linear',
-                          willChange: 'transform'
-                        }}
-                        unoptimized
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-slate-300 italic text-sm">画像が未選択です</div>
-                  )}
-                </div>
-              </div>
-
-              <FormField
-                control={form.control}
-                name="imageCaption"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 ml-1">
-                      <MessageSquareText className="h-3 w-3" /> 画像説明（キャプション）
-                    </FormLabel>
-                    <FormControl>
-                      <Input placeholder="例：北海学園大学正門付近での撮影" className="h-12 rounded-xl border-slate-100 bg-white" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
-          
+        {/* Footer: Publication Toggle & Submit */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 pt-10 border-t sticky bottom-6 z-20 bg-white/80 backdrop-blur-md p-6 rounded-[2.5rem] shadow-2xl border border-white">
           <FormField
             control={form.control}
             name="isPublished"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-3xl border-2 border-primary/10 p-6 bg-white">
+              <FormItem className="flex flex-row items-center gap-4 space-y-0">
+                <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} className="scale-110" /></FormControl>
                 <div className="space-y-0.5">
-                  <FormLabel className="text-lg font-black text-primary">公式サイトに公開</FormLabel>
-                  <FormDescription className="text-[10px] font-bold">有効にすると即座に掲載されます。</FormDescription>
+                  <FormLabel className="text-sm font-black text-slate-700">公式サイトに公開</FormLabel>
                 </div>
-                <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} className="scale-125" /></FormControl>
               </FormItem>
             )}
           />
-        </div>
-
-        <div className="flex justify-end gap-3 pt-10 border-t sticky bottom-6 z-20">
-          <Button type="button" variant="outline" onClick={onSuccess} className="w-32 h-14 rounded-2xl font-bold">キャンセル</Button>
-          <Button type="submit" disabled={isSaving} className="w-48 h-14 shadow-2xl font-black rounded-2xl text-lg bg-primary hover:bg-primary/90">
-            {isSaving ? <Loader2 className="h-6 w-6 animate-spin" /> : "内容を確定する"}
-          </Button>
+          <div className="flex gap-3">
+            <Button type="button" variant="outline" onClick={onSuccess} className="w-32 h-14 rounded-2xl font-bold border-slate-200">キャンセル</Button>
+            <Button type="submit" disabled={isSaving} className="w-48 h-14 shadow-2xl font-black rounded-2xl text-lg bg-primary hover:bg-primary/90">
+              {isSaving ? <Loader2 className="h-6 w-6 animate-spin" /> : "記事を保存する"}
+            </Button>
+          </div>
         </div>
       </form>
     </Form>

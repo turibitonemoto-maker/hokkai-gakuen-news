@@ -43,42 +43,42 @@
   }
 }
 
-/* Tiptapエディタ & 記事本文のカスタマイズ (日本仕様の黄金比: 約1.6倍) */
+/* Tiptapエディタ & 記事本文のカスタマイズ (noteを意識したモダンなタイポグラフィ) */
 .ProseMirror, .article-content {
-  @apply outline-none text-lg leading-7 text-slate-700 tracking-normal;
+  @apply outline-none text-lg leading-relaxed text-slate-700 tracking-normal max-w-3xl mx-auto;
 }
 
 .ProseMirror p, .article-content p {
-  @apply mb-4 leading-7; 
+  @apply mb-6 leading-relaxed; 
 }
 
 .ProseMirror h1, .article-content h1 {
-  @apply text-3xl font-black mb-4 mt-8 tracking-tighter;
+  @apply text-3xl font-black mb-6 mt-10 tracking-tighter text-slate-900;
 }
 
 .ProseMirror h2, .article-content h2 {
-  @apply text-2xl font-black mb-3 mt-6 tracking-tight border-b-2 border-slate-50 pb-2;
+  @apply text-2xl font-black mb-4 mt-8 tracking-tight text-slate-800 border-b-2 border-slate-50 pb-2;
 }
 
 .ProseMirror ul, .article-content ul {
-  @apply list-disc ml-6 mb-4;
+  @apply list-disc ml-6 mb-6 space-y-2;
 }
 
 .ProseMirror ol, .article-content ol {
-  @apply list-decimal ml-6 mb-4;
+  @apply list-decimal ml-6 mb-6 space-y-2;
 }
 
 .ProseMirror blockquote, .article-content blockquote {
-  @apply border-l-4 border-primary/20 pl-6 italic text-slate-500 my-6;
+  @apply border-l-4 border-primary/20 pl-6 italic text-slate-500 my-8;
 }
 
 .ProseMirror img, .article-content img {
-  @apply rounded-2xl shadow-xl my-8 mx-auto max-w-full h-auto;
+  @apply rounded-2xl shadow-lg my-10 mx-auto max-w-full h-auto border-4 border-white transition-transform hover:scale-[1.01];
 }
 
 .ProseMirror p.is-editor-empty:first-child::before {
-  content: "ここに内容を入力してください...";
-  @apply text-slate-300 float-left pointer-events-none h-0 font-bold italic;
+  content: "本文を入力してください...";
+  @apply text-slate-200 float-left pointer-events-none h-0 font-bold;
 }
 
 .page-fade-in {
