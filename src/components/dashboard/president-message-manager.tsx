@@ -225,17 +225,17 @@ export function PresidentMessageManager() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in duration-700 pb-20">
-      {/* 統合プレビュー ＆ 画像選択エリア */}
       <div className="flex flex-col items-center gap-8">
         <div className="text-center space-y-2">
           <h2 className="text-3xl font-black text-slate-800 tracking-tight">会長挨拶管理 🔒</h2>
-          <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Master Control Panel</p>
+          <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">マスター・コントロール</p>
         </div>
 
+        {/* 統合マスター・フレーム (w-48 h-48 固定) */}
         <div className="relative group">
           <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleFacePhotoSelect} />
           <div 
-            className="relative w-64 h-64 md:w-80 md:h-80 rounded-[4rem] overflow-hidden shadow-2xl border-8 border-white bg-slate-50 cursor-pointer hover:scale-[1.02] transition-all duration-300 flex items-center justify-center group"
+            className="relative w-48 h-48 rounded-[3rem] overflow-hidden shadow-2xl border-8 border-white bg-slate-50 cursor-pointer hover:scale-[1.02] transition-all duration-300 flex items-center justify-center group"
             onClick={() => fileInputRef.current?.click()}
           >
             {authorImagePreview ? (
@@ -252,37 +252,36 @@ export function PresidentMessageManager() {
                 unoptimized
               />
             ) : (
-              <div className="flex flex-col items-center gap-4 text-slate-300">
-                <div className="bg-slate-100 p-6 rounded-full group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                  <Plus className="h-12 w-12" />
-                </div>
-                <span className="text-xs font-black uppercase tracking-[0.2em]">Add Photo</span>
+              <div className="flex flex-col items-center gap-2 text-slate-300">
+                <Plus className="h-12 w-12" />
+                <span className="text-[8px] font-black uppercase tracking-widest">Add Photo</span>
               </div>
             )}
             
-            {/* Hover Overlay */}
-            <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
-              <span className="bg-white/90 backdrop-blur-md px-6 py-2 rounded-full text-xs font-black text-primary shadow-lg">写真を変更する</span>
-            </div>
+            {authorImagePreview && (
+              <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                <span className="bg-white/90 backdrop-blur-md px-4 py-1.5 rounded-full text-[10px] font-black text-primary shadow-lg">写真を変更</span>
+              </div>
+            )}
           </div>
         </div>
 
         {authorImagePreview && (
-          <div className="w-full max-w-2xl bg-white/50 backdrop-blur-sm p-8 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-6 animate-in slide-in-from-top-4 duration-500">
+          <div className="w-full max-w-xl bg-white/50 backdrop-blur-sm p-6 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-6 animate-in slide-in-from-top-4 duration-500">
             <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center justify-center gap-2">
-              <Maximize className="h-3 w-3" /> 画像の構図をミリ単位で調整
+              <Maximize className="h-3 w-3" /> 構図の微調整
             </h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="space-y-3">
-                <label className="text-[10px] font-bold text-slate-500 text-center block uppercase tracking-widest">ズーム: {transform.scale.toFixed(0)}%</label>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <label className="text-[9px] font-bold text-slate-500 text-center block uppercase">ズーム: {transform.scale.toFixed(0)}%</label>
                 <Slider min={-200} max={200} step={1} value={[transform.scale]} onValueChange={([val]) => form.setValue("authorImageTransform.scale", val)} />
               </div>
-              <div className="space-y-3">
-                <label className="text-[10px] font-bold text-slate-500 text-center block uppercase tracking-widest">水平位置: {transform.x.toFixed(0)}%</label>
+              <div className="space-y-2">
+                <label className="text-[9px] font-bold text-slate-500 text-center block uppercase">水平: {transform.x.toFixed(0)}%</label>
                 <Slider min={-200} max={200} step={1} value={[transform.x]} onValueChange={([val]) => form.setValue("authorImageTransform.x", val)} />
               </div>
-              <div className="space-y-3">
-                <label className="text-[10px] font-bold text-slate-500 text-center block uppercase tracking-widest">垂直位置: {transform.y.toFixed(0)}%</label>
+              <div className="space-y-2">
+                <label className="text-[9px] font-bold text-slate-500 text-center block uppercase">垂直: {transform.y.toFixed(0)}%</label>
                 <Slider min={-200} max={200} step={1} value={[transform.y]} onValueChange={([val]) => form.setValue("authorImageTransform.y", val)} />
               </div>
             </div>
@@ -330,7 +329,7 @@ export function PresidentMessageManager() {
                 </div>
               </div>
 
-              <div className="flex justify-center pt-6 border-t border-slate-100">
+              <div className="flex justify-center pt-6">
                 <Button type="submit" disabled={isSaving} className="px-20 h-16 font-black rounded-2xl shadow-2xl bg-primary text-xl hover:scale-105 transition-transform active:scale-95">
                   {isSaving ? <Loader2 className="h-6 w-6 animate-spin mr-3" /> : <Save className="h-6 w-6 mr-3" />}
                   内容を確定・保存する
