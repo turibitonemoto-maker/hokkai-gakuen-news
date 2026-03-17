@@ -86,12 +86,19 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
   });
 
   async function handleImageInsert(file: File) {
+    const titleValue = form.getValues("title");
+    if (!titleValue) {
+      toast({ variant: "destructive", title: "先にタイトルを入力してください", description: "画像を保存するフォルダを特定するためにタイトルが必要です。" });
+      return;
+    }
+
     if (!file.type.startsWith('image/')) return;
     setIsProcessing(true);
     try {
-      const subFolder = sanitizeFolderName(form.getValues("title"));
+      const subFolder = sanitizeFolderName(titleValue);
       const formData = new FormData();
       formData.append("file", file);
+      // タイトルに基づいたフォルダ
       formData.append("folder", `newspaper_archive/articles/${subFolder}/embedded`);
       
       const res = await fetch("/api/upload", { method: "POST", body: formData });
@@ -123,6 +130,12 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
   });
 
   const handleMainImageUpload = async (e: React.ChangeEvent<HTMLInputElement> | React.DragEvent) => {
+    const titleValue = form.getValues("title");
+    if (!titleValue) {
+      toast({ variant: "destructive", title: "先にタイトルを入力してください", description: "画像を保存するフォルダを特定するためにタイトルが必要です。" });
+      return;
+    }
+
     let file: File | undefined;
     if ('files' in (e.target as any) && (e.target as any).files) {
       file = (e.target as any).files[0];
@@ -133,9 +146,10 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     
     setIsProcessing(true);
     try {
-      const subFolder = sanitizeFolderName(form.getValues("title"));
+      const subFolder = sanitizeFolderName(titleValue);
       const formData = new FormData();
       formData.append("file", file);
+      // タイトルに基づいたフォルダ
       formData.append("folder", `newspaper_archive/articles/${subFolder}`);
       
       const res = await fetch("/api/upload", { method: "POST", body: formData });

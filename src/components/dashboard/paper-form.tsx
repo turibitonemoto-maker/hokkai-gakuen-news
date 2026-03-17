@@ -148,12 +148,18 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
   };
 
   const handleFilesUpload = async (files: FileList) => {
+    const titleValue = form.getValues("title");
+    if (!titleValue) {
+      toast({ variant: "destructive", title: "タイトルを入力してください", description: "フォルダを作成するためにタイトルが必要です。" });
+      return;
+    }
+
     const fileArray = Array.from(files);
     setIsUploading(true);
     setUploadProgress({ current: 0, total: fileArray.length });
 
     const newUrls: string[] = [...watchedImages];
-    const subFolder = sanitizeFolderName(currentTitle);
+    const subFolder = sanitizeFolderName(titleValue);
 
     try {
       for (let i = 0; i < fileArray.length; i++) {
@@ -164,6 +170,7 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
 
         const formData = new FormData();
         formData.append("file", file);
+        // 最高司令官の命令通り、タイトルをフォルダ名として使用
         formData.append("folder", `newspaper_archive/papers/${subFolder}`);
         
         const res = await fetch("/api/upload", { method: "POST", body: formData });
@@ -230,12 +237,12 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
         <div className="bg-slate-50/50 p-8 rounded-[2.5rem] border border-slate-100 shadow-sm grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}
-            name="publishDate"
+            name="title"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">発行日</FormLabel>
+                <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">タイトル</FormLabel>
                 <FormControl>
-                  <Input type="date" className="h-12 rounded-xl font-bold border-white bg-white shadow-sm" {...field} />
+                  <Input placeholder="例：2025年度 新入生歓迎号" className="h-12 rounded-xl font-bold border-white bg-white shadow-sm" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -243,12 +250,12 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
           />
           <FormField
             control={form.control}
-            name="title"
+            name="publishDate"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">タイトル</FormLabel>
+                <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">発行日</FormLabel>
                 <FormControl>
-                  <Input placeholder="例：2025年度 新入生歓迎号" className="h-12 rounded-xl font-bold border-white bg-white shadow-sm" {...field} />
+                  <Input type="date" className="h-12 rounded-xl font-bold border-white bg-white shadow-sm" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

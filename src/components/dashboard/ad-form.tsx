@@ -60,14 +60,21 @@ export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
   });
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const titleValue = form.getValues("title");
+    if (!titleValue) {
+      toast({ variant: "destructive", title: "先に広告名を入力してください", description: "フォルダを作成するために名前が必要です。" });
+      return;
+    }
+
     const file = e.target.files?.[0];
     if (!file) return;
 
     setIsProcessing(true);
     try {
-      const subFolder = sanitizeFolderName(form.getValues("title"));
+      const subFolder = sanitizeFolderName(titleValue);
       const formData = new FormData();
       formData.append("file", file);
+      // タイトルに基づいたフォルダ
       formData.append("folder", `newspaper_archive/ads/${subFolder}`);
       
       const res = await fetch("/api/upload", { method: "POST", body: formData });
