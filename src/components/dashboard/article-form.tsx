@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { Image as LucideImage, Type, Heading2, Loader2, MessageSquareText, Bold, Italic, List, Maximize, RefreshCw, PlusCircle, Trash2 } from "lucide-react";
+import { Image as LucideImage, Type, Heading2, Loader2, Bold, Italic, List, Maximize, RefreshCw, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditor, EditorContent, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -25,7 +25,7 @@ import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 
 /**
- * リサイズ可能な画像ノードビュー
+ * 本文内：リサイズ ＆ キャプション機能付き画像コンポーネント
  */
 const ResizableImageComponent = ({ node, updateAttributes, selected }: any) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -59,28 +59,34 @@ const ResizableImageComponent = ({ node, updateAttributes, selected }: any) => {
     <NodeViewWrapper className={cn("resizable-image-container", selected && "is-selected")}>
       <div 
         ref={containerRef}
+        className="mx-auto"
         style={{ width: node.attrs.width || '100%', position: 'relative' }}
       >
         <img 
           src={node.attrs.src} 
           alt={node.attrs.alt} 
-          title={node.attrs.title}
           style={{ width: '100%', height: 'auto' }}
         />
         
-        {/* Resize Handle (Bottom Right) */}
+        {/* Resize Handle */}
         <div 
           className="resize-handle resize-handle-bottom-right" 
           onMouseDown={onMouseDown}
         />
       </div>
+
+      {/* キャプション入力エリア */}
+      <input
+        type="text"
+        placeholder="キャプションを入力..."
+        value={node.attrs.caption || ''}
+        onChange={(e) => updateAttributes({ caption: e.target.value })}
+        className="w-full mt-2 text-center text-sm font-bold text-slate-400 bg-transparent outline-none border-none placeholder:text-slate-200"
+      />
     </NodeViewWrapper>
   );
 };
 
-/**
- * リサイズ機能付き画像拡張
- */
 const CustomResizableImage = ImageExtension.extend({
   addAttributes() {
     return {
@@ -91,10 +97,25 @@ const CustomResizableImage = ImageExtension.extend({
           style: `width: ${attributes.width}; height: auto;`,
         }),
       },
+      caption: {
+        default: '',
+        renderHTML: attributes => ({
+          'data-caption': attributes.caption,
+        }),
+      },
     };
   },
   addNodeView() {
     return ReactNodeViewRenderer(ResizableImageComponent);
+  },
+  renderHTML({ HTMLAttributes }) {
+    // 保存時のHTML出力をカスタマイズ
+    return [
+      'div', 
+      { class: 'resizable-image-container' }, 
+      ['img', { ...HTMLAttributes, class: 'mx-auto' }],
+      ['span', { class: 'image-caption-text' }, HTMLAttributes['data-caption'] || '']
+    ];
   },
 });
 
@@ -102,7 +123,7 @@ const articleSchema = z.object({
   title: z.string().min(1, "タイトルを入力してください"),
   articleType: z.literal("Standard"),
   content: z.string().min(1, "本文を入力してください"),
-  imageCaption: z.string().optional().or(z.literal("")),
+  imageCaption: z.string().optional(), // 内部的には保持するがUIからは排除
   categoryId: z.enum(["Campus", "Event", "Interview", "Sports", "Column", "Opinion"]),
   publishDate: z.string(),
   mainImageUrl: z.string().optional().or(z.literal("")),
@@ -143,7 +164,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       title: article?.title || "",
       articleType: "Standard",
       content: article?.content || "",
-      imageCaption: article?.imageCaption || "",
+      imageCaption: "",
       categoryId: (article?.categoryId === "Viewer" ? "Campus" : article?.categoryId) || "Campus",
       publishDate: article?.publishDate || new Date().toISOString().split("T")[0],
       mainImageUrl: article?.mainImageUrl || "",
@@ -161,7 +182,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       reader.onload = () => {
         const base64 = reader.result as string;
         editorRef.current?.chain().focus().setImage({ src: base64 }).run();
-        toast({ title: "画像を一時挿入しました（保存時にクラウドへ送られます）" });
+        toast({ title: "画像を一時挿入しました" });
         setIsProcessing(false);
       };
       reader.readAsDataURL(file);
@@ -208,12 +229,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
   });
 
   useEffect(() => {
-    if (editor) {
-      editorRef.current = editor;
-    }
-  }, [editor]);
-
-  useEffect(() => {
     if (article?.mainImageUrl) {
       setMainImagePreview(article.mainImageUrl);
     }
@@ -228,9 +243,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     setMainImagePreview(preview);
   };
 
-  /**
-   * HTML内のBase64画像をCloudinaryにアップロードし、URLを置換する
-   */
   const processEditorImages = async (html: string, folder: string) => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
@@ -316,7 +328,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-w-5xl mx-auto pb-20">
         
-        {/* タイトル & 見出し画像アイコン統合エリア */}
+        {/* タイトル & 見出し画像アイコン */}
         <div className="flex items-start gap-4 md:gap-6 border-b-2 border-slate-100 pb-6 group/title">
           <div className="relative pt-4">
             <input 
@@ -337,11 +349,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
               )}
               onClick={() => mainImageInputRef.current?.click()}
             >
-              {mainImagePreview ? (
-                <RefreshCw className="h-6 w-6" />
-              ) : (
-                <LucideImage className="h-6 w-6" />
-              )}
+              {mainImagePreview ? <RefreshCw className="h-6 w-6" /> : <LucideImage className="h-6 w-6" />}
               <span className="text-[8px] font-black uppercase tracking-tighter">Header</span>
             </Button>
             {mainImagePreview && (
@@ -383,61 +391,49 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
           </div>
         </div>
 
-        {/* 見出し画像が選択されている場合のみ表示される調整エリア */}
+        {/* 見出し画像調整エリア */}
         {mainImagePreview && (
           <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
-            <div className="relative aspect-[21/9] w-full rounded-[2.5rem] overflow-hidden border-4 border-white shadow-2xl bg-slate-100">
-              <Image 
-                src={mainImagePreview} 
-                alt="Header Preview" 
-                fill 
-                className="object-cover"
+            <div className="relative aspect-[21/9] w-full rounded-[2.5rem] overflow-hidden border-4 border-white shadow-2xl bg-slate-200">
+              <div 
+                className="relative w-full h-full"
                 style={{
                   transform: `scale(${Math.max(0.01, 1 + transform.scale / 100)}) translate(${transform.x}%, ${transform.y}%)`,
                   transition: 'transform 0.1s linear',
                   willChange: 'transform'
                 }}
-                unoptimized
-              />
-              <div className="absolute top-4 right-4">
-                <Badge className="bg-black/60 backdrop-blur-md border-none font-black text-[10px] uppercase tracking-widest px-3 py-1">Heading Image Preview</Badge>
+              >
+                <Image 
+                  src={mainImagePreview} 
+                  alt="Header Preview" 
+                  fill 
+                  className="object-cover"
+                  unoptimized
+                />
+              </div>
+              <div className="absolute top-4 right-4 pointer-events-none">
+                <Badge className="bg-black/60 backdrop-blur-md border-none font-black text-[10px] uppercase tracking-widest px-3 py-1">Header Preview</Badge>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 bg-slate-50/50 p-6 rounded-3xl border border-slate-100 space-y-4">
-                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                  <Maximize className="h-3 w-3" /> 画像構図の調整
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-slate-500">ズーム: {transform.scale.toFixed(0)}%</label>
-                    <Slider min={-200} max={200} step={1} value={[transform.scale]} onValueChange={([val]) => form.setValue("mainImageTransform.scale", val)} />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-slate-500">水平位置: {transform.x.toFixed(0)}%</label>
-                    <Slider min={-200} max={200} step={1} value={[transform.x]} onValueChange={([val]) => form.setValue("mainImageTransform.x", val)} />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-slate-500">垂直位置: {transform.y.toFixed(0)}%</label>
-                    <Slider min={-200} max={200} step={1} value={[transform.y]} onValueChange={([val]) => form.setValue("mainImageTransform.y", val)} />
-                  </div>
+            <div className="bg-slate-50/50 p-6 rounded-3xl border border-slate-100 space-y-4">
+              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                <Maximize className="h-3 w-3" /> 見出し画像の構図を調整
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-500">ズーム: {transform.scale.toFixed(0)}%</label>
+                  <Slider min={-200} max={200} step={1} value={[transform.scale]} onValueChange={([val]) => form.setValue("mainImageTransform.scale", val)} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-500">水平位置: {transform.x.toFixed(0)}%</label>
+                  <Slider min={-200} max={200} step={1} value={[transform.x]} onValueChange={([val]) => form.setValue("mainImageTransform.x", val)} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-500">垂直位置: {transform.y.toFixed(0)}%</label>
+                  <Slider min={-200} max={200} step={1} value={[transform.y]} onValueChange={([val]) => form.setValue("mainImageTransform.y", val)} />
                 </div>
               </div>
-              <FormField
-                control={form.control}
-                name="imageCaption"
-                render={({ field }) => (
-                  <FormItem className="bg-slate-50/50 p-6 rounded-3xl border border-slate-100">
-                    <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                      <MessageSquareText className="h-3 w-3" /> 画像の説明
-                    </FormLabel>
-                    <FormControl>
-                      <Input placeholder="キャプションを入力..." className="border-none bg-transparent shadow-none px-0 font-bold placeholder:text-slate-300 focus-visible:ring-0" {...field} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
             </div>
           </div>
         )}
@@ -517,7 +513,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
           <div className="min-h-[600px] bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-inner relative group/editor">
             <EditorContent editor={editor} />
             <div className="absolute top-4 right-4 opacity-0 group-hover/editor:opacity-100 transition-opacity pointer-events-none">
-              <Badge variant="outline" className="bg-white/80 backdrop-blur-sm text-[9px] font-bold text-slate-400">画像は角をドラッグしてサイズ調整できます</Badge>
+              <Badge variant="outline" className="bg-white/80 backdrop-blur-sm text-[9px] font-bold text-slate-400">画像は角をドラッグしてサイズ調整、下に説明を入力できます</Badge>
             </div>
           </div>
         </div>
