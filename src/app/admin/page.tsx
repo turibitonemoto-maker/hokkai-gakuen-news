@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -24,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { useCollection, useDoc, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query, orderBy, limit, doc } from "firebase/firestore";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 export default function AdminDashboard() {
   const [currentTime, setCurrentTime] = useState<string | null>(null);
