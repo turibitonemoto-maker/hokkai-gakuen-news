@@ -39,12 +39,18 @@ import {
 const paperSchema = z.object({
   title: z.string().min(1, "タイトルを入力してください"),
   publishDate: z.string().min(1, "発行日を選択してください"),
-  paperImages: z.array(z.string()).min(1, "少なくとも1枚の紙面画像をアップロードしてください"),
 });
 
 type PaperFormValues = z.infer<typeof paperSchema>;
 
-function SortableImage({ url, index, onRemove, onPreview }: { url: string; index: number; onRemove: () => void; onPreview: () => void }) {
+// 表示用データの型（URLと、もし新規ならFileオブジェクトを持つ）
+interface PageData {
+  id: string;
+  url: string;
+  file?: File;
+}
+
+function SortableImage({ page, index, onRemove, onPreview }: { page: PageData; index: number; onRemove: () => void; onPreview: () => void }) {
   const {
     attributes,
     listeners,
@@ -52,7 +58,7 @@ function SortableImage({ url, index, onRemove, onPreview }: { url: string; index
     transform,
     transition,
     isDragging
-  } = useSortable({ id: url });
+  } = useSortable({ id: page.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -69,7 +75,7 @@ function SortableImage({ url, index, onRemove, onPreview }: { url: string; index
         isDragging ? "opacity-50 scale-95 border-primary" : "border-slate-100 hover:border-primary/50 shadow-sm"
       )}
     >
-      <Image src={url} alt={`Page ${index + 1}`} fill className="object-cover" unoptimized />
+      <Image src={page.url} alt={`Page ${index + 1}`} fill className="object-cover" unoptimized />
       
       <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md text-white text-[10px] font-black px-2 py-0.5 rounded-full z-10">
         P.{index + 1}
@@ -111,8 +117,8 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
   const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
+  const [isSaving, setIsSaving] = useState(false);
+  const [pages, setPages] = useState<PageData[]>([]);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -126,7 +132,6 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
     defaultValues: {
       title: "",
       publishDate: new Date().toISOString().split("T")[0],
-      paperImages: [],
     },
   });
 
@@ -135,100 +140,107 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
       form.reset({
         title: paper.title || "",
         publishDate: paper.publishDate || new Date().toISOString().split("T")[0],
-        paperImages: paper.paperImages || [],
       });
+      // 既存の画像を初期化
+      const existingPages = (paper.paperImages || []).map((url: string) => ({
+        id: url,
+        url: url
+      }));
+      setPages(existingPages);
     }
   }, [paper, form]);
 
-  const watchedImages = form.watch("paperImages");
-  const currentTitle = form.watch("title");
-
-  const sanitizeFolderName = (name: string) => {
-    return name.trim().replace(/[\/\?\s]/g, '_').slice(0, 50) || "untitled";
-  };
-
-  const handleFilesUpload = async (files: FileList) => {
-    const titleValue = form.getValues("title");
-    if (!titleValue) {
-      toast({ variant: "destructive", title: "タイトルを入力してください", description: "フォルダを作成するためにタイトルが必要です。" });
-      return;
-    }
-
+  const handleFilesSelect = (files: FileList) => {
     const fileArray = Array.from(files);
-    setIsUploading(true);
-    setUploadProgress({ current: 0, total: fileArray.length });
-
-    const newUrls: string[] = [...watchedImages];
-    const subFolder = sanitizeFolderName(titleValue);
-
-    try {
-      for (let i = 0; i < fileArray.length; i++) {
-        const file = fileArray[i];
-        if (!file.type.startsWith('image/')) continue;
-
-        setUploadProgress(prev => ({ ...prev, current: i + 1 }));
-
-        const formData = new FormData();
-        formData.append("file", file);
-        // 最高司令官の命令通り、タイトルをフォルダ名として使用
-        formData.append("folder", `newspaper_archive/papers/${subFolder}`);
-        
-        const res = await fetch("/api/upload", { method: "POST", body: formData });
-        if (!res.ok) {
-          const errData = await res.json();
-          throw new Error(errData.details || "アップロード失敗");
-        }
-        const data = await res.json();
-        newUrls.push(data.secure_url);
-      }
-
-      form.setValue("paperImages", newUrls, { shouldDirty: true });
-      toast({ title: `${fileArray.length}枚の画像を追加しました` });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "エラー", description: error.message });
-    } finally {
-      setIsUploading(false);
-    }
+    const newPages: PageData[] = fileArray.map(file => {
+      const tempUrl = URL.createObjectURL(file);
+      return {
+        id: tempUrl,
+        url: tempUrl,
+        file: file
+      };
+    });
+    setPages(prev => [...prev, ...newPages]);
   };
 
-  const removeImage = (index: number) => {
-    const newUrls = [...watchedImages];
-    newUrls.splice(index, 1);
-    form.setValue("paperImages", newUrls, { shouldValidate: true, shouldDirty: true });
+  const removePage = (index: number) => {
+    const target = pages[index];
+    if (target.file) {
+      URL.revokeObjectURL(target.url);
+    }
+    const newPages = [...pages];
+    newPages.splice(index, 1);
+    setPages(newPages);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
-      const oldIndex = watchedImages.indexOf(active.id as string);
-      const newIndex = watchedImages.indexOf(over.id as string);
-      form.setValue("paperImages", arrayMove(watchedImages, oldIndex, newIndex), { shouldDirty: true });
+      const oldIndex = pages.findIndex(p => p.id === active.id);
+      const newIndex = pages.findIndex(p => p.id === over.id);
+      setPages(arrayMove(pages, oldIndex, newIndex));
     }
   };
 
-  const onSubmit = (values: PaperFormValues) => {
-    if (!firestore) return;
-    
-    const data = {
-      ...values,
-      mainImageUrl: values.paperImages[0] || "",
-      articleType: "Standard",
-      categoryId: "Viewer", 
-      isPublished: paper?.isPublished ?? true,
-      updatedAt: serverTimestamp(),
-      updatedBy: user?.email || "unknown"
-    };
+  const sanitizeFolderName = (name: string) => {
+    return name.trim().replace(/[\/\?\s]/g, '_').slice(0, 50) || "untitled";
+  };
 
-    if (paper?.id) {
-      const docRef = doc(firestore, "articles", paper.id);
-      setDocumentNonBlocking(docRef, data, { merge: true });
-      toast({ title: "更新しました" });
-    } else {
-      const colRef = collection(firestore, "articles");
-      addDocumentNonBlocking(colRef, { ...data, createdAt: serverTimestamp(), viewCount: 0 });
-      toast({ title: "アーカイブを登録しました" });
+  const onSubmit = async (values: PaperFormValues) => {
+    if (!firestore || pages.length === 0) {
+      if (pages.length === 0) toast({ variant: "destructive", title: "画像がありません" });
+      return;
     }
-    onSuccess();
+    
+    setIsSaving(true);
+    const subFolder = sanitizeFolderName(values.title);
+    const finalUrls: string[] = [];
+
+    try {
+      // 1. 必要に応じてアップロード
+      for (const page of pages) {
+        if (page.file) {
+          const formData = new FormData();
+          formData.append("file", page.file);
+          formData.append("folder", `newspaper_archive/papers/${subFolder}`);
+          
+          const res = await fetch("/api/upload", { method: "POST", body: formData });
+          if (!res.ok) throw new Error("アップロード中にエラーが発生しました");
+          const data = await res.json();
+          finalUrls.push(data.secure_url);
+        } else {
+          // 既存のURL
+          finalUrls.push(page.url);
+        }
+      }
+
+      // 2. Firestoreへ記録
+      const data = {
+        ...values,
+        paperImages: finalUrls,
+        mainImageUrl: finalUrls[0] || "",
+        articleType: "Standard",
+        categoryId: "Viewer", 
+        isPublished: paper?.isPublished ?? true,
+        updatedAt: serverTimestamp(),
+        updatedBy: user?.email || "unknown"
+      };
+
+      if (paper?.id) {
+        const docRef = doc(firestore, "articles", paper.id);
+        setDocumentNonBlocking(docRef, data, { merge: true });
+        toast({ title: "更新完了" });
+      } else {
+        const colRef = collection(firestore, "articles");
+        addDocumentNonBlocking(colRef, { ...data, createdAt: serverTimestamp(), viewCount: 0 });
+        toast({ title: "アーカイブを登録しました" });
+      }
+      onSuccess();
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "失敗", description: error.message });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -268,45 +280,33 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
             <div className="space-y-1">
               <h3 className="font-black text-slate-800">紙面構成管理</h3>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">
-                ドラッグで並び替え / 削除も可能です
+                ドラッグで並び替え / 削除が可能です
               </p>
             </div>
           </div>
 
-          {isUploading && (
-            <div className="bg-primary/5 border border-primary/10 p-6 rounded-3xl animate-pulse flex items-center gap-4 mb-6">
-              <RefreshCw className="h-6 w-6 text-primary animate-spin" />
-              <div>
-                <p className="text-sm font-black text-primary uppercase">Uploading...</p>
-                <p className="text-[10px] font-bold text-slate-400">{uploadProgress.current} / {uploadProgress.total}</p>
-              </div>
-            </div>
-          )}
-
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={watchedImages}>
+            <SortableContext items={pages.map(p => p.id)}>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 p-1">
-                {watchedImages.map((url, index) => (
+                {pages.map((page, index) => (
                   <SortableImage 
-                    key={url} 
-                    url={url} 
+                    key={page.id} 
+                    page={page} 
                     index={index} 
-                    onRemove={() => removeImage(index)}
-                    onPreview={() => setPreviewUrl(url)}
+                    onRemove={() => removePage(index)}
+                    onPreview={() => setPreviewUrl(page.url)}
                   />
                 ))}
 
-                {!isUploading && (
-                  <div 
-                    className="aspect-[1/1.4] rounded-2xl border-4 border-dashed border-slate-100 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-slate-50 transition-colors group"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <div className="bg-slate-50 p-4 rounded-full text-slate-200 group-hover:scale-110 transition-transform">
-                      <Plus className="h-8 w-8" />
-                    </div>
-                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-tight text-center">Add<br />Page</p>
+                <div 
+                  className="aspect-[1/1.4] rounded-2xl border-4 border-dashed border-slate-100 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-slate-50 transition-colors group"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <div className="bg-slate-50 p-4 rounded-full text-slate-200 group-hover:scale-110 transition-transform">
+                    <Plus className="h-8 w-8" />
                   </div>
-                )}
+                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-tight text-center">Add<br />Page</p>
+                </div>
               </div>
             </SortableContext>
           </DndContext>
@@ -317,17 +317,21 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
             accept="image/*" 
             className="hidden" 
             ref={fileInputRef} 
-            onChange={(e) => e.target.files && handleFilesUpload(e.target.files)} 
+            onChange={(e) => e.target.files && handleFilesSelect(e.target.files)} 
           />
         </div>
 
         <div className="pt-10 border-t sticky bottom-6 z-20">
           <Button 
             type="submit" 
-            disabled={watchedImages.length === 0 || isUploading}
+            disabled={pages.length === 0 || isSaving}
             className="w-full h-16 shadow-2xl font-black rounded-2xl text-xl bg-primary hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-50"
           >
-            紙面アーカイブを保存する
+            {isSaving ? (
+              <><Loader2 className="mr-2 h-6 w-6 animate-spin" /> 保存中...</>
+            ) : (
+              "紙面アーカイブを保存する"
+            )}
           </Button>
         </div>
       </form>

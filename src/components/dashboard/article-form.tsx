@@ -19,7 +19,7 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import ImageExtension from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 
@@ -50,7 +50,10 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
   const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
+  const [isSaving, setIsSaving] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [mainImageFile, setMainImageFile] = useState<File | null>(null);
+  const [mainImagePreview, setMainImagePreview] = useState<string>("");
   const [isDraggingMain, setIsDraggingMain] = useState(false);
   const mainImageInputRef = useRef<HTMLInputElement>(null);
 
@@ -85,20 +88,15 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     },
   });
 
-  async function handleImageInsert(file: File) {
-    const titleValue = form.getValues("title");
-    if (!titleValue) {
-      toast({ variant: "destructive", title: "先にタイトルを入力してください", description: "画像を保存するフォルダを特定するためにタイトルが必要です。" });
-      return;
-    }
-
+  // Tiptap内の画像は文脈上即時アップロードが必要（タイトルがまだ無い場合はuntitledフォルダへ）
+  async function handleEditorImageInsert(file: File) {
     if (!file.type.startsWith('image/')) return;
     setIsProcessing(true);
     try {
+      const titleValue = form.getValues("title");
       const subFolder = sanitizeFolderName(titleValue);
       const formData = new FormData();
       formData.append("file", file);
-      // タイトルに基づいたフォルダ
       formData.append("folder", `newspaper_archive/articles/${subFolder}/embedded`);
       
       const res = await fetch("/api/upload", { method: "POST", body: formData });
@@ -108,7 +106,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       editor?.chain().focus().setImage({ src: data.secure_url }).run();
       toast({ title: "画像を本文に埋め込みました" });
     } catch (error: any) {
-      toast({ variant: "destructive", title: "失敗", description: "画像の処理に失敗しました。" });
+      toast({ variant: "destructive", title: "失敗" });
     } finally {
       setIsProcessing(false);
     }
@@ -129,13 +127,13 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     },
   });
 
-  const handleMainImageUpload = async (e: React.ChangeEvent<HTMLInputElement> | React.DragEvent) => {
-    const titleValue = form.getValues("title");
-    if (!titleValue) {
-      toast({ variant: "destructive", title: "先にタイトルを入力してください", description: "画像を保存するフォルダを特定するためにタイトルが必要です。" });
-      return;
+  useEffect(() => {
+    if (article?.mainImageUrl) {
+      setMainImagePreview(article.mainImageUrl);
     }
+  }, [article]);
 
+  const handleMainImageSelect = (e: React.ChangeEvent<HTMLInputElement> | React.DragEvent) => {
     let file: File | undefined;
     if ('files' in (e.target as any) && (e.target as any).files) {
       file = (e.target as any).files[0];
@@ -144,47 +142,55 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     }
     if (!file || !file.type.startsWith('image/')) return;
     
-    setIsProcessing(true);
-    try {
-      const subFolder = sanitizeFolderName(titleValue);
-      const formData = new FormData();
-      formData.append("file", file);
-      // タイトルに基づいたフォルダ
-      formData.append("folder", `newspaper_archive/articles/${subFolder}`);
-      
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      if (!res.ok) throw new Error("Upload failed");
-      const data = await res.json();
-      
-      form.setValue("mainImageUrl", data.secure_url);
-      toast({ title: "表紙画像を取り込みました" });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "失敗" });
-    } finally {
-      setIsProcessing(false);
-    }
+    setMainImageFile(file);
+    const preview = URL.createObjectURL(file);
+    setMainImagePreview(preview);
   };
 
-  function onSubmit(values: ArticleFormValues) {
+  async function onSubmit(values: ArticleFormValues) {
     if (!firestore) return;
-    const data = {
-      ...values,
-      updatedAt: serverTimestamp(),
-      updatedBy: user?.email || "unknown"
-    };
-    if (article?.id) {
-      const docRef = doc(firestore, "articles", article.id);
-      setDocumentNonBlocking(docRef, data, { merge: true });
-      toast({ title: "記事を更新しました" });
-    } else {
-      const colRef = collection(firestore, "articles");
-      addDocumentNonBlocking(colRef, { ...data, createdAt: serverTimestamp(), viewCount: 0 });
-      toast({ title: "記事を作成しました" });
+    setIsSaving(true);
+
+    try {
+      let finalMainImageUrl = values.mainImageUrl;
+
+      // 保存時にメイン画像をアップロード
+      if (mainImageFile) {
+        const subFolder = sanitizeFolderName(values.title);
+        const formData = new FormData();
+        formData.append("file", mainImageFile);
+        formData.append("folder", `newspaper_archive/articles/${subFolder}`);
+        
+        const res = await fetch("/api/upload", { method: "POST", body: formData });
+        if (!res.ok) throw new Error("メイン画像のアップロードに失敗しました");
+        const data = await res.json();
+        finalMainImageUrl = data.secure_url;
+      }
+
+      const data = {
+        ...values,
+        mainImageUrl: finalMainImageUrl,
+        updatedAt: serverTimestamp(),
+        updatedBy: user?.email || "unknown"
+      };
+
+      if (article?.id) {
+        const docRef = doc(firestore, "articles", article.id);
+        setDocumentNonBlocking(docRef, data, { merge: true });
+        toast({ title: "記事を更新しました" });
+      } else {
+        const colRef = collection(firestore, "articles");
+        addDocumentNonBlocking(colRef, { ...data, createdAt: serverTimestamp(), viewCount: 0 });
+        toast({ title: "記事を作成しました" });
+      }
+      onSuccess();
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "失敗", description: error.message });
+    } finally {
+      setIsSaving(false);
     }
-    onSuccess();
   }
 
-  const mainImageUrl = form.watch("mainImageUrl");
   const transform = form.watch("mainImageTransform");
 
   return (
@@ -263,7 +269,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
               <div className="relative">
                 <input type="file" accept="image/*" className="hidden" id="editor-image-upload" onChange={(e) => {
                   const file = e.target.files?.[0];
-                  if (file) handleImageInsert(file);
+                  if (file) handleEditorImageInsert(file);
                 }}/>
                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => document.getElementById('editor-image-upload')?.click()} disabled={isProcessing}>
                   {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <LucideImage className="h-4 w-4" />}
@@ -279,56 +285,50 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
         <div className="bg-slate-50/50 p-8 rounded-[2.5rem] border border-slate-100 space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
             <div className="space-y-6">
-              <FormField
-                control={form.control}
-                name="mainImageUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 ml-1">
-                      <LucideImage className="h-3 w-3" /> 表紙画像
-                    </FormLabel>
-                    <div 
-                      className={cn(
-                        "relative h-48 md:h-64 rounded-[2rem] border-4 border-dashed transition-all flex flex-col items-center justify-center gap-4 group cursor-pointer overflow-hidden",
-                        isDraggingMain ? "border-primary bg-primary/5 scale-[0.98]" : "border-slate-200 bg-white hover:border-primary/50"
-                      )}
-                      onDragOver={(e) => { e.preventDefault(); setIsDraggingMain(true); }}
-                      onDragLeave={() => setIsDraggingMain(false)}
-                      onDrop={(e) => { e.preventDefault(); handleMainImageUpload(e as any); }}
-                      onClick={() => mainImageInputRef.current?.click()}
-                    >
-                      {mainImageUrl ? (
-                        <div className="relative w-full h-full">
-                           <Image 
-                            src={mainImageUrl} 
-                            alt="" 
-                            fill 
-                            className="object-cover opacity-20"
-                            unoptimized
-                          />
-                          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                            <RefreshCw className="h-8 w-8 text-primary/40" />
-                            <span className="text-[10px] font-black text-primary/40 uppercase tracking-widest">画像を入れ替え</span>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="bg-slate-50 p-6 rounded-full text-slate-300 group-hover:scale-110 transition-transform">
-                            <Upload className="h-8 w-8" />
-                          </div>
-                          <div className="text-center">
-                            <p className="text-sm font-black text-slate-400">ファイルをドロップ</p>
-                            <p className="text-[10px] font-bold text-slate-300 mt-1 uppercase tracking-widest">またはクリックして選択</p>
-                          </div>
-                        </>
-                      )}
-                      <input type="file" accept="image/*" className="hidden" ref={mainImageInputRef} onChange={handleMainImageUpload} />
+              <div className="space-y-2">
+                <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 ml-1">
+                  <LucideImage className="h-3 w-3" /> 表紙画像
+                </FormLabel>
+                <div 
+                  className={cn(
+                    "relative h-48 md:h-64 rounded-[2rem] border-4 border-dashed transition-all flex flex-col items-center justify-center gap-4 group cursor-pointer overflow-hidden",
+                    isDraggingMain ? "border-primary bg-primary/5 scale-[0.98]" : "border-slate-200 bg-white hover:border-primary/50"
+                  )}
+                  onDragOver={(e) => { e.preventDefault(); setIsDraggingMain(true); }}
+                  onDragLeave={() => setIsDraggingMain(false)}
+                  onDrop={(e) => { e.preventDefault(); handleMainImageSelect(e as any); }}
+                  onClick={() => mainImageInputRef.current?.click()}
+                >
+                  {mainImagePreview ? (
+                    <div className="relative w-full h-full">
+                        <Image 
+                        src={mainImagePreview} 
+                        alt="" 
+                        fill 
+                        className="object-cover opacity-20"
+                        unoptimized
+                      />
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                        <RefreshCw className="h-8 w-8 text-primary/40" />
+                        <span className="text-[10px] font-black text-primary/40 uppercase tracking-widest">画像を入れ替え</span>
+                      </div>
                     </div>
-                  </FormItem>
-                )}
-              />
+                  ) : (
+                    <>
+                      <div className="bg-slate-50 p-6 rounded-full text-slate-300 group-hover:scale-110 transition-transform">
+                        <Upload className="h-8 w-8" />
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm font-black text-slate-400">ファイルをドロップ</p>
+                        <p className="text-[10px] font-bold text-slate-300 mt-1 uppercase tracking-widest">またはクリックして選択</p>
+                      </div>
+                    </>
+                  )}
+                  <input type="file" accept="image/*" className="hidden" ref={mainImageInputRef} onChange={handleMainImageSelect} />
+                </div>
+              </div>
 
-              {mainImageUrl && (
+              {mainImagePreview && (
                 <div className="space-y-6 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm animate-in fade-in zoom-in duration-300">
                    <h4 className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-2">
                     <Maximize className="h-3 w-3" /> 画像構図管制
@@ -391,10 +391,10 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">仕上がりプレビュー</label>
                 <div className="relative aspect-video rounded-3xl overflow-hidden bg-slate-100 border-4 border-white shadow-xl">
-                  {mainImageUrl ? (
+                  {mainImagePreview ? (
                     <div className="relative w-full h-full overflow-hidden">
                       <Image 
-                        src={mainImageUrl} 
+                        src={mainImagePreview} 
                         alt="Preview" 
                         fill 
                         className="object-cover"
@@ -447,8 +447,8 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
 
         <div className="flex justify-end gap-3 pt-10 border-t sticky bottom-6 z-20">
           <Button type="button" variant="outline" onClick={onSuccess} className="w-32 h-14 rounded-2xl font-bold">キャンセル</Button>
-          <Button type="submit" className="w-48 h-14 shadow-2xl font-black rounded-2xl text-lg bg-primary hover:bg-primary/90">
-            内容を確定する
+          <Button type="submit" disabled={isSaving} className="w-48 h-14 shadow-2xl font-black rounded-2xl text-lg bg-primary hover:bg-primary/90">
+            {isSaving ? <Loader2 className="h-6 w-6 animate-spin" /> : "内容を確定する"}
           </Button>
         </div>
       </form>
