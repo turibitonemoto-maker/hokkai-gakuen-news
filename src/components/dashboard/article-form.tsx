@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { Image as LucideImage, Type, Heading2, Loader2, MessageSquareText, Bold, Italic, List, Maximize, RefreshCw, PlusCircle, Trash2 } from "lucide-react";
+import { Image as LucideImage, Type, Heading2, Loader2, MessageSquareText, Bold, Italic, List, Maximize, RefreshCw, PlusCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditor, EditorContent, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -68,10 +68,7 @@ const ResizableImageComponent = ({ node, updateAttributes, selected }: any) => {
           style={{ width: '100%', height: 'auto' }}
         />
         
-        {/* Resize Handles (4 Corners) */}
-        <div className="resize-handle resize-handle-top-left" />
-        <div className="resize-handle resize-handle-top-right" />
-        <div className="resize-handle resize-handle-bottom-left" />
+        {/* Resize Handle (Bottom Right) */}
         <div 
           className="resize-handle resize-handle-bottom-right" 
           onMouseDown={onMouseDown}
@@ -158,26 +155,23 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
 
   const handleEditorImageInsert = useCallback(async (file: File) => {
     if (!file.type.startsWith('image/')) return;
+    
+    // 即座にアップロードせず、Base64プレビューとして挿入
     setIsProcessing(true);
     try {
-      const titleValue = form.getValues("title") || "editor_uploads";
-      const subFolder = sanitizeFolderName(titleValue);
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("folder", `newspaper_archive/${subFolder}`);
-      
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      if (!res.ok) throw new Error("Upload failed");
-      const data = await res.json();
-      
-      editorRef.current?.chain().focus().setImage({ src: data.secure_url }).run();
-      toast({ title: "画像を挿入しました" });
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = reader.result as string;
+        editorRef.current?.chain().focus().setImage({ src: base64 }).run();
+        toast({ title: "画像を一時挿入しました（保存時にクラウドへ送られます）" });
+        setIsProcessing(false);
+      };
+      reader.readAsDataURL(file);
     } catch (error: any) {
-      toast({ variant: "destructive", title: "画像挿入に失敗しました" });
-    } finally {
+      toast({ variant: "destructive", title: "画像プレビューに失敗しました" });
       setIsProcessing(false);
     }
-  }, [form, toast]);
+  }, [toast]);
 
   const editor = useEditor({
     extensions: [
@@ -241,18 +235,56 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     setMainImagePreview(preview);
   };
 
+  /**
+   * HTML内のBase64画像をCloudinaryにアップロードし、URLを置換する
+   */
+  const processEditorImages = async (html: string, folder: string) => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const images = Array.from(doc.querySelectorAll('img'));
+    
+    for (const img of images) {
+      const src = img.getAttribute('src');
+      if (src && (src.startsWith('data:image') || src.startsWith('blob:'))) {
+        try {
+          // Base64またはBlobからFileオブジェクトを擬似的に作成
+          const response = await fetch(src);
+          const blob = await response.blob();
+          const file = new File([blob], "editor_image.jpg", { type: blob.type });
+
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("folder", folder);
+
+          const res = await fetch("/api/upload", { method: "POST", body: formData });
+          if (!res.ok) throw new Error("本文画像のアップロードに失敗しました");
+          const data = await res.json();
+          
+          img.setAttribute('src', data.secure_url);
+        } catch (e) {
+          console.error("Image upload failed:", e);
+        }
+      }
+    }
+    
+    return doc.body.innerHTML;
+  };
+
   async function onSubmit(values: ArticleFormValues) {
     if (!firestore) return;
     setIsSaving(true);
 
     try {
+      const subFolder = sanitizeFolderName(values.title);
+      const folderPath = `newspaper_archive/${subFolder}`;
+      
       let finalMainImageUrl = values.mainImageUrl;
 
+      // 1. メイン画像のアップロード（変更があれば）
       if (mainImageFile) {
-        const subFolder = sanitizeFolderName(values.title);
         const formData = new FormData();
         formData.append("file", mainImageFile);
-        formData.append("folder", `newspaper_archive/${subFolder}`);
+        formData.append("folder", folderPath);
         
         const res = await fetch("/api/upload", { method: "POST", body: formData });
         if (!res.ok) throw new Error("メイン画像のアップロードに失敗しました");
@@ -260,8 +292,12 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
         finalMainImageUrl = data.secure_url;
       }
 
+      // 2. 本文内の一括アップロードと置換
+      const processedContent = await processEditorImages(values.content, folderPath);
+
       const data = {
         ...values,
+        content: processedContent,
         mainImageUrl: finalMainImageUrl,
         updatedAt: serverTimestamp(),
         updatedBy: user?.email || "unknown"
@@ -278,7 +314,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       }
       onSuccess();
     } catch (error: any) {
-      toast({ variant: "destructive", title: "失敗", description: error.message });
+      toast({ variant: "destructive", title: "保存に失敗しました", description: error.message });
     } finally {
       setIsSaving(false);
     }
@@ -487,7 +523,8 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
           <div className="flex gap-3">
             <Button type="button" variant="outline" onClick={onSuccess} className="w-32 h-14 rounded-2xl font-bold border-slate-200">キャンセル</Button>
             <Button type="submit" disabled={isSaving} className="w-48 h-14 shadow-2xl font-black rounded-2xl text-lg bg-primary hover:bg-primary/90">
-              {isSaving ? <Loader2 className="h-6 w-6 animate-spin" /> : "記事を保存する"}
+              {isSaving ? <Loader2 className="h-6 w-6 animate-spin mr-2" /> : null}
+              {isSaving ? "転送・保存中" : "記事を保存する"}
             </Button>
           </div>
         </div>
