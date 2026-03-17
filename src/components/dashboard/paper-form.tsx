@@ -35,9 +35,9 @@ import { CSS } from "@dnd-kit/utilities";
 
 /**
  * 紙面アーカイブ（聖典に従い articles コレクションへ categoryId: "Viewer" として保存）
+ * 最高司令官の命令により「号数」をパージしました。
  */
 const paperSchema = z.object({
-  issueNumber: z.number().min(1, "号数を入力してください"),
   title: z.string().min(1, "タイトルを入力してください"),
   publishDate: z.string().min(1, "発行日を選択してください"),
   pages: z.array(z.object({
@@ -58,7 +58,6 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
   const form = useForm<PaperFormValues>({
     resolver: zodResolver(paperSchema),
     defaultValues: {
-      issueNumber: paper?.issueNumber || 0,
       title: paper?.title || "",
       publishDate: paper?.publishDate || new Date().toISOString().split("T")[0],
       pages: paper?.paperImages?.map((url: string, index: number) => ({ id: `page-${index}-${Date.now()}`, url })) || [{ id: `page-initial-${Date.now()}`, url: "" }],
@@ -131,9 +130,7 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
     const paperImages = values.pages.map(p => p.url).filter(url => url !== "");
     const mainImageUrl = paperImages[0] || "";
 
-    // 聖典の約束: 紙面データも articles コレクションへ保存（papersへの書き込みは廃止）
     const data = {
-      issueNumber: values.issueNumber,
       title: values.title,
       publishDate: values.publishDate,
       isPublished: values.isPublished,
@@ -148,11 +145,11 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
     if (paper?.id) {
       const docRef = doc(firestore, "articles", paper.id);
       setDocumentNonBlocking(docRef, data, { merge: true });
-      toast({ title: "更新完了", description: `第 ${values.issueNumber} 号を更新しました。` });
+      toast({ title: "更新完了", description: `「${values.title}」を更新しました。` });
     } else {
       const colRef = collection(firestore, "articles");
       addDocumentNonBlocking(colRef, { ...data, createdAt: serverTimestamp(), viewCount: 0 });
-      toast({ title: "登録完了", description: `第 ${values.issueNumber} 号をアーカイブに登録しました。` });
+      toast({ title: "登録完了", description: `「${values.title}」をアーカイブに登録しました。` });
     }
     onSuccess();
   };
@@ -160,20 +157,7 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10 max-w-5xl mx-auto pb-20">
-        <div className="bg-slate-50/50 p-8 rounded-[2.5rem] border border-slate-100 shadow-sm grid grid-cols-1 md:grid-cols-3 gap-6">
-          <FormField
-            control={form.control}
-            name="issueNumber"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">号数</FormLabel>
-                <FormControl>
-                  <Input type="number" className="h-12 rounded-xl font-bold border-white bg-white shadow-sm" {...field} onChange={e => field.onChange(Number(e.target.value))} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <div className="bg-slate-50/50 p-8 rounded-[2.5rem] border border-slate-100 shadow-sm grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}
             name="publishDate"

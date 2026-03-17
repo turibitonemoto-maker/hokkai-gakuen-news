@@ -35,7 +35,6 @@ export function ViewerManager() {
 
   const papersQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    // インデックス不要のため articles コレクションを全取得してフロントでフィルタ
     return collection(firestore, "articles");
   }, [firestore, user]);
 
@@ -43,15 +42,13 @@ export function ViewerManager() {
 
   const viewerPapers = useMemo(() => {
     if (!allArticles) return [];
-    // categoryId: "Viewer" のみを抽出し、発行日順にソート
+    // categoryId: "Viewer" のみを抽出し、発行日順にソート。号数（issueNumber）によるソートは廃止。
     return allArticles
       .filter(a => a.categoryId === "Viewer")
       .sort((a, b) => {
         const dateA = a.publishDate || "";
         const dateB = b.publishDate || "";
-        const dateCompare = dateB.localeCompare(dateA);
-        if (dateCompare !== 0) return dateCompare;
-        return (b.issueNumber || 0) - (a.issueNumber || 0);
+        return dateB.localeCompare(dateA);
       });
   }, [allArticles]);
 
@@ -77,7 +74,7 @@ export function ViewerManager() {
       <div className="space-y-6 animate-in fade-in zoom-in duration-300">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-black text-slate-800">{currentPaper ? `第 ${currentPaper.issueNumber} 号を編集` : "新しい紙面を登録"}</h2>
+            <h2 className="text-2xl font-black text-slate-800">{currentPaper ? `「${currentPaper.title}」を編集` : "新しい紙面を登録"}</h2>
             <p className="text-sm font-bold text-slate-500">紙面画像をアップロードしてアーカイブを構築します。</p>
           </div>
           <Button variant="ghost" onClick={() => setIsEditing(false)} className="font-bold rounded-full">戻る</Button>
@@ -115,8 +112,7 @@ export function ViewerManager() {
               <TableHeader className="bg-slate-50/50">
                 <TableRow>
                   <TableHead className="w-[100px] font-black text-xs uppercase text-center">公開</TableHead>
-                  <TableHead className="w-[100px] font-black text-xs uppercase text-center">号数</TableHead>
-                  <TableHead className="min-w-[250px] font-black text-xs uppercase">タイトル</TableHead>
+                  <TableHead className="min-w-[300px] font-black text-xs uppercase">タイトル</TableHead>
                   <TableHead className="w-[150px] font-black text-xs uppercase text-center">発行日</TableHead>
                   <TableHead className="w-[150px] font-black text-xs uppercase text-center">ページ数</TableHead>
                   <TableHead className="text-right font-black text-xs uppercase px-8">操作</TableHead>
@@ -127,9 +123,6 @@ export function ViewerManager() {
                   <TableRow key={paper.id} className="group hover:bg-slate-50/80 transition-colors border-slate-50">
                     <TableCell className="text-center">
                       <Switch checked={paper.isPublished} onCheckedChange={() => handleTogglePublish(paper)} className="scale-90" />
-                    </TableCell>
-                    <TableCell className="text-center font-black text-slate-400">
-                      第 {paper.issueNumber} 号
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col">
@@ -163,7 +156,7 @@ export function ViewerManager() {
                 ))}
                 {viewerPapers.length === 0 && !isLoading && (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-24 text-slate-300 font-black italic">
+                    <TableCell colSpan={5} className="text-center py-24 text-slate-300 font-black italic">
                       登録されている紙面データがありません。
                     </TableCell>
                   </TableRow>
