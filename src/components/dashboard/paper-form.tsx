@@ -43,7 +43,6 @@ const paperSchema = z.object({
 
 type PaperFormValues = z.infer<typeof paperSchema>;
 
-// 表示用データの型（URLと、もし新規ならFileオブジェクトを持つ）
 interface PageData {
   id: string;
   url: string;
@@ -141,7 +140,6 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
         title: paper.title || "",
         publishDate: paper.publishDate || new Date().toISOString().split("T")[0],
       });
-      // 既存の画像を初期化
       const existingPages = (paper.paperImages || []).map((url: string) => ({
         id: url,
         url: url
@@ -193,28 +191,26 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
     }
     
     setIsSaving(true);
+    // フラット化：papers/ を削除し、newspaper_archive/タイトルの階層へ
     const subFolder = sanitizeFolderName(values.title);
     const finalUrls: string[] = [];
 
     try {
-      // 1. 必要に応じてアップロード
       for (const page of pages) {
         if (page.file) {
           const formData = new FormData();
           formData.append("file", page.file);
-          formData.append("folder", `newspaper_archive/papers/${subFolder}`);
+          formData.append("folder", `newspaper_archive/${subFolder}`);
           
           const res = await fetch("/api/upload", { method: "POST", body: formData });
           if (!res.ok) throw new Error("アップロード中にエラーが発生しました");
           const data = await res.json();
           finalUrls.push(data.secure_url);
         } else {
-          // 既存のURL
           finalUrls.push(page.url);
         }
       }
 
-      // 2. Firestoreへ記録
       const data = {
         ...values,
         paperImages: finalUrls,

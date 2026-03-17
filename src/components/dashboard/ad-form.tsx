@@ -74,8 +74,8 @@ export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
       const subFolder = sanitizeFolderName(titleValue);
       const formData = new FormData();
       formData.append("file", file);
-      // タイトルに基づいたフォルダ
-      formData.append("folder", `newspaper_archive/ads/${subFolder}`);
+      // フラット化：newspaper_archive/タイトルの直下へ
+      formData.append("folder", `newspaper_archive/${subFolder}`);
       
       const res = await fetch("/api/upload", { method: "POST", body: formData });
       if (!res.ok) throw new Error("Upload failed");

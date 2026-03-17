@@ -88,7 +88,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     },
   });
 
-  // Tiptap内の画像は文脈上即時アップロードが必要（タイトルがまだ無い場合はuntitledフォルダへ）
   async function handleEditorImageInsert(file: File) {
     if (!file.type.startsWith('image/')) return;
     setIsProcessing(true);
@@ -97,7 +96,8 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       const subFolder = sanitizeFolderName(titleValue);
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("folder", `newspaper_archive/articles/${subFolder}/embedded`);
+      // フラット化：newspaper_archive/タイトルの直下へ
+      formData.append("folder", `newspaper_archive/${subFolder}/embedded`);
       
       const res = await fetch("/api/upload", { method: "POST", body: formData });
       if (!res.ok) throw new Error("Upload failed");
@@ -154,12 +154,12 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     try {
       let finalMainImageUrl = values.mainImageUrl;
 
-      // 保存時にメイン画像をアップロード
       if (mainImageFile) {
         const subFolder = sanitizeFolderName(values.title);
         const formData = new FormData();
         formData.append("file", mainImageFile);
-        formData.append("folder", `newspaper_archive/articles/${subFolder}`);
+        // フラット化：newspaper_archive/タイトルの直下へ
+        formData.append("folder", `newspaper_archive/${subFolder}`);
         
         const res = await fetch("/api/upload", { method: "POST", body: formData });
         if (!res.ok) throw new Error("メイン画像のアップロードに失敗しました");
