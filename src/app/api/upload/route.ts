@@ -3,8 +3,8 @@ import { v2 as cloudinary } from "cloudinary";
 import { NextResponse } from "next/server";
 
 /**
- * PDF対応画像・ドキュメントアップロード API
- * resource_type: "auto" により PDF も画像として扱わず、ドキュメントとして適切に保存します。
+ * フォルダ指定対応アップロード API
+ * FormData に 'folder' フィールドを含めることで、Cloudinary上の保存先を物理的に整理します。
  */
 export async function POST(request: Request) {
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME?.trim();
@@ -27,6 +27,7 @@ export async function POST(request: Request) {
 
     const formData = await request.formData();
     const file = formData.get("file") as File;
+    const folder = (formData.get("folder") as string) || "newspaper_archive/misc";
 
     if (!file) {
       return NextResponse.json({ error: "ファイルが見つかりません" }, { status: 400 });
@@ -35,27 +36,31 @@ export async function POST(request: Request) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
+    console.log(`[Upload API] TARGET_CLOUD_NAME: ${cloudName}, FOLDER: ${folder}`);
+
     const result: any = await new Promise((resolve, reject) => {
       cloudinary.uploader.upload_stream(
         {
-          folder: "newspaper_archive/pdfs",
-          resource_type: "auto", // PDF, Image 自動判別
-          pages: true // PDFの場合、ページ情報を保持
+          folder: folder,
+          resource_type: "auto",
         },
         (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
+          if (error) {
+            console.error("Cloudinary SDK Error:", error);
+            reject(error);
+          } else {
+            resolve(result);
+          }
         }
       ).end(buffer);
     });
 
-    console.log(`[Upload API] Success: ${result.resource_type} uploaded.`);
     return NextResponse.json(result);
   } catch (error: any) {
     console.error("Upload API Error:", error);
     return NextResponse.json({ 
       error: error.message || "Internal server error",
-      details: error.http_code === 401 ? "認証に失敗しました。API Key/Secretを確認してください。" : "アップロード中に障害が発生しました。"
+      details: "アップロード中に障害が発生しました。クラウド名や権限を確認してください。"
     }, { status: 500 });
   }
 }

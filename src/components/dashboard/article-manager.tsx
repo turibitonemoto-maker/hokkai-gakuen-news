@@ -33,7 +33,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   Sports: "スポーツ",
   Column: "コラム",
   Opinion: "オピニオン",
-  // Viewer は専用管理画面で扱うため、ここからは除外
 };
 
 const getTagColor = (tag: string, isActive: boolean) => {
@@ -57,6 +56,7 @@ export function ArticleManager() {
   const [currentArticle, setCurrentArticle] = useState<any>(null);
   const [articleToDelete, setArticleToDelete] = useState<any>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const firestore = useFirestore();
   const { user } = useUser();
@@ -76,7 +76,6 @@ export function ArticleManager() {
     const tagsSet = new Set<string>();
     Object.values(CATEGORY_LABELS).forEach(label => tagsSet.add(label));
     allArticles?.forEach(article => {
-      // Viewer カテゴリーの記事はタグ収集からも除外
       if (article.categoryId === "Viewer") return;
       article.tags?.forEach((tag: string) => {
         if (tag && tag.trim()) tagsSet.add(tag.trim());
@@ -87,12 +86,8 @@ export function ArticleManager() {
 
   const filteredArticles = useMemo(() => {
     if (!allArticles) return [];
-    
-    // Viewer カテゴリーの記事は専用画面で管理するため、ここでは一切表示しない
     const baseArticles = allArticles.filter(a => a.categoryId !== "Viewer");
-    
     if (selectedTags.length === 0) return baseArticles;
-
     return baseArticles.filter(article => {
       const articleTags = [
         CATEGORY_LABELS[article.categoryId] || article.categoryId,
@@ -111,25 +106,42 @@ export function ArticleManager() {
   const handleTogglePublish = (article: any) => {
     if (!firestore) return;
     const docRef = doc(firestore, "articles", article.id);
-    
     updateDocumentNonBlocking(docRef, { 
       isPublished: !article.isPublished,
       updatedAt: serverTimestamp(),
       updatedBy: user?.email || "unknown"
     });
-
-    toast({ 
-      title: !article.isPublished ? "公開しました" : "非公開にしました", 
-      description: `「${article.title}」の公開設定を切り替えました。` 
-    });
+    toast({ title: !article.isPublished ? "公開しました" : "非公開にしました" });
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!articleToDelete || !firestore) return;
-    const docRef = doc(firestore, "articles", articleToDelete.id);
-    deleteDocumentNonBlocking(docRef);
-    toast({ title: "削除しました", description: `「${articleToDelete.title}」をデータベースから完全に抹消しました。` });
-    setArticleToDelete(null);
+    setIsDeleting(true);
+    
+    try {
+      // 1. 画像削除の実行
+      const urlsToDel = [];
+      if (articleToDelete.mainImageUrl) urlsToDel.push(articleToDelete.mainImageUrl);
+      
+      // 本文中の画像は解析が複雑なため、今回は表紙画像のみ連動削除の対象とします
+      if (urlsToDel.length > 0) {
+        await fetch("/api/upload/delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ urls: urlsToDel }),
+        });
+      }
+
+      // 2. レコード削除
+      deleteDocumentNonBlocking(doc(firestore, "articles", articleToDelete.id));
+      toast({ title: "削除しました", description: "表紙画像も連動して抹消されました。" });
+    } catch (e) {
+      console.error("Delete error:", e);
+      toast({ variant: "destructive", title: "削除失敗" });
+    } finally {
+      setIsDeleting(false);
+      setArticleToDelete(null);
+    }
   };
 
   if (isEditing) {
@@ -275,13 +287,6 @@ export function ArticleManager() {
                       </TableCell>
                     </TableRow>
                   ))}
-                  {filteredArticles.length === 0 && !isLoading && (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center py-20 text-slate-300 font-black italic">
-                        表示する記事がありません。
-                      </TableCell>
-                    </TableRow>
-                  )}
                 </TableBody>
               </Table>
             )}
@@ -289,7 +294,7 @@ export function ArticleManager() {
         </div>
       </Card>
 
-      <AlertDialog open={!!articleToDelete} onOpenChange={(open) => !open && setArticleToDelete(null)}>
+      <AlertDialog open={!!articleToDelete} onOpenChange={(open) => !open && !isDeleting && setArticleToDelete(null)}>
         <AlertDialogContent className="rounded-3xl border-none p-10">
           <AlertDialogHeader>
             <div className="flex items-center gap-3 text-destructive mb-2">
@@ -297,12 +302,15 @@ export function ArticleManager() {
               <AlertDialogTitle className="text-2xl font-black">記事を完全に消去しますか？</AlertDialogTitle>
             </div>
             <AlertDialogDescription className="font-bold text-slate-500">
-              「{articleToDelete?.title}」をデータベースから完全に抹消します。<br />この操作は取り消せません。
+              「{articleToDelete?.title}」のデータと表紙画像が物理的に抹消されます。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2 mt-6">
-            <AlertDialogCancel className="rounded-xl font-bold h-12">キャンセル</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90 rounded-xl font-black h-12 px-8">削除を確定する</AlertDialogAction>
+            <AlertDialogCancel className="rounded-xl font-bold h-12" disabled={isDeleting}>キャンセル</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90 rounded-xl font-black h-12 px-8">
+              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              削除を確定する
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

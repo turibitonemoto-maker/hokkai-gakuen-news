@@ -130,7 +130,6 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
     },
   });
 
-  // 編集時にデータを確実に反映させるための同期回路
   useEffect(() => {
     if (paper) {
       form.reset({
@@ -159,9 +158,13 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
 
         const formData = new FormData();
         formData.append("file", file);
+        formData.append("folder", "newspaper_archive/papers");
         
         const res = await fetch("/api/upload", { method: "POST", body: formData });
-        if (!res.ok) throw new Error("アップロード失敗");
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.details || "アップロード失敗");
+        }
         const data = await res.json();
         newUrls.push(data.secure_url);
       }
@@ -252,7 +255,7 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
             <div className="space-y-1">
               <h3 className="font-black text-slate-800">紙面構成管理</h3>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">
-                ドラッグで並び替え / 画像をクリックで表示
+                ドラッグで並び替え / 削除も可能です
               </p>
             </div>
           </div>

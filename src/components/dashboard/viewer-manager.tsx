@@ -28,6 +28,7 @@ export function ViewerManager() {
   const [isEditing, setIsEditing] = useState(false);
   const [currentPaper, setCurrentPaper] = useState<any>(null);
   const [paperToDelete, setPaperToDelete] = useState<any>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const firestore = useFirestore();
   const { user } = useUser();
@@ -61,11 +62,30 @@ export function ViewerManager() {
     toast({ title: paper.isPublished ? "非公開にしました" : "公開しました" });
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!paperToDelete || !firestore) return;
-    deleteDocumentNonBlocking(doc(firestore, "articles", paperToDelete.id));
-    toast({ title: "削除しました" });
-    setPaperToDelete(null);
+    setIsDeleting(true);
+    
+    try {
+      // 1. Cloudinary上の画像を物理抹消
+      if (paperToDelete.paperImages && paperToDelete.paperImages.length > 0) {
+        await fetch("/api/upload/delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ urls: paperToDelete.paperImages }),
+        });
+      }
+
+      // 2. Firestoreレコード抹消
+      deleteDocumentNonBlocking(doc(firestore, "articles", paperToDelete.id));
+      toast({ title: "削除しました", description: "画像ファイルも連動して抹消されました。" });
+    } catch (e) {
+      console.error("Delete sequence failed:", e);
+      toast({ variant: "destructive", title: "連動消去エラー", description: "一部のファイルが残っている可能性があります。" });
+    } finally {
+      setIsDeleting(false);
+      setPaperToDelete(null);
+    }
   };
 
   if (isEditing) {
@@ -172,7 +192,7 @@ export function ViewerManager() {
         </CardContent>
       </Card>
 
-      <AlertDialog open={!!paperToDelete} onOpenChange={(open) => !open && setPaperToDelete(null)}>
+      <AlertDialog open={!!paperToDelete} onOpenChange={(open) => !open && !isDeleting && setPaperToDelete(null)}>
         <AlertDialogContent className="rounded-[2rem] border-none p-10">
           <AlertDialogHeader>
             <div className="flex items-center gap-3 text-destructive mb-2">
@@ -182,12 +202,15 @@ export function ViewerManager() {
               <AlertDialogTitle className="text-2xl font-black tracking-tight text-slate-800">紙面アーカイブを永久抹消しますか？</AlertDialogTitle>
             </div>
             <AlertDialogDescription className="font-bold text-slate-500 py-4 leading-relaxed">
-              「{paperToDelete?.title}」のデータはデータベースから完全に削除されます。この操作は、物理的に取り消すことができません。
+              「{paperToDelete?.title}」のデータおよびCloudinary上の画像実体は完全に削除されます。この操作は物理的に取り消せません。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-3 mt-4">
-            <AlertDialogCancel className="rounded-xl font-bold h-12 border-slate-200">作戦中止</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90 rounded-xl font-black h-12 px-8 shadow-lg shadow-destructive/20">抹消を確定する</AlertDialogAction>
+            <AlertDialogCancel className="rounded-xl font-bold h-12 border-slate-200" disabled={isDeleting}>作戦中止</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90 rounded-xl font-black h-12 px-8 shadow-lg shadow-destructive/20">
+              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              抹消を確定する
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

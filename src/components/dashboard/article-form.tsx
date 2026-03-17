@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -45,9 +46,6 @@ interface ArticleFormProps {
   onSuccess: () => void;
 }
 
-/**
- * ニュース記事作成フォーム
- */
 export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
   const firestore = useFirestore();
   const { user } = useUser();
@@ -87,16 +85,19 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     if (!file.type.startsWith('image/')) return;
     setIsProcessing(true);
     try {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        const base64 = reader.result as string;
-        editor?.chain().focus().setImage({ src: base64 }).run();
-        toast({ title: "画像を本文に埋め込みました" });
-        setIsProcessing(false);
-      };
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", "newspaper_archive/articles/embedded");
+      
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json();
+      
+      editor?.chain().focus().setImage({ src: data.secure_url }).run();
+      toast({ title: "画像を本文に埋め込みました" });
     } catch (error: any) {
       toast({ variant: "destructive", title: "失敗", description: "画像の処理に失敗しました。" });
+    } finally {
       setIsProcessing(false);
     }
   }
@@ -124,17 +125,22 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       file = e.dataTransfer.files[0];
     }
     if (!file || !file.type.startsWith('image/')) return;
+    
     setIsProcessing(true);
     try {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        form.setValue("mainImageUrl", reader.result as string);
-        toast({ title: "表紙画像を取り込みました" });
-        setIsProcessing(false);
-      };
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", "newspaper_archive/articles");
+      
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json();
+      
+      form.setValue("mainImageUrl", data.secure_url);
+      toast({ title: "表紙画像を取り込みました" });
     } catch (error: any) {
       toast({ variant: "destructive", title: "失敗" });
+    } finally {
       setIsProcessing(false);
     }
   };
