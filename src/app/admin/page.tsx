@@ -24,7 +24,6 @@ import { Button } from "@/components/ui/button";
 import { useCollection, useDoc, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query, orderBy, limit, doc } from "firebase/firestore";
 import Link from "next/link";
-import Image from "next/image";
 
 export default function AdminDashboard() {
   const [currentTime, setCurrentTime] = useState<string | null>(null);
@@ -118,10 +117,10 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <Card className="lg:col-span-2 shadow-sm border-slate-200 overflow-hidden bg-white rounded-2xl">
-          <CardHeader className="bg-white border-b border-slate-50 p-6">
+          <CardHeader className="bg-slate-50/50 border-b p-6">
             <CardTitle className="text-lg font-bold flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-primary" />
-              最新の管制アクティビティ
+              最新のアクティビティ
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
@@ -164,7 +163,7 @@ export default function AdminDashboard() {
                   </div>
                 )
               )) : (
-                <div className="p-16 text-center text-slate-400 text-sm font-medium italic">記事はまだありません。</div>
+                <div className="p-16 text-center text-slate-400 text-sm font-medium italic">データはまだありません。</div>
               )}
             </div>
           </CardContent>
