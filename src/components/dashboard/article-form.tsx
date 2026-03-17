@@ -8,12 +8,12 @@ import { useFirestore, useUser } from "@/firebase";
 import { collection, doc, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { Image as LucideImage, Type, Heading2, Loader2, Upload, MessageSquareText, Bold, Italic, List, Maximize, MoveHorizontal, MoveVertical, RefreshCw, PlusCircle } from "lucide-react";
+import { Image as LucideImage, Type, Heading2, Loader2, MessageSquareText, Bold, Italic, List, Maximize, RefreshCw, PlusCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -22,6 +22,7 @@ import LinkExtension from '@tiptap/extension-link';
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
+import { Badge } from "@/components/ui/badge";
 
 const articleSchema = z.object({
   title: z.string().min(1, "タイトルを入力してください"),
@@ -56,6 +57,9 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
   const [mainImagePreview, setMainImagePreview] = useState<string>("");
   const [isDraggingMain, setIsDraggingMain] = useState(false);
   const mainImageInputRef = useRef<HTMLInputElement>(null);
+  
+  // エディタ参照用のRef（循環参照エラー回避用）
+  const editorRef = useRef<any>(null);
 
   const sanitizeFolderName = (name: string) => {
     return name.trim().replace(/[\/\?\s]/g, '_').slice(0, 50) || "untitled";
@@ -75,15 +79,15 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       if (!res.ok) throw new Error("Upload failed");
       const data = await res.json();
       
-      editor?.chain().focus().setImage({ src: data.secure_url }).run();
+      editorRef.current?.chain().focus().setImage({ src: data.secure_url }).run();
       toast({ title: "画像を挿入しました" });
     } catch (error: any) {
       toast({ variant: "destructive", title: "画像挿入に失敗しました" });
     } finally {
       setIsProcessing(false);
     }
-  }, [editor]); // eslint-disable-line
-  
+  }, []); // eslint-disable-line
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -101,6 +105,9 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     ],
     content: article?.content || "",
     immediatelyRender: false,
+    onCreate: ({ editor }) => {
+      editorRef.current = editor;
+    },
     onUpdate: ({ editor }) => {
       form.setValue("content", editor.getHTML());
     },
@@ -120,6 +127,13 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       },
     },
   });
+
+  // エディタが更新されたらRefを更新
+  useEffect(() => {
+    if (editor) {
+      editorRef.current = editor;
+    }
+  }, [editor]);
 
   const form = useForm<ArticleFormValues>({
     resolver: zodResolver(articleSchema),
@@ -205,7 +219,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-w-5xl mx-auto pb-20">
         
-        {/* Header Section: Title & Controls */}
+        {/* Title Section (note-like large heading) */}
         <div className="space-y-6">
           <FormField
             control={form.control}
@@ -224,49 +238,9 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
               </FormItem>
             )}
           />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
-            <FormField
-              control={form.control}
-              name="categoryId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest">カテゴリー</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="h-12 rounded-xl border-slate-100 bg-slate-50/50 font-bold">
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Campus">キャンパス</SelectItem>
-                      <SelectItem value="Event">イベント</SelectItem>
-                      <SelectItem value="Interview">インタビュー</SelectItem>
-                      <SelectItem value="Sports">スポーツ</SelectItem>
-                      <SelectItem value="Column">コラム</SelectItem>
-                      <SelectItem value="Opinion">オピニオン</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="publishDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest">公開日</FormLabel>
-                  <FormControl>
-                    <Input type="date" className="h-12 rounded-xl border-slate-100 bg-slate-50/50 font-bold" {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          </div>
         </div>
 
-        {/* Main Image (Hero) Section: Note-like big header image */}
+        {/* Main Image Section (Hero image below title) */}
         <div className="space-y-4">
           <div 
             className={cn(
@@ -350,7 +324,48 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
           )}
         </div>
 
-        {/* Body Editor Section */}
+        {/* Metadata Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+          <FormField
+            control={form.control}
+            name="categoryId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest">カテゴリー</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger className="h-12 rounded-xl border-slate-100 bg-slate-50/50 font-bold">
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Campus">キャンパス</SelectItem>
+                    <SelectItem value="Event">イベント</SelectItem>
+                    <SelectItem value="Interview">インタビュー</SelectItem>
+                    <SelectItem value="Sports">スポーツ</SelectItem>
+                    <SelectItem value="Column">コラム</SelectItem>
+                    <SelectItem value="Opinion">オピニオン</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="publishDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest">公開日</FormLabel>
+                <FormControl>
+                  <Input type="date" className="h-12 rounded-xl border-slate-100 bg-slate-50/50 font-bold" {...field} />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        </div>
+
+        {/* Editor Section */}
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 pb-2">
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
@@ -389,7 +404,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
           </div>
         </div>
 
-        {/* Footer: Publication Toggle & Submit */}
+        {/* Footer Section */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 pt-10 border-t sticky bottom-6 z-20 bg-white/80 backdrop-blur-md p-6 rounded-[2.5rem] shadow-2xl border border-white">
           <FormField
             control={form.control}
