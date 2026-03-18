@@ -46,7 +46,7 @@ import { Separator } from "@/components/ui/separator";
 /**
  * note風：画像サイズ選択 ＆ キャプション機能付きコンポーネント
  */
-const NoteImageComponent = ({ node, updateAttributes, selected }: any) => {
+const NoteImageComponent = ({ node, updateAttributes, selected, deleteNode }: any) => {
   const setWidth = (width: string) => {
     updateAttributes({ width });
   };
@@ -63,7 +63,7 @@ const NoteImageComponent = ({ node, updateAttributes, selected }: any) => {
           style={{ width: '100%', height: 'auto' }}
         />
         
-        {/* Note-like Size Toolbar */}
+        {/* Note-like Toolbar */}
         {selected && (
           <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-md border border-slate-200 rounded-full p-1 shadow-2xl flex items-center gap-1 z-50 animate-in fade-in slide-in-from-bottom-2">
             <button 
@@ -86,6 +86,15 @@ const NoteImageComponent = ({ node, updateAttributes, selected }: any) => {
               className={cn("px-3 py-1 rounded-full text-[10px] font-black transition-all", currentWidth === '100%' ? "bg-primary text-white" : "hover:bg-slate-100 text-slate-500")}
             >
               大
+            </button>
+            <div className="w-px h-4 bg-slate-200 mx-1" />
+            <button 
+              type="button"
+              onClick={deleteNode}
+              className="p-1.5 rounded-full hover:bg-red-50 text-red-500 transition-all"
+              title="画像を削除"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
             </button>
           </div>
         )}
@@ -164,6 +173,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
   const [mainImageFile, setMainImageFile] = useState<File | null>(null);
   const [mainImagePreview, setMainImagePreview] = useState<string>("");
   const mainImageInputRef = useRef<HTMLInputElement>(null);
+  const editorImageInputRef = useRef<HTMLInputElement>(null);
   const editorRef = useRef<any>(null);
 
   const form = useForm<ArticleFormValues>({
@@ -334,6 +344,16 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
 
   return (
     <div className="flex flex-col min-h-screen bg-white font-body">
+      {/* 安定した画像入力要素 - どこからでも呼べるようにルートに配置 */}
+      <input 
+        type="file" 
+        id="editor-image-insert-hidden" 
+        accept="image/*" 
+        className="hidden" 
+        ref={editorImageInputRef}
+        onChange={(e) => { const file = e.target.files?.[0]; if (file) handleEditorImageInsert(file); }} 
+      />
+
       {/* Header - Fixed & Clean */}
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b h-14 flex items-center justify-between px-4">
         <Button variant="ghost" size="icon" onClick={onSuccess} className="rounded-full">
@@ -436,7 +456,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                   unoptimized
                 />
                 <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {/* Intuitive Composition Adjustment Button */}
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button variant="secondary" size="icon" className="rounded-full shadow-lg bg-white/90 backdrop-blur-md hover:bg-white transition-all">
@@ -539,7 +558,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                       <div className="grid gap-1">
                         <button 
                           type="button"
-                          onClick={() => document.getElementById('editor-image-insert')?.click()}
+                          onClick={() => editorImageInputRef.current?.click()}
                           className="flex items-center gap-4 w-full p-4 hover:bg-slate-50 rounded-2xl text-left transition-all group"
                         >
                           <div className="bg-blue-50 p-2 rounded-xl group-hover:bg-blue-100 transition-colors">
@@ -602,7 +621,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                 <div className="grid gap-1">
                   <button 
                     type="button"
-                    onClick={() => document.getElementById('editor-image-insert')?.click()}
+                    onClick={() => editorImageInputRef.current?.click()}
                     className="flex items-center gap-4 w-full p-4 hover:bg-slate-50 rounded-2xl text-left transition-all group"
                   >
                     <div className="bg-blue-50 p-2 rounded-xl group-hover:bg-blue-100 transition-colors">
@@ -610,7 +629,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                     </div>
                     <span className="text-sm font-black text-slate-700">画像を挿入</span>
                   </button>
-                  <input type="file" id="editor-image-insert" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleEditorImageInsert(file); }} />
                   
                   <button 
                     type="button"
