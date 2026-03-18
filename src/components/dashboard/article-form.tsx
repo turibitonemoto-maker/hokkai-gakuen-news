@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { 
   Image as LucideImage, 
@@ -29,9 +30,6 @@ import {
   MoreVertical,
   AlignCenter,
   Quote,
-  Sparkles,
-  Minimize2,
-  Maximize2,
   Check
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -69,18 +67,21 @@ const NoteImageComponent = ({ node, updateAttributes, selected }: any) => {
         {selected && (
           <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-md border border-slate-200 rounded-full p-1 shadow-2xl flex items-center gap-1 z-50 animate-in fade-in slide-in-from-bottom-2">
             <button 
+              type="button"
               onClick={() => setWidth('30%')}
               className={cn("px-3 py-1 rounded-full text-[10px] font-black transition-all", currentWidth === '30%' ? "bg-primary text-white" : "hover:bg-slate-100 text-slate-500")}
             >
               小
             </button>
             <button 
+              type="button"
               onClick={() => setWidth('60%')}
               className={cn("px-3 py-1 rounded-full text-[10px] font-black transition-all", currentWidth === '60%' ? "bg-primary text-white" : "hover:bg-slate-100 text-slate-500")}
             >
               中
             </button>
             <button 
+              type="button"
               onClick={() => setWidth('100%')}
               className={cn("px-3 py-1 rounded-full text-[10px] font-black transition-all", currentWidth === '100%' ? "bg-primary text-white" : "hover:bg-slate-100 text-slate-500")}
             >
@@ -499,6 +500,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
               <PopoverContent side="top" align="start" className="w-56 p-2 rounded-3xl shadow-2xl border-none mb-2 animate-in slide-in-from-bottom-4 zoom-in-95">
                 <div className="grid gap-1">
                   <button 
+                    type="button"
                     onClick={() => document.getElementById('editor-image-insert')?.click()}
                     className="flex items-center gap-4 w-full p-4 hover:bg-slate-50 rounded-2xl text-left transition-all group"
                   >
@@ -510,6 +512,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                   <input type="file" id="editor-image-insert" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleEditorImageInsert(file); }} />
                   
                   <button 
+                    type="button"
                     onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
                     className="flex items-center gap-4 w-full p-4 hover:bg-slate-50 rounded-2xl text-left transition-all group"
                   >
@@ -520,6 +523,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                   </button>
                   
                   <button 
+                    type="button"
                     onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}
                     className="flex items-center gap-4 w-full p-4 hover:bg-slate-50 rounded-2xl text-left transition-all group"
                   >
