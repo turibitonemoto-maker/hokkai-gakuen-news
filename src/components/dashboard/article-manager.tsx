@@ -5,14 +5,14 @@ import { useState, useMemo } from "react";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc, orderBy, query, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Loader2, X, Filter, Tag as TagIcon, AlertCircle, RefreshCw, Eye } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Plus, Pencil, Trash2, Loader2, Filter, Tag as TagIcon, AlertCircle, RefreshCw, Eye } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { ArticleForm } from "./article-form";
 import { deleteDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,8 +52,7 @@ const getTagColor = (tag: string, isActive: boolean) => {
 };
 
 export function ArticleManager() {
-  const [isEditing, setIsEditing] = useState(false);
-  const [currentArticle, setCurrentArticle] = useState<any>(null);
+  const router = useRouter();
   const [articleToDelete, setArticleToDelete] = useState<any>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -119,11 +118,9 @@ export function ArticleManager() {
     setIsDeleting(true);
     
     try {
-      // 1. 画像削除の実行
       const urlsToDel = [];
       if (articleToDelete.mainImageUrl) urlsToDel.push(articleToDelete.mainImageUrl);
       
-      // 本文中の画像は解析が複雑なため、今回は表紙画像のみ連動削除の対象とします
       if (urlsToDel.length > 0) {
         await fetch("/api/upload/delete", {
           method: "POST",
@@ -132,7 +129,6 @@ export function ArticleManager() {
         });
       }
 
-      // 2. レコード削除
       deleteDocumentNonBlocking(doc(firestore, "articles", articleToDelete.id));
       toast({ title: "削除しました", description: "表紙画像も連動して抹消されました。" });
     } catch (e) {
@@ -143,27 +139,6 @@ export function ArticleManager() {
       setArticleToDelete(null);
     }
   };
-
-  if (isEditing) {
-    return (
-      <Card className="animate-in fade-in zoom-in duration-300 rounded-2xl md:rounded-3xl border-none shadow-xl overflow-hidden">
-        <CardHeader className="flex flex-col md:flex-row md:items-center justify-between border-b bg-slate-50/50 p-6 md:p-8">
-          <div>
-            <CardTitle className="text-xl md:text-2xl font-black">{currentArticle ? "記事を編集" : "新規記事の作成"}</CardTitle>
-            <CardDescription className="font-bold">
-              学内のニュースやコラムを作成・編集します。
-            </CardDescription>
-          </div>
-          <Button variant="ghost" onClick={() => setIsEditing(false)} className="mt-4 md:mt-0 font-bold rounded-full">
-            <X className="h-4 w-4 mr-2" /> 閉じる
-          </Button>
-        </CardHeader>
-        <CardContent className="p-6 md:p-10">
-          <ArticleForm article={currentArticle} onSuccess={() => setIsEditing(false)} />
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -176,7 +151,7 @@ export function ArticleManager() {
           <Button variant="outline" size="icon" onClick={() => window.location.reload()} className="rounded-xl h-12 w-12 border-slate-200">
             <RefreshCw className="h-5 w-5 text-slate-400" />
           </Button>
-          <Button onClick={() => { setCurrentArticle(null); setIsEditing(true); }} className="flex-1 md:flex-none h-12 px-6 shadow-lg gap-2 font-black rounded-2xl">
+          <Button onClick={() => router.push('/admin/new')} className="flex-1 md:flex-none h-12 px-6 shadow-lg gap-2 font-black rounded-2xl">
             <Plus className="h-5 w-5" />
             新規記事作成
           </Button>
@@ -277,7 +252,7 @@ export function ArticleManager() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => { setCurrentArticle(article); setIsEditing(true); }} className="rounded-full hover:bg-primary/10 hover:text-primary">
+                          <Button variant="ghost" size="icon" onClick={() => router.push(`/admin/edit/${article.id}`)} className="rounded-full hover:bg-primary/10 hover:text-primary">
                             <Pencil className="h-4 w-4" />
                           </Button>
                           <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 rounded-full" onClick={() => setArticleToDelete(article)}>
