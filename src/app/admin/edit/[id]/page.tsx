@@ -5,11 +5,11 @@ import { useParams, useRouter } from "next/navigation";
 import { useDoc, useFirestore, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { ArticleForm } from "@/components/dashboard/article-form";
-import { Loader2, ArrowLeft, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 /**
- * 記事編集ページ（全画面没入型）
+ * 記事編集ページ（完全没入型フルスクリーン）
  */
 export default function EditArticlePage() {
   const { id } = useParams();
@@ -25,7 +25,7 @@ export default function EditArticlePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-white">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
         <p className="font-black text-slate-400 uppercase tracking-widest">記事データを復元中...</p>
       </div>
@@ -34,7 +34,7 @@ export default function EditArticlePage() {
 
   if (!article) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-6">
+      <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-white">
         <div className="bg-red-50 p-6 rounded-full text-red-500">
           <AlertCircle className="h-12 w-12" />
         </div>
@@ -50,25 +50,6 @@ export default function EditArticlePage() {
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex items-center gap-4 mb-8">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={() => router.push('/admin/articles')} 
-          className="rounded-full hover:bg-white shadow-sm"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div>
-          <h2 className="text-2xl font-black text-slate-800 tracking-tight">記事の改訂</h2>
-          <p className="text-sm font-bold text-slate-500">既存の記録を修正・更新します。</p>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-[3rem] shadow-sm border border-slate-100 min-h-screen p-8 md:p-16">
-        <ArticleForm article={article} onSuccess={() => router.push('/admin/articles')} />
-      </div>
-    </div>
+    <ArticleForm article={article} onSuccess={() => router.push('/admin/articles')} />
   );
 }

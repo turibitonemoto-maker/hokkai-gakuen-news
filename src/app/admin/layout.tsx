@@ -14,7 +14,8 @@ import {
   Loader2,
   Lock,
   BookOpen,
-  Info
+  Info,
+  Share2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -49,6 +50,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { id: "/admin", label: "ダッシュボード", icon: LayoutDashboard },
     { id: "/admin/articles", label: "記事・公開管理", icon: FileText },
     { id: "/admin/viewer", label: "紙面ビューアー", icon: BookOpen },
+    { id: "/admin/note", label: "note管理", icon: Share2 },
     { id: "/admin/ads", label: "広告管理", icon: Megaphone, isProtected: true },
     { id: "/admin/president", label: "会長挨拶", icon: UserRound, isProtected: true },
     { id: "/admin/about", label: "About Us", icon: Info, isProtected: true },
@@ -97,6 +99,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </div>
     );
+  }
+
+  // 記事作成・編集時はサイドバーなしのフルスクリーン
+  const isEditorPage = pathname === '/admin/new' || pathname.startsWith('/admin/edit/');
+  if (isEditorPage) {
+    return <div className="min-h-screen bg-white font-body">{children}</div>;
   }
 
   const activeLabel = menuItems.find(i => i.id === pathname)?.label || "管理";
