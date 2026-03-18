@@ -66,7 +66,6 @@ const NoteImageComponent = ({ node, updateAttributes, selected, deleteNode }: an
           style={{ width: '100%', height: 'auto' }}
         />
         
-        {/* note風 ツールバー (サイズ ＆ 削除) */}
         {selected && (
           <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-md border border-slate-200 rounded-full p-1 shadow-2xl flex items-center gap-1 z-50 animate-in fade-in slide-in-from-bottom-2">
             <button 
@@ -162,12 +161,7 @@ const articleSchema = z.object({
 
 type ArticleFormValues = z.infer<typeof articleSchema>;
 
-interface ArticleFormProps {
-  article?: any;
-  onSuccess: () => void;
-}
-
-export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
+export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: () => void }) {
   const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
@@ -194,29 +188,19 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
 
   const transform = form.watch("mainImageTransform");
 
-  useEffect(() => {
-    if (mainImagePreview && !article?.mainImageUrl) {
-      form.setValue("mainImageTransform", { scale: 0, x: 0, y: 0 });
-    }
-  }, [mainImagePreview, form, article]);
-
   const editor = useEditor({
     extensions: [
       StarterKit,
       CustomResizableImage,
       LinkExtension.configure({
         openOnClick: false,
-        HTMLAttributes: {
-          class: 'text-primary font-bold underline',
-        },
+        HTMLAttributes: { class: 'text-primary font-bold underline' },
       }),
       Placeholder.configure({
         placeholder: 'ご自由にお書きください。',
         emptyNodeClass: 'is-editor-empty',
       }),
-      TextAlign.configure({
-        types: ['heading', 'paragraph'],
-      }),
+      TextAlign.configure({ types: ['heading', 'paragraph'] }),
     ],
     content: article?.content || "",
     immediatelyRender: false,
@@ -248,23 +232,15 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     }
   }, [editor, toast]);
 
-  const charCount = useMemo(() => {
-    if (!editor) return 0;
-    return editor.getText().length;
-  }, [editor]);
-
   useEffect(() => {
-    if (article?.mainImageUrl) {
-      setMainImagePreview(article.mainImageUrl);
-    }
+    if (article?.mainImageUrl) setMainImagePreview(article.mainImageUrl);
   }, [article]);
 
   const handleMainImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !file.type.startsWith('image/')) return;
     setMainImageFile(file);
-    const preview = URL.createObjectURL(file);
-    setMainImagePreview(preview);
+    setMainImagePreview(URL.createObjectURL(file));
   };
 
   const sanitizeFolderName = (name: string) => {
@@ -281,7 +257,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
         try {
           const response = await fetch(src);
           const blob = await response.blob();
-          const file = new File([blob], "editor_image.jpg", { type: blob.type });
+          const file = new File([blob], `body_${Date.now()}.jpg`, { type: blob.type });
           const formData = new FormData();
           formData.append("file", file);
           formData.append("folder", folder);
@@ -301,8 +277,11 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     if (!firestore) return;
     setIsSaving(true);
     try {
+      // 衝突回避プロトコル: 記事タイトル + ユニークID でフォルダを分ける
+      const uniqueSuffix = Date.now().toString(36);
       const subFolder = sanitizeFolderName(values.title);
-      const folderPath = `newspaper_archive/${subFolder}`;
+      const folderPath = `newspaper_archive/${subFolder}_${uniqueSuffix}`;
+      
       let finalMainImageUrl = values.mainImageUrl;
       if (mainImageFile) {
         const formData = new FormData();
@@ -313,6 +292,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
         const data = await res.json();
         finalMainImageUrl = data.secure_url;
       }
+
       const processedContent = await processEditorImages(values.content, folderPath);
       const data = {
         ...values,
@@ -321,18 +301,18 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
         updatedAt: serverTimestamp(),
         updatedBy: user?.email || "unknown"
       };
+
       if (article?.id) {
         const docRef = doc(firestore, "articles", article.id);
         setDocumentNonBlocking(docRef, data, { merge: true });
-        toast({ title: "保存しました" });
       } else {
         const colRef = collection(firestore, "articles");
         addDocumentNonBlocking(colRef, { ...data, createdAt: serverTimestamp(), viewCount: 0 });
-        toast({ title: "保存しました" });
       }
+      toast({ title: "保存完了" });
       onSuccess();
     } catch (error: any) {
-      toast({ variant: "destructive", title: "保存に失敗しました", description: error.message });
+      toast({ variant: "destructive", title: "保存失敗", description: error.message });
     } finally {
       setIsSaving(false);
     }
@@ -350,181 +330,94 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
 
   return (
     <div className="flex flex-col min-h-screen bg-white font-body">
-      {/* 安定した画像入力要素 */}
-      <input 
-        type="file" 
-        id="editor-image-insert-hidden" 
-        accept="image/*" 
-        className="hidden" 
-        ref={editorImageInputRef}
-        onChange={(e) => { const file = e.target.files?.[0]; if (file) handleEditorImageInsert(file); }} 
-      />
-      <input 
-        type="file" 
-        accept="image/*" 
-        className="hidden" 
-        ref={mainImageInputRef} 
-        onChange={handleMainImageSelect} 
-      />
+      <input type="file" accept="image/*" className="hidden" ref={editorImageInputRef} onChange={(e) => { const file = e.target.files?.[0]; if (file) handleEditorImageInsert(file); }} />
+      <input type="file" accept="image/*" className="hidden" ref={mainImageInputRef} onChange={handleMainImageSelect} />
 
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b h-14 flex items-center justify-between px-4">
-        <div className="flex items-center gap-1 md:gap-2">
-          <Button variant="ghost" size="icon" onClick={onSuccess} className="rounded-full">
-            <ArrowLeft className="h-6 w-6 text-slate-600" />
-          </Button>
-          
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className={cn("rounded-full transition-all", mainImagePreview ? "text-primary" : "text-slate-400 hover:text-primary")}
-            onClick={() => mainImageInputRef.current?.click()}
-            title="見出し画像を追加・変更"
-          >
-            <LucideImage className="h-6 w-6" />
-          </Button>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" onClick={onSuccess} className="rounded-full"><ArrowLeft className="h-6 w-6 text-slate-600" /></Button>
+          <Button variant="ghost" size="icon" className={cn("rounded-full", mainImagePreview ? "text-primary" : "text-slate-400")} onClick={() => mainImageInputRef.current?.click()}><LucideImage className="h-6 w-6" /></Button>
         </div>
         
         <div className="flex items-center gap-2">
           <Form {...form}>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="ghost" className="font-black text-slate-700 h-9 px-4 rounded-full hover:bg-slate-100 transition-all">
-                  公開設定
-                </Button>
+                <Button variant="ghost" className="font-black text-slate-700 h-9 px-4 rounded-full">公開設定</Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[90vw] max-w-sm p-6 rounded-3xl shadow-2xl border-none" align="end" sideOffset={10}>
+              <PopoverContent className="w-[90vw] max-w-sm p-6 rounded-3xl shadow-2xl border-none" align="end">
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <h3 className="font-black text-lg">記事の公開設定</h3>
                     <Badge variant="outline" className="text-[10px] font-black uppercase">Admin Only</Badge>
                   </div>
                   <Separator />
-                  <FormField
-                    control={form.control}
-                    name="categoryId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest">カテゴリー</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="h-12 rounded-xl border-slate-100 bg-slate-50 font-bold"><SelectValue /></SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Campus">キャンパス</SelectItem>
-                            <SelectItem value="Event">イベント</SelectItem>
-                            <SelectItem value="Interview">インタビュー</SelectItem>
-                            <SelectItem value="Sports">スポーツ</SelectItem>
-                            <SelectItem value="Column">コラム</SelectItem>
-                            <SelectItem value="Opinion">オピニオン</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="publishDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest">公開日</FormLabel>
-                        <FormControl><Input type="date" className="h-12 rounded-xl border-slate-100 bg-slate-50 font-bold" {...field} /></FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="isPublished"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-2xl border p-4 bg-slate-50/50">
-                        <div className="space-y-0.5">
-                          <FormLabel className="text-sm font-black">公式サイトに公開</FormLabel>
-                        </div>
-                        <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} className="data-[state=checked]:bg-green-500" /></FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  <Button 
-                    onClick={form.handleSubmit(onSubmit)} 
-                    disabled={isSaving} 
-                    className="w-full h-14 rounded-2xl font-black text-lg shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90 transition-transform active:scale-95"
-                  >
-                    {isSaving ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Check className="h-5 w-5 mr-2" />}
-                    保存する
+                  <FormField control={form.control} name="categoryId" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest">カテゴリー</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl><SelectTrigger className="h-12 rounded-xl font-bold bg-slate-50"><SelectValue /></SelectTrigger></FormControl>
+                        <SelectContent>
+                          <SelectItem value="Campus">キャンパス</SelectItem>
+                          <SelectItem value="Event">イベント</SelectItem>
+                          <SelectItem value="Interview">インタビュー</SelectItem>
+                          <SelectItem value="Sports">スポーツ</SelectItem>
+                          <SelectItem value="Column">コラム</SelectItem>
+                          <SelectItem value="Opinion">オピニオン</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="publishDate" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest">公開日</FormLabel>
+                      <FormControl><Input type="date" className="h-12 rounded-xl font-bold bg-slate-50" {...field} /></FormControl>
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="isPublished" render={({ field }) => (
+                    <FormItem className="flex items-center justify-between rounded-2xl border p-4 bg-slate-50/50">
+                      <FormLabel className="text-sm font-black">公式サイトに公開</FormLabel>
+                      <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                    </FormItem>
+                  )} />
+                  <Button onClick={form.handleSubmit(onSubmit)} disabled={isSaving} className="w-full h-14 rounded-2xl font-black text-lg bg-primary">
+                    {isSaving ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Check className="h-5 w-5 mr-2" />}保存する
                   </Button>
                 </div>
               </PopoverContent>
             </Popover>
           </Form>
-          <Button variant="ghost" size="icon" className="rounded-full">
-            <MoreVertical className="h-5 w-5 text-slate-400" />
-          </Button>
         </div>
       </header>
 
       <main className="flex-1 overflow-y-auto pb-40">
-        <div className="max-w-3xl mx-auto px-6 pt-12 pb-20">
-          <div className={cn("mb-12 transition-all duration-500", mainImagePreview ? "opacity-100 scale-100" : "opacity-0 scale-95 h-0 overflow-hidden mb-0")}>
-            {mainImagePreview && (
-              <div className="relative group aspect-[21/9] w-full rounded-3xl overflow-hidden border-4 border-white shadow-2xl bg-slate-50">
-                <Image 
-                  src={mainImagePreview} 
-                  alt="" 
-                  fill 
-                  className="object-contain transition-transform duration-100"
-                  style={{
-                    transform: `translate(${transform.x}%, ${transform.y}%) scale(${Math.max(0.01, 1 + transform.scale / 100)})`,
-                  }}
-                  unoptimized
-                />
-                <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="secondary" size="icon" className="rounded-full shadow-lg bg-white/90 backdrop-blur-md hover:bg-white transition-all">
-                        <Maximize className="h-4 w-4 text-primary" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-80 p-6 rounded-3xl shadow-2xl border-none" align="end" sideOffset={10}>
-                      <div className="space-y-6">
-                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                          <Maximize className="h-3 w-3 text-primary" /> 見出し画像の構図調整
-                        </h4>
-                        <div className="space-y-4">
-                          <div className="space-y-2">
-                            <div className="flex justify-between items-center">
-                              <label className="text-[10px] font-bold text-slate-500 uppercase">ズーム: {transform.scale.toFixed(0)}%</label>
-                            </div>
-                            <Slider min={-500} max={500} step={1} value={[transform.scale]} onValueChange={([val]) => form.setValue("mainImageTransform.scale", val)} />
-                          </div>
-                          <div className="space-y-2">
-                            <div className="flex justify-between items-center">
-                              <label className="text-[10px] font-bold text-slate-500 uppercase">水平位置: {transform.x.toFixed(0)}%</label>
-                            </div>
-                            <Slider min={-500} max={500} step={1} value={[transform.x]} onValueChange={([val]) => form.setValue("mainImageTransform.x", val)} />
-                          </div>
-                          <div className="space-y-2">
-                            <div className="flex justify-between items-center">
-                              <label className="text-[10px] font-bold text-slate-500 uppercase">垂直位置: {transform.y.toFixed(0)}%</label>
-                            </div>
-                            <Slider min={-500} max={500} step={1} value={[transform.y]} onValueChange={([val]) => form.setValue("mainImageTransform.y", val)} />
-                          </div>
-                        </div>
-                        <Button 
-                          variant="ghost" 
-                          className="w-full text-[10px] font-black uppercase text-slate-400 hover:text-primary transition-colors"
-                          onClick={() => form.setValue("mainImageTransform", { scale: 0, x: 0, y: 0 })}
-                        >
-                          構図をリセット
-                        </Button>
+        <div className="max-w-3xl mx-auto px-6 pt-12">
+          {mainImagePreview && (
+            <div className="relative group aspect-[21/9] w-full rounded-3xl overflow-hidden border-4 border-white shadow-2xl bg-slate-50 mb-12">
+              <Image 
+                src={mainImagePreview} alt="" fill className="object-contain transition-transform" 
+                style={{ transform: `translate(${transform.x}%, ${transform.y}%) scale(${Math.max(0.01, 1 + transform.scale / 100)})` }}
+                unoptimized
+              />
+              <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100">
+                <Popover>
+                  <PopoverTrigger asChild><Button variant="secondary" size="icon" className="rounded-full shadow-lg"><Maximize className="h-4 w-4 text-primary" /></Button></PopoverTrigger>
+                  <PopoverContent className="w-80 p-6 rounded-3xl shadow-2xl border-none">
+                    <div className="space-y-6">
+                      <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><Maximize className="h-3 w-3 text-primary" /> 見出し画像の調整</h4>
+                      <div className="space-y-4">
+                        <div className="space-y-2"><label className="text-[9px] font-bold text-slate-500 uppercase">ズーム: {transform.scale.toFixed(0)}%</label><Slider min={-500} max={500} step={1} value={[transform.scale]} onValueChange={([v]) => form.setValue("mainImageTransform.scale", v)} /></div>
+                        <div className="space-y-2"><label className="text-[9px] font-bold text-slate-500 uppercase">水平: {transform.x.toFixed(0)}%</label><Slider min={-500} max={500} step={1} value={[transform.x]} onValueChange={([v]) => form.setValue("mainImageTransform.x", v)} /></div>
+                        <div className="space-y-2"><label className="text-[9px] font-bold text-slate-500 uppercase">垂直: {transform.y.toFixed(0)}%</label><Slider min={-500} max={500} step={1} value={[transform.y]} onValueChange={([v]) => form.setValue("mainImageTransform.y", v)} /></div>
                       </div>
-                    </PopoverContent>
-                  </Popover>
-
-                  <Button variant="secondary" size="icon" className="rounded-full shadow-lg bg-white/90 backdrop-blur-md" onClick={() => mainImageInputRef.current?.click()}><RefreshCw className="h-4 w-4" /></Button>
-                  <Button variant="destructive" size="icon" className="rounded-full shadow-lg" onClick={() => { setMainImagePreview(""); setMainImageFile(null); }}><Trash2 className="h-4 w-4" /></Button>
-                </div>
+                      <Button variant="ghost" className="w-full text-[10px] font-black" onClick={() => form.setValue("mainImageTransform", { scale: 0, x: 0, y: 0 })}>リセット</Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                <Button variant="destructive" size="icon" className="rounded-full" onClick={() => { setMainImagePreview(""); setMainImageFile(null); }}><Trash2 className="h-4 w-4" /></Button>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           <textarea
             className="w-full text-4xl md:text-5xl font-black border-none focus:ring-0 resize-none px-0 py-2 leading-tight placeholder:text-slate-200 bg-transparent min-h-[80px]"
@@ -544,47 +437,22 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                 <FloatingMenu editor={editor} tippyOptions={{ duration: 100 }}>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-10 w-10 text-white bg-primary hover:bg-primary/90 rounded-2xl shadow-xl shadow-primary/20 -ml-12 group active:scale-90 transition-all">
-                        <Plus className="h-6 w-6 group-hover:rotate-90 transition-transform duration-300" />
-                      </Button>
+                      <Button variant="ghost" size="icon" className="h-10 w-10 text-white bg-primary hover:bg-primary/90 rounded-2xl shadow-xl -ml-12"><Plus className="h-6 w-6" /></Button>
                     </PopoverTrigger>
-                    <PopoverContent side="right" align="start" className="w-56 p-2 rounded-3xl shadow-2xl border-none ml-2 animate-in slide-in-from-left-4 zoom-in-95">
+                    <PopoverContent side="right" className="w-56 p-2 rounded-3xl shadow-2xl border-none">
                       <div className="grid gap-1">
-                        <button 
-                          type="button"
-                          onClick={() => editorImageInputRef.current?.click()}
-                          className="flex items-center gap-4 w-full p-4 hover:bg-slate-50 rounded-2xl text-left transition-all group"
-                        >
-                          <div className="bg-blue-50 p-2 rounded-xl group-hover:bg-blue-100 transition-colors">
-                            <LucideImage className="h-5 w-5 text-blue-500" />
-                          </div>
+                        <button type="button" onClick={() => editorImageInputRef.current?.click()} className="flex items-center gap-4 w-full p-4 hover:bg-slate-50 rounded-2xl">
+                          <div className="bg-blue-50 p-2 rounded-xl"><LucideImage className="h-5 w-5 text-blue-500" /></div>
                           <span className="text-sm font-black text-slate-700">画像を挿入</span>
                         </button>
-                        <button 
-                          type="button"
-                          onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
-                          className="flex items-center gap-4 w-full p-4 hover:bg-slate-50 rounded-2xl text-left transition-all group"
-                        >
-                          <div className="bg-slate-50 p-2 rounded-xl group-hover:bg-slate-100 transition-colors">
-                            <Heading2 className="h-5 w-5 text-slate-500" />
-                          </div>
+                        <button type="button" onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()} className="flex items-center gap-4 w-full p-4 hover:bg-slate-50 rounded-2xl">
+                          <div className="bg-slate-50 p-2 rounded-xl"><Heading2 className="h-5 w-5 text-slate-500" /></div>
                           <span className="text-sm font-black text-slate-700">大見出し</span>
-                        </button>
-                        <button 
-                          type="button"
-                          onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}
-                          className="flex items-center gap-4 w-full p-4 hover:bg-slate-50 rounded-2xl text-left transition-all group"
-                        >
-                          <div className="bg-slate-50 p-2 rounded-xl group-hover:bg-slate-100 transition-colors">
-                            <Heading3 className="h-5 w-5 text-slate-500" />
-                          </div>
-                          <span className="text-sm font-black text-slate-700">小見出し</span>
                         </button>
                       </div>
                     </PopoverContent>
                   </Popover>
                 </FloatingMenu>
-
                 <EditorContent editor={editor} />
               </div>
             )}
@@ -592,68 +460,17 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
         </div>
       </main>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
-        <div className="max-w-3xl mx-auto flex flex-col">
-          <div className="px-6 py-1.5 flex justify-end">
-            <div className="text-[9px] font-black text-slate-400 bg-slate-50 px-3 py-1 rounded-full border border-slate-100 flex items-center gap-1.5 shadow-sm">
-              <span className="w-1 h-1 bg-green-500 rounded-full animate-pulse" />
-              {charCount.toLocaleString()} 文字
-            </div>
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t z-50">
+        <div className="max-w-3xl mx-auto h-16 flex items-center px-4 gap-2">
+          <Button variant="ghost" size="icon" className="h-12 w-12 text-white bg-primary rounded-2xl shadow-xl" onClick={() => editorImageInputRef.current?.click()}><Plus className="h-7 w-7" /></Button>
+          <Separator orientation="vertical" className="h-8 mx-2" />
+          <div className="flex-1 flex gap-1">
+            <Button variant="ghost" size="icon" onClick={() => editor?.chain().focus().toggleBold().run()} className={cn("rounded-xl", editor?.isActive('bold') && "bg-primary/5 text-primary")}><Bold className="h-5 w-5" /></Button>
+            <Button variant="ghost" size="icon" onClick={() => editor?.chain().focus().setTextAlign('center').run()} className={cn("rounded-xl", editor?.isActive({ textAlign: 'center' }) && "bg-primary/5 text-primary")}><AlignCenter className="h-5 w-5" /></Button>
+            <Button variant="ghost" size="icon" onClick={setLink} className={cn("rounded-xl", editor?.isActive('link') && "bg-primary/5 text-primary")}><LinkIcon className="h-5 w-5" /></Button>
+            <Button variant="ghost" size="icon" onClick={() => editor?.chain().focus().toggleBlockquote().run()} className={cn("rounded-xl", editor?.isActive('blockquote') && "bg-primary/5 text-primary")}><Quote className="h-5 w-5" /></Button>
           </div>
-
-          <div className="h-16 flex items-center px-2 overflow-x-auto gap-1 no-scrollbar pb-safe-area-inset-bottom">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-12 w-12 shrink-0 text-white bg-primary hover:bg-primary/90 rounded-2xl shadow-xl shadow-primary/20 ml-2 group active:scale-90 transition-all">
-                  <Plus className="h-7 w-7 group-hover:rotate-90 transition-transform duration-300" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent side="top" align="start" className="w-56 p-2 rounded-3xl shadow-2xl border-none mb-2 animate-in slide-in-from-bottom-4 zoom-in-95">
-                <div className="grid gap-1">
-                  <button 
-                    type="button"
-                    onClick={() => editorImageInputRef.current?.click()}
-                    className="flex items-center gap-4 w-full p-4 hover:bg-slate-50 rounded-2xl text-left transition-all group"
-                  >
-                    <div className="bg-blue-50 p-2 rounded-xl group-hover:bg-blue-100 transition-colors">
-                      <LucideImage className="h-5 w-5 text-blue-500" />
-                    </div>
-                    <span className="text-sm font-black text-slate-700">画像を挿入</span>
-                  </button>
-                  <button 
-                    type="button"
-                    onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
-                    className="flex items-center gap-4 w-full p-4 hover:bg-slate-50 rounded-2xl text-left transition-all group"
-                  >
-                    <div className="bg-slate-50 p-2 rounded-xl group-hover:bg-slate-100 transition-colors">
-                      <Heading2 className="h-5 w-5 text-slate-500" />
-                    </div>
-                    <span className="text-sm font-black text-slate-700">大見出し</span>
-                  </button>
-                  <button 
-                    type="button"
-                    onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}
-                    className="flex items-center gap-4 w-full p-4 hover:bg-slate-50 rounded-2xl text-left transition-all group"
-                  >
-                    <div className="bg-slate-50 p-2 rounded-xl group-hover:bg-slate-100 transition-colors">
-                      <Heading3 className="h-5 w-5 text-slate-500" />
-                    </div>
-                    <span className="text-sm font-black text-slate-700">小見出し</span>
-                  </button>
-                </div>
-              </PopoverContent>
-            </Popover>
-
-            <Separator orientation="vertical" className="h-8 mx-2 bg-slate-100" />
-
-            <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" className={cn("h-11 w-11 shrink-0 rounded-xl transition-all", editor?.isActive('bold') ? "text-primary bg-primary/5 shadow-inner" : "text-slate-400")} onClick={() => editor?.chain().focus().toggleBold().run()}><Bold className="h-5 w-5" /></Button>
-              <Button variant="ghost" size="icon" className={cn("h-11 w-11 shrink-0 rounded-xl transition-all", editor?.isActive({ textAlign: 'center' }) ? "text-primary bg-primary/5" : "text-slate-400")} onClick={() => editor?.chain().focus().setTextAlign('center').run()}><AlignCenter className="h-5 w-5" /></Button>
-              <Button variant="ghost" size="icon" className={cn("h-11 w-11 shrink-0 rounded-xl transition-all", editor?.isActive('bulletList') ? "text-primary bg-primary/5" : "text-slate-400")} onClick={() => editor?.chain().focus().toggleBulletList().run()}><List className="h-5 w-5" /></Button>
-              <Button variant="ghost" size="icon" className={cn("h-11 w-11 shrink-0 rounded-xl transition-all", editor?.isActive('link') ? "text-primary bg-primary/5" : "text-slate-400")} onClick={setLink}><LinkIcon className="h-5 w-5" /></Button>
-              <Button variant="ghost" size="icon" className={cn("h-11 w-11 shrink-0 rounded-xl transition-all", editor?.isActive('blockquote') ? "text-primary bg-primary/5" : "text-slate-400")} onClick={() => editor?.chain().focus().toggleBlockquote().run()}><Quote className="h-5 w-5" /></Button>
-            </div>
-          </div>
+          <div className="text-[10px] font-black text-slate-400 bg-slate-50 px-3 py-1 rounded-full">{editor?.getText().length.toLocaleString()} 文字</div>
         </div>
       </div>
     </div>

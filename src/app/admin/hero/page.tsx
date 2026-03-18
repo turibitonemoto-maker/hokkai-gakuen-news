@@ -1,7 +1,7 @@
-"use client";
 
-import { HeroManager } from "@/components/dashboard/hero-manager";
-
+'use client';
+import { redirect } from 'next/navigation';
 export default function HeroAdminPage() {
-  return <HeroManager />;
+  redirect('/admin');
+  return null;
 }
