@@ -39,6 +39,7 @@ import StarterKit from '@tiptap/starter-kit';
 import ImageExtension from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
+import TextAlign from '@tiptap/extension-text-align';
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
@@ -46,7 +47,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Separator } from "@/components/ui/separator";
 
 /**
- * note風：画像サイズ選択 ＆ キャプション機能付きコンポーネント
+ * note風：画像サイズ選択 ＆ 抹消機能付きコンポーネント
  */
 const NoteImageComponent = ({ node, updateAttributes, selected, deleteNode }: any) => {
   const setWidth = (width: string) => {
@@ -65,7 +66,7 @@ const NoteImageComponent = ({ node, updateAttributes, selected, deleteNode }: an
           style={{ width: '100%', height: 'auto' }}
         />
         
-        {/* Note-like Toolbar */}
+        {/* note風 ツールバー (サイズ ＆ 削除) */}
         {selected && (
           <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-md border border-slate-200 rounded-full p-1 shadow-2xl flex items-center gap-1 z-50 animate-in fade-in slide-in-from-bottom-2">
             <button 
@@ -213,6 +214,9 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
         placeholder: 'ご自由にお書きください。',
         emptyNodeClass: 'is-editor-empty',
       }),
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
+      }),
     ],
     content: article?.content || "",
     immediatelyRender: false,
@@ -247,7 +251,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
   const charCount = useMemo(() => {
     if (!editor) return 0;
     return editor.getText().length;
-  }, [editor?.getText()]);
+  }, [editor]);
 
   useEffect(() => {
     if (article?.mainImageUrl) {
@@ -356,7 +360,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
         onChange={(e) => { const file = e.target.files?.[0]; if (file) handleEditorImageInsert(file); }} 
       />
 
-      {/* Header - Fixed & Clean */}
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b h-14 flex items-center justify-between px-4">
         <Button variant="ghost" size="icon" onClick={onSuccess} className="rounded-full">
           <ArrowLeft className="h-6 w-6 text-slate-600" />
@@ -439,10 +442,8 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
         </div>
       </header>
 
-      {/* Main canvas */}
       <main className="flex-1 overflow-y-auto pb-40">
         <div className="max-w-3xl mx-auto px-6 pt-12 pb-20">
-          {/* Header Image Area */}
           <div className="mb-12 group relative">
             <input type="file" accept="image/*" className="hidden" ref={mainImageInputRef} onChange={handleMainImageSelect} />
             {mainImagePreview ? (
@@ -474,31 +475,19 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                             <div className="flex justify-between items-center">
                               <label className="text-[10px] font-bold text-slate-500 uppercase">ズーム: {transform.scale.toFixed(0)}%</label>
                             </div>
-                            <Slider 
-                              min={-500} max={500} step={1} 
-                              value={[transform.scale]} 
-                              onValueChange={([val]) => form.setValue("mainImageTransform.scale", val)} 
-                            />
+                            <Slider min={-500} max={500} step={1} value={[transform.scale]} onValueChange={([val]) => form.setValue("mainImageTransform.scale", val)} />
                           </div>
                           <div className="space-y-2">
                             <div className="flex justify-between items-center">
                               <label className="text-[10px] font-bold text-slate-500 uppercase">水平位置: {transform.x.toFixed(0)}%</label>
                             </div>
-                            <Slider 
-                              min={-500} max={500} step={1} 
-                              value={[transform.x]} 
-                              onValueChange={([val]) => form.setValue("mainImageTransform.x", val)} 
-                            />
+                            <Slider min={-500} max={500} step={1} value={[transform.x]} onValueChange={([val]) => form.setValue("mainImageTransform.x", val)} />
                           </div>
                           <div className="space-y-2">
                             <div className="flex justify-between items-center">
                               <label className="text-[10px] font-bold text-slate-500 uppercase">垂直位置: {transform.y.toFixed(0)}%</label>
                             </div>
-                            <Slider 
-                              min={-500} max={500} step={1} 
-                              value={[transform.y]} 
-                              onValueChange={([val]) => form.setValue("mainImageTransform.y", val)} 
-                            />
+                            <Slider min={-500} max={500} step={1} value={[transform.y]} onValueChange={([val]) => form.setValue("mainImageTransform.y", val)} />
                           </div>
                         </div>
                         <Button 
@@ -529,7 +518,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
             )}
           </div>
 
-          {/* Title Area */}
           <textarea
             className="w-full text-4xl md:text-5xl font-black border-none focus:ring-0 resize-none px-0 py-2 leading-tight placeholder:text-slate-200 bg-transparent min-h-[80px]"
             placeholder="記事タイトル"
@@ -542,11 +530,9 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
             }}
           />
 
-          {/* Editor Area */}
           <div className="mt-8">
             {editor && (
               <div className="prose-container relative">
-                {/* Note-like Floating Menu (+) */}
                 <FloatingMenu editor={editor} tippyOptions={{ duration: 100 }}>
                   <Popover>
                     <PopoverTrigger asChild>
@@ -598,10 +584,8 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
         </div>
       </main>
 
-      {/* Bottom Toolbar */}
       <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
         <div className="max-w-3xl mx-auto flex flex-col">
-          {/* Character Count Bar */}
           <div className="px-6 py-1.5 flex justify-end">
             <div className="text-[9px] font-black text-slate-400 bg-slate-50 px-3 py-1 rounded-full border border-slate-100 flex items-center gap-1.5 shadow-sm">
               <span className="w-1 h-1 bg-green-500 rounded-full animate-pulse" />
@@ -628,7 +612,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                     </div>
                     <span className="text-sm font-black text-slate-700">画像を挿入</span>
                   </button>
-                  
                   <button 
                     type="button"
                     onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
@@ -639,7 +622,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                     </div>
                     <span className="text-sm font-black text-slate-700">大見出し</span>
                   </button>
-                  
                   <button 
                     type="button"
                     onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}
@@ -657,50 +639,11 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
             <Separator orientation="vertical" className="h-8 mx-2 bg-slate-100" />
 
             <div className="flex items-center gap-1">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className={cn("h-11 w-11 shrink-0 rounded-xl transition-all", editor?.isActive('bold') ? "text-primary bg-primary/5 shadow-inner" : "text-slate-400")} 
-                onClick={() => editor?.chain().focus().toggleBold().run()}
-              >
-                <Bold className="h-5 w-5" />
-              </Button>
-
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className={cn("h-11 w-11 shrink-0 rounded-xl transition-all", editor?.isActive({ textAlign: 'center' }) ? "text-primary bg-primary/5" : "text-slate-400")} 
-                onClick={() => editor?.chain().focus().setTextAlign('center').run()}
-              >
-                <AlignCenter className="h-5 w-5" />
-              </Button>
-
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className={cn("h-11 w-11 shrink-0 rounded-xl transition-all", editor?.isActive('bulletList') ? "text-primary bg-primary/5" : "text-slate-400")} 
-                onClick={() => editor?.chain().focus().toggleBulletList().run()}
-              >
-                <List className="h-5 w-5" />
-              </Button>
-
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className={cn("h-11 w-11 shrink-0 rounded-xl transition-all", editor?.isActive('link') ? "text-primary bg-primary/5" : "text-slate-400")} 
-                onClick={setLink}
-              >
-                <LinkIcon className="h-5 w-5" />
-              </Button>
-
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className={cn("h-11 w-11 shrink-0 rounded-xl transition-all", editor?.isActive('blockquote') ? "text-primary bg-primary/5" : "text-slate-400")} 
-                onClick={() => editor?.chain().focus().toggleBlockquote().run()}
-              >
-                <Quote className="h-5 w-5" />
-              </Button>
+              <Button variant="ghost" size="icon" className={cn("h-11 w-11 shrink-0 rounded-xl transition-all", editor?.isActive('bold') ? "text-primary bg-primary/5 shadow-inner" : "text-slate-400")} onClick={() => editor?.chain().focus().toggleBold().run()}><Bold className="h-5 w-5" /></Button>
+              <Button variant="ghost" size="icon" className={cn("h-11 w-11 shrink-0 rounded-xl transition-all", editor?.isActive({ textAlign: 'center' }) ? "text-primary bg-primary/5" : "text-slate-400")} onClick={() => editor?.chain().focus().setTextAlign('center').run()}><AlignCenter className="h-5 w-5" /></Button>
+              <Button variant="ghost" size="icon" className={cn("h-11 w-11 shrink-0 rounded-xl transition-all", editor?.isActive('bulletList') ? "text-primary bg-primary/5" : "text-slate-400")} onClick={() => editor?.chain().focus().toggleBulletList().run()}><List className="h-5 w-5" /></Button>
+              <Button variant="ghost" size="icon" className={cn("h-11 w-11 shrink-0 rounded-xl transition-all", editor?.isActive('link') ? "text-primary bg-primary/5" : "text-slate-400")} onClick={setLink}><LinkIcon className="h-5 w-5" /></Button>
+              <Button variant="ghost" size="icon" className={cn("h-11 w-11 shrink-0 rounded-xl transition-all", editor?.isActive('blockquote') ? "text-primary bg-primary/5" : "text-slate-400")} onClick={() => editor?.chain().focus().toggleBlockquote().run()}><Quote className="h-5 w-5" /></Button>
             </div>
           </div>
         </div>
