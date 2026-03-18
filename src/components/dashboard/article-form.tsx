@@ -60,7 +60,7 @@ const ResizableImageComponent = ({ node, updateAttributes, selected }: any) => {
       <div 
         ref={containerRef}
         className="mx-auto"
-        style={{ width: node.attrs.width || '100%', position: 'relative' }}
+        style={{ width: node.attrs.width || '60%', position: 'relative' }}
       >
         <img 
           src={node.attrs.src} 
@@ -89,7 +89,7 @@ const CustomResizableImage = ImageExtension.extend({
     return {
       ...this.parent?.(),
       width: {
-        default: '100%',
+        default: '60%',
         renderHTML: attributes => ({
           style: `width: ${attributes.width}; height: auto;`,
         }),
@@ -178,7 +178,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       reader.onload = () => {
         const base64 = reader.result as string;
         editorRef.current?.chain().focus().setImage({ src: base64 }).run();
-        toast({ title: "画像を一時挿入しました" });
+        toast({ title: "画像を挿入しました" });
         setIsProcessing(false);
       };
       reader.readAsDataURL(file);
