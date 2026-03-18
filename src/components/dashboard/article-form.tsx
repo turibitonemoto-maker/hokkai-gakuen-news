@@ -12,6 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Slider } from "@/components/ui/slider";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { 
   Image as LucideImage, 
@@ -33,7 +34,7 @@ import {
   Check
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useEditor, EditorContent, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react';
+import { useEditor, EditorContent, NodeViewWrapper, ReactNodeViewRenderer, FloatingMenu } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import ImageExtension from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
@@ -180,6 +181,8 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     },
   });
 
+  const transform = form.watch("mainImageTransform");
+
   useEffect(() => {
     if (mainImagePreview && !article?.mainImageUrl) {
       form.setValue("mainImageTransform", { scale: 0, x: 0, y: 0 });
@@ -320,8 +323,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     }
   }
 
-  const transform = form.watch("mainImageTransform");
-
   const setLink = useCallback(() => {
     const url = window.prompt('URLを入力してください');
     if (url === null) return;
@@ -436,6 +437,61 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                   unoptimized
                 />
                 <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {/* Intuitive Composition Adjustment Button */}
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="secondary" size="icon" className="rounded-full shadow-lg bg-white/90 backdrop-blur-md hover:bg-white transition-all">
+                        <Maximize className="h-4 w-4 text-primary" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 p-6 rounded-3xl shadow-2xl border-none" align="end" sideOffset={10}>
+                      <div className="space-y-6">
+                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                          <Maximize className="h-3 w-3 text-primary" /> 見出し画像の構図調整
+                        </h4>
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <label className="text-[10px] font-bold text-slate-500 uppercase">ズーム: {transform.scale.toFixed(0)}%</label>
+                            </div>
+                            <Slider 
+                              min={-200} max={200} step={1} 
+                              value={[transform.scale]} 
+                              onValueChange={([val]) => form.setValue("mainImageTransform.scale", val)} 
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <label className="text-[10px] font-bold text-slate-500 uppercase">水平位置: {transform.x.toFixed(0)}%</label>
+                            </div>
+                            <Slider 
+                              min={-200} max={200} step={1} 
+                              value={[transform.x]} 
+                              onValueChange={([val]) => form.setValue("mainImageTransform.x", val)} 
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <label className="text-[10px] font-bold text-slate-500 uppercase">垂直位置: {transform.y.toFixed(0)}%</label>
+                            </div>
+                            <Slider 
+                              min={-200} max={200} step={1} 
+                              value={[transform.y]} 
+                              onValueChange={([val]) => form.setValue("mainImageTransform.y", val)} 
+                            />
+                          </div>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          className="w-full text-[10px] font-black uppercase text-slate-400 hover:text-primary transition-colors"
+                          onClick={() => form.setValue("mainImageTransform", { scale: 0, x: 0, y: 0 })}
+                        >
+                          構図をリセット
+                        </Button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+
                   <Button variant="secondary" size="icon" className="rounded-full shadow-lg bg-white/90 backdrop-blur-md" onClick={() => mainImageInputRef.current?.click()}><RefreshCw className="h-4 w-4" /></Button>
                   <Button variant="destructive" size="icon" className="rounded-full shadow-lg" onClick={() => { setMainImagePreview(""); setMainImageFile(null); }}><Trash2 className="h-4 w-4" /></Button>
                 </div>
@@ -471,6 +527,52 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
             {editor && (
               <div className="prose-container relative">
                 {!editor.getText() && !editor.isActive('image') && <p className="absolute top-10 left-0 text-slate-200 font-bold pointer-events-none text-xl">ご自由にお書きください。</p>}
+                
+                {/* Note-like Floating Menu (+) */}
+                <FloatingMenu editor={editor} tippyOptions={{ duration: 100 }}>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-10 w-10 text-white bg-primary hover:bg-primary/90 rounded-2xl shadow-xl shadow-primary/20 -ml-12 group active:scale-90 transition-all">
+                        <Plus className="h-6 w-6 group-hover:rotate-90 transition-transform duration-300" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent side="right" align="start" className="w-56 p-2 rounded-3xl shadow-2xl border-none ml-2 animate-in slide-in-from-left-4 zoom-in-95">
+                      <div className="grid gap-1">
+                        <button 
+                          type="button"
+                          onClick={() => document.getElementById('editor-image-insert')?.click()}
+                          className="flex items-center gap-4 w-full p-4 hover:bg-slate-50 rounded-2xl text-left transition-all group"
+                        >
+                          <div className="bg-blue-50 p-2 rounded-xl group-hover:bg-blue-100 transition-colors">
+                            <LucideImage className="h-5 w-5 text-blue-500" />
+                          </div>
+                          <span className="text-sm font-black text-slate-700">画像を挿入</span>
+                        </button>
+                        <button 
+                          type="button"
+                          onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
+                          className="flex items-center gap-4 w-full p-4 hover:bg-slate-50 rounded-2xl text-left transition-all group"
+                        >
+                          <div className="bg-slate-50 p-2 rounded-xl group-hover:bg-slate-100 transition-colors">
+                            <Heading2 className="h-5 w-5 text-slate-500" />
+                          </div>
+                          <span className="text-sm font-black text-slate-700">大見出し</span>
+                        </button>
+                        <button 
+                          type="button"
+                          onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}
+                          className="flex items-center gap-4 w-full p-4 hover:bg-slate-50 rounded-2xl text-left transition-all group"
+                        >
+                          <div className="bg-slate-50 p-2 rounded-xl group-hover:bg-slate-100 transition-colors">
+                            <Heading3 className="h-5 w-5 text-slate-500" />
+                          </div>
+                          <span className="text-sm font-black text-slate-700">小見出し</span>
+                        </button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </FloatingMenu>
+
                 <EditorContent editor={editor} />
               </div>
             )}
