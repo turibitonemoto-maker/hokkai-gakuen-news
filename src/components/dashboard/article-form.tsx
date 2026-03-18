@@ -13,16 +13,35 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { Image as LucideImage, Heading2, Loader2, Bold, Italic, List, Maximize, RefreshCw, Trash2, Plus, Link as LinkIcon, Heading3 } from "lucide-react";
+import { 
+  Image as LucideImage, 
+  Heading2, 
+  Loader2, 
+  Bold, 
+  Italic, 
+  List, 
+  Maximize, 
+  RefreshCw, 
+  Trash2, 
+  Plus, 
+  Link as LinkIcon, 
+  Heading3,
+  ArrowLeft,
+  MoreVertical,
+  AlignCenter,
+  Quote,
+  Sparkles
+} from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useEditor, EditorContent, NodeViewWrapper, ReactNodeViewRenderer, FloatingMenu } from '@tiptap/react';
+import { useEditor, EditorContent, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import ImageExtension from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Separator } from "@/components/ui/separator";
 
 /**
  * 本文内：リサイズ ＆ キャプション機能付き画像コンポーネント
@@ -65,7 +84,7 @@ const ResizableImageComponent = ({ node, updateAttributes, selected }: any) => {
         <img 
           src={node.attrs.src} 
           alt={node.attrs.alt} 
-          style={{ width: '100%', height: 'auto' }}
+          style={{ width: '100%', height: 'auto', objectFit: 'contain' }}
         />
         <div 
           className="resize-handle resize-handle-bottom-right" 
@@ -119,7 +138,6 @@ const articleSchema = z.object({
   title: z.string().min(1, "タイトルを入力してください"),
   articleType: z.literal("Standard"),
   content: z.string().min(1, "本文を入力してください"),
-  imageCaption: z.string().optional(),
   categoryId: z.enum(["Campus", "Event", "Interview", "Sports", "Column", "Opinion"]),
   publishDate: z.string(),
   mainImageUrl: z.string().optional().or(z.literal("")),
@@ -155,7 +173,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       title: article?.title || "",
       articleType: "Standard",
       content: article?.content || "",
-      imageCaption: "",
       categoryId: (article?.categoryId === "Viewer" ? "Campus" : article?.categoryId) || "Campus",
       publishDate: article?.publishDate || new Date().toISOString().split("T")[0],
       mainImageUrl: article?.mainImageUrl || "",
@@ -209,20 +226,15 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     },
     editorProps: {
       attributes: {
-        class: 'ProseMirror outline-none min-h-[600px] p-4 md:p-12',
-      },
-      handleDrop: (view, event, slice, moved) => {
-        if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]) {
-          const file = event.dataTransfer.files[0];
-          if (file.type.startsWith('image/')) {
-            handleEditorImageInsert(file);
-            return true;
-          }
-        }
-        return false;
+        class: 'ProseMirror outline-none min-h-[600px] py-10 px-4 md:px-0 max-w-3xl mx-auto',
       },
     },
   });
+
+  const charCount = useMemo(() => {
+    if (!editor) return 0;
+    return editor.getText().length;
+  }, [editor?.getText()]);
 
   useEffect(() => {
     if (article?.mainImageUrl) {
@@ -322,209 +334,236 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
   }, [editor]);
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-w-5xl mx-auto pb-20 px-2 md:px-0">
-        <div className="flex items-start gap-3 md:gap-6 border-b-2 border-slate-100 pb-6 group/title">
-          <div className="relative pt-2 md:pt-4">
-            <input type="file" accept="image/*" className="hidden" ref={mainImageInputRef} onChange={handleMainImageSelect} />
-            <Button 
-              type="button" 
-              variant="ghost" 
-              className={cn(
-                "h-12 w-12 md:h-20 md:w-20 rounded-[1rem] md:rounded-[1.5rem] border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all shrink-0",
-                mainImagePreview ? "border-primary bg-primary/5 text-primary" : "border-slate-200 bg-slate-50 text-slate-400 hover:border-slate-300 hover:bg-slate-100"
-              )}
-              onClick={() => mainImageInputRef.current?.click()}
-            >
-              {mainImagePreview ? <RefreshCw className="h-5 w-5 md:h-6 md:w-6" /> : <LucideImage className="h-5 w-5 md:h-6 md:w-6" />}
-              <span className="text-[6px] md:text-[8px] font-black uppercase tracking-tighter hidden md:inline">Header</span>
-            </Button>
-            {mainImagePreview && (
-              <Button
-                type="button"
-                variant="destructive"
-                size="icon"
-                className="absolute -top-1 -right-1 h-5 w-5 md:h-6 md:w-6 rounded-full shadow-lg scale-0 group-hover/title:scale-100 transition-transform"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setMainImagePreview("");
-                  setMainImageFile(null);
-                  form.setValue("mainImageUrl", "");
-                }}
-              >
-                <Trash2 className="h-2 w-2 md:h-3 md:w-3" />
-              </Button>
-            )}
-          </div>
-          <div className="flex-1">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem className="space-y-0">
-                  <FormControl>
-                    <Input className="h-auto py-1 md:py-2 text-xl md:text-5xl font-black border-none bg-transparent shadow-none px-0 focus-visible:ring-0 placeholder:text-slate-200 leading-tight" placeholder="タイトルを入力してください" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+    <div className="flex flex-col min-h-screen bg-white">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-white border-b h-14 flex items-center justify-between px-4">
+        <Button variant="ghost" size="icon" onClick={onSuccess} className="rounded-full">
+          <ArrowLeft className="h-6 w-6" />
+        </Button>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" className="rounded-full">
+            <MoreVertical className="h-5 w-5" />
+          </Button>
+          <Form {...form}>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" className="font-bold text-slate-700">公開設定</Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[90vw] max-w-sm p-6 rounded-3xl shadow-2xl border-none" align="end" sideOffset={10}>
+                <div className="space-y-6">
+                  <h3 className="font-black text-lg">記事の公開設定</h3>
+                  <Separator />
+                  <FormField
+                    control={form.control}
+                    name="categoryId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest">カテゴリー</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="h-12 rounded-xl border-slate-100 bg-slate-50 font-bold"><SelectValue /></SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Campus">キャンパス</SelectItem>
+                            <SelectItem value="Event">イベント</SelectItem>
+                            <SelectItem value="Interview">インタビュー</SelectItem>
+                            <SelectItem value="Sports">スポーツ</SelectItem>
+                            <SelectItem value="Column">コラム</SelectItem>
+                            <SelectItem value="Opinion">オピニオン</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="publishDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest">公開日</FormLabel>
+                        <FormControl><Input type="date" className="h-12 rounded-xl border-slate-100 bg-slate-50 font-bold" {...field} /></FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="isPublished"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-xl border p-4 bg-slate-50/50">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-sm font-bold">公式サイトに公開</FormLabel>
+                        </div>
+                        <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <Button 
+                    onClick={form.handleSubmit(onSubmit)} 
+                    disabled={isSaving} 
+                    className="w-full h-14 rounded-2xl font-black text-lg shadow-lg shadow-primary/20"
+                  >
+                    {isSaving ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
+                    保存する
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </Form>
         </div>
+      </header>
 
-        {mainImagePreview && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
-            <div className="relative aspect-[21/9] w-full rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden border-4 border-white shadow-2xl bg-slate-100">
-              <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+      {/* Main canvas */}
+      <main className="flex-1 overflow-y-auto pb-32">
+        <div className="max-w-3xl mx-auto px-6 py-10">
+          {/* Header Image Upload Area */}
+          <div className="mb-10 group relative">
+            <input type="file" accept="image/*" className="hidden" ref={mainImageInputRef} onChange={handleMainImageSelect} />
+            {mainImagePreview ? (
+              <div className="relative aspect-[21/9] w-full rounded-2xl overflow-hidden border-4 border-white shadow-xl bg-slate-50">
                 <Image 
                   src={mainImagePreview} 
-                  alt="Header Preview" 
+                  alt="" 
                   fill 
-                  className="transition-transform duration-100 ease-linear"
+                  className="object-contain transition-transform duration-100"
                   style={{
-                    objectFit: "contain",
                     transform: `translate(${transform.x}%, ${transform.y}%) scale(${Math.max(0.01, 1 + transform.scale / 100)})`,
-                    willChange: 'transform'
                   }}
                   unoptimized
                 />
-              </div>
-            </div>
-            <div className="bg-slate-50/50 p-4 md:p-6 rounded-2xl md:rounded-3xl border border-slate-100 space-y-4">
-              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                <Maximize className="h-3 w-3" /> 見出し画像の構図を調整
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-500">ズーム: {transform.scale.toFixed(0)}%</label>
-                  <Slider min={-200} max={200} step={1} value={[transform.scale]} onValueChange={([val]) => form.setValue("mainImageTransform.scale", val)} />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-500">水平位置: {transform.x.toFixed(0)}%</label>
-                  <Slider min={-200} max={200} step={1} value={[transform.x]} onValueChange={([val]) => form.setValue("mainImageTransform.x", val)} />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-500">垂直位置: {transform.y.toFixed(0)}%</label>
-                  <Slider min={-200} max={200} step = {1} value={[transform.y]} onValueChange={([val]) => form.setValue("mainImageTransform.y", val)} />
+                <div className="absolute top-2 right-2 flex gap-2">
+                  <Button variant="secondary" size="icon" className="rounded-full shadow-lg" onClick={() => mainImageInputRef.current?.click()}><RefreshCw className="h-4 w-4" /></Button>
+                  <Button variant="destructive" size="icon" className="rounded-full shadow-lg" onClick={() => { setMainImagePreview(""); setMainImageFile(null); }}><Trash2 className="h-4 w-4" /></Button>
                 </div>
               </div>
-            </div>
+            ) : (
+              <Button 
+                variant="ghost" 
+                className="h-14 w-14 rounded-full border-2 border-dashed border-slate-200 bg-slate-50 text-slate-400 hover:border-primary hover:bg-primary/5 hover:text-primary transition-all p-0 flex items-center justify-center"
+                onClick={() => mainImageInputRef.current?.click()}
+              >
+                <LucideImage className="h-6 w-6" />
+              </Button>
+            )}
           </div>
-        )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 items-end">
-          <FormField
-            control={form.control}
-            name="categoryId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest">カテゴリー</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger className="h-12 rounded-xl border-slate-100 bg-slate-50/50 font-bold"><SelectValue /></SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Campus">キャンパス</SelectItem>
-                    <SelectItem value="Event">イベント</SelectItem>
-                    <SelectItem value="Interview">インタビュー</SelectItem>
-                    <SelectItem value="Sports">スポーツ</SelectItem>
-                    <SelectItem value="Column">コラム</SelectItem>
-                    <SelectItem value="Opinion">オピニオン</SelectItem>
-                  </SelectContent>
-                </Select>
-              </FormItem>
-            )}
+          {/* Title Area */}
+          <textarea
+            className="w-full text-4xl md:text-5xl font-black border-none focus:ring-0 resize-none px-0 py-2 leading-tight placeholder:text-slate-200 bg-transparent min-h-[100px]"
+            placeholder="記事タイトル"
+            rows={2}
+            value={form.watch("title")}
+            onChange={(e) => form.setValue("title", e.target.value)}
           />
-          <FormField
-            control={form.control}
-            name="publishDate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest">公開日</FormLabel>
-                <FormControl><Input type="date" className="h-12 rounded-xl border-slate-100 bg-slate-50/50 font-bold" {...field} /></FormControl>
-              </FormItem>
+
+          {/* Editor Area */}
+          <div className="mt-4">
+            {editor && (
+              <div className="prose-container relative">
+                {!editor.getText() && <p className="absolute top-10 left-4 text-slate-300 font-bold pointer-events-none">ご自由にお書きください。</p>}
+                <EditorContent editor={editor} />
+              </div>
             )}
-          />
+          </div>
         </div>
+      </main>
 
-        <div className="relative pt-6 md:pt-10">
-          {editor && (
-            <FloatingMenu 
-              editor={editor} 
-              tippyOptions={{ duration: 100, placement: 'left-start' }}
-              className="flex items-center gap-1 -ml-8 md:-ml-12"
+      {/* Bottom Toolbar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t z-50">
+        <div className="max-w-3xl mx-auto">
+          <div className="px-4 py-1 flex justify-end">
+            <span className="text-[10px] font-black text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{charCount} 文字</span>
+          </div>
+          <div className="h-14 flex items-center px-2 overflow-x-auto gap-1 no-scrollbar">
+            {/* The Plus button is front and center (far left) */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0 text-slate-600 hover:text-primary rounded-xl">
+                  <Plus className="h-6 w-6" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent side="top" align="start" className="w-48 p-2 rounded-2xl shadow-2xl border-none">
+                <div className="grid gap-1">
+                  <button 
+                    onClick={() => document.getElementById('editor-image-insert')?.click()}
+                    className="flex items-center gap-3 w-full p-3 hover:bg-slate-50 rounded-xl text-left transition-colors group"
+                  >
+                    <LucideImage className="h-4 w-4 text-slate-400 group-hover:text-primary" />
+                    <span className="text-xs font-black text-slate-600">画像を挿入</span>
+                  </button>
+                  <input type="file" id="editor-image-insert" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleEditorImageInsert(file); }} />
+                  <button 
+                    onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
+                    className="flex items-center gap-3 w-full p-3 hover:bg-slate-50 rounded-xl text-left transition-colors"
+                  >
+                    <Heading2 className="h-4 w-4 text-slate-400" />
+                    <span className="text-xs font-black text-slate-600">大見出し</span>
+                  </button>
+                  <button 
+                    onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}
+                    className="flex items-center gap-3 w-full p-3 hover:bg-slate-50 rounded-xl text-left transition-colors"
+                  >
+                    <Heading3 className="h-4 w-4 text-slate-400" />
+                    <span className="text-xs font-black text-slate-600">小見出し</span>
+                  </button>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0 text-slate-300 rounded-xl"><Sparkles className="h-5 w-5" /></Button>
+            
+            <Separator orientation="vertical" className="h-6 mx-1" />
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" className="h-10 px-3 shrink-0 text-sm font-black text-slate-600 rounded-xl">見出し <Plus className="ml-1 h-3 w-3 opacity-50" /></Button>
+              </PopoverTrigger>
+              <PopoverContent side="top" className="w-32 p-1 rounded-xl shadow-xl border-none">
+                <Button variant="ghost" className="w-full justify-start font-bold" onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}>大見出し</Button>
+                <Button variant="ghost" className="w-full justify-start font-bold" onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}>小見出し</Button>
+              </PopoverContent>
+            </Popover>
+
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className={cn("h-10 w-10 shrink-0 rounded-xl", editor?.isActive('bold') && "text-primary bg-primary/5")} 
+              onClick={() => editor?.chain().focus().toggleBold().run()}
             >
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button type="button" variant="ghost" size="icon" className="h-10 w-10 md:h-12 md:w-12 rounded-full bg-white shadow-2xl border-2 border-slate-100 text-slate-400 hover:text-primary hover:scale-110 transition-all z-50">
-                    <Plus className="h-6 w-6 md:h-7 md:w-7" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent side="right" className="w-48 p-2 rounded-2xl shadow-2xl border-none z-50">
-                  <div className="grid gap-1">
-                    <button 
-                      type="button"
-                      onClick={() => document.getElementById('editor-image-upload')?.click()}
-                      className="flex items-center gap-3 w-full p-3 hover:bg-slate-50 rounded-xl text-left transition-colors group"
-                    >
-                      <LucideImage className="h-4 w-4 text-slate-400 group-hover:text-primary" />
-                      <span className="text-xs font-black text-slate-600">画像を挿入</span>
-                    </button>
-                    <button 
-                      type="button"
-                      onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-                      className="flex items-center gap-3 w-full p-3 hover:bg-slate-50 rounded-xl text-left transition-colors group"
-                    >
-                      <Heading2 className="h-4 w-4 text-slate-400 group-hover:text-primary" />
-                      <span className="text-xs font-black text-slate-600">大見出し</span>
-                    </button>
-                    <button 
-                      type="button"
-                      onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-                      className="flex items-center gap-3 w-full p-3 hover:bg-slate-50 rounded-xl text-left transition-colors group"
-                    >
-                      <Heading3 className="h-4 w-4 text-slate-400 group-hover:text-primary" />
-                      <span className="text-xs font-black text-slate-600">小見出し</span>
-                    </button>
-                    <button 
-                      type="button"
-                      onClick={setLink}
-                      className="flex items-center gap-3 w-full p-3 hover:bg-slate-50 rounded-xl text-left transition-colors group"
-                    >
-                      <LinkIcon className="h-4 w-4 text-slate-400 group-hover:text-primary" />
-                      <span className="text-xs font-black text-slate-600">リンクを挿入</span>
-                    </button>
-                  </div>
-                </PopoverContent>
-              </Popover>
-            </FloatingMenu>
-          )}
+              <Bold className="h-5 w-5" />
+            </Button>
 
-          <div className="min-h-[600px] bg-white rounded-[1.5rem] md:rounded-[2rem] border border-slate-100 overflow-hidden shadow-inner relative group/editor">
-            <EditorContent editor={editor} />
-            <input type="file" accept="image/*" className="hidden" id="editor-image-upload" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleEditorImageInsert(file); }}/>
-          </div>
-        </div>
+            <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0 text-slate-600 rounded-xl"><AlignCenter className="h-5 w-5" /></Button>
 
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6 pt-10 border-t sticky bottom-4 md:bottom-6 z-20 bg-white/80 backdrop-blur-md p-4 md:p-6 rounded-2xl md:rounded-[2.5rem] shadow-2xl border border-white">
-          <FormField
-            control={form.control}
-            name="isPublished"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-center gap-4 space-y-0">
-                <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} className="scale-110" /></FormControl>
-                <FormLabel className="text-sm font-black text-slate-700">公式サイトに公開</FormLabel>
-              </FormItem>
-            )}
-          />
-          <div className="flex gap-2 w-full md:w-auto">
-            <Button type="button" variant="outline" onClick={onSuccess} className="flex-1 md:w-32 h-12 md:h-14 rounded-xl md:rounded-2xl font-bold border-slate-200">キャンセル</Button>
-            <Button type="submit" disabled={isSaving} className="flex-[2] md:w-48 h-12 md:h-14 shadow-2xl font-black rounded-xl md:rounded-2xl text-base md:text-lg bg-primary hover:bg-primary/90">
-              {isSaving ? <Loader2 className="h-5 w-5 md:h-6 md:w-6 animate-spin mr-2" /> : null}{isSaving ? "保存中" : "記事を保存する"}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className={cn("h-10 w-10 shrink-0 rounded-xl", editor?.isActive('bulletList') && "text-primary bg-primary/5")} 
+              onClick={() => editor?.chain().focus().toggleBulletList().run()}
+            >
+              <List className="h-5 w-5" />
+            </Button>
+
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className={cn("h-10 w-10 shrink-0 rounded-xl", editor?.isActive('link') && "text-primary bg-primary/5")} 
+              onClick={setLink}
+            >
+              <LinkIcon className="h-5 w-5" />
+            </Button>
+
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className={cn("h-10 w-10 shrink-0 rounded-xl", editor?.isActive('blockquote') && "text-primary bg-primary/5")} 
+              onClick={() => editor?.chain().focus().toggleBlockquote().run()}
+            >
+              <Quote className="h-5 w-5" />
             </Button>
           </div>
+          <div className="h-safe-area-inset-bottom" />
         </div>
-      </form>
-    </Form>
+      </div>
+    </div>
   );
 }
