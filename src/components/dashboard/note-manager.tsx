@@ -12,7 +12,8 @@ import {
   ImageOff,
   RefreshCw,
   Lock,
-  ArrowRight
+  ArrowRight,
+  ShieldAlert
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -71,7 +72,7 @@ export function NoteManager() {
 
   const startSyncProcess = () => {
     if (lockoutTime && lockoutTime > Date.now()) {
-      toast({ variant: "destructive", title: "ロック中", description: "頭を冷やしてください。" });
+      toast({ variant: "destructive", title: "ロック中", description: "アクセス制限がかかっています。" });
       return;
     }
     setShowPasswordDialog(true);
@@ -108,11 +109,11 @@ export function NoteManager() {
         setIsVerifying(true);
         setTimeout(() => {
           setIsVerifying(false);
-          const until = Date.now() + 5 * 60 * 1000;
+          const until = Date.now() + 15 * 60 * 1000;
           setLockoutTime(until);
           localStorage.setItem("lockout_until", until.toString());
           setShowPasswordDialog(false);
-          toast({ variant: "destructive", title: "アクセス拒否", description: "頭を冷やしてください。" });
+          toast({ variant: "destructive", title: "アクセス拒否", description: "セキュリティ保護のためロックされました。" });
         }, 800);
       } else {
         toast({ variant: "destructive", title: "不一致", description: `あと ${3 - newCount} 回でロックされます。` });
@@ -133,7 +134,7 @@ export function NoteManager() {
 
     toast({ 
       title: "記事管理へ送りました", 
-      description: `「${article.title}」を下書きとして採用しました。記事管理ページで公開してください。` 
+      description: `「${article.title}」を下書きとして採用しました。` 
     });
   };
 
@@ -141,29 +142,28 @@ export function NoteManager() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="font-black text-slate-400 animate-pulse">確認中...</p>
+        <p className="font-black text-slate-400 animate-pulse">認証情報を照合中...</p>
       </div>
     );
   }
 
   if (lockoutTime && lockoutTime > Date.now()) {
     return (
-      <div className="max-w-4xl mx-auto mt-10 animate-in fade-in zoom-in duration-500">
-        <Card className="shadow-2xl border-none bg-black text-white rounded-[2rem] md:rounded-[3rem] overflow-hidden text-center p-0">
-          <div className="relative aspect-video w-full bg-slate-900">
-            <iframe 
-              src="https://drive.google.com/file/d/1Exd3NJVJ4KeS5PNI9IgZJEDsWgvjshBJ/preview" 
-              className="absolute inset-0 w-full h-full border-none"
-              title="Trap Video"
-            ></iframe>
+      <div className="max-w-4xl mx-auto mt-10">
+        <Card className="shadow-2xl border-none bg-white rounded-[3rem] p-16 text-center space-y-8">
+          <div className="bg-red-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto">
+            <ShieldAlert className="h-12 w-12 text-red-500" />
           </div>
-          <div className="p-8 md:p-12 space-y-6">
-            <h2 className="text-2xl md:text-3xl font-black mb-4 text-red-500">アクセス禁止 🔒</h2>
-            <p className="text-slate-400 font-bold text-sm md:text-lg">頭を冷やして出直してください。<br />再試行まであと約 {Math.ceil((lockoutTime - Date.now()) / 60000)} 分です。</p>
-            <Button variant="outline" className="border-slate-700 text-slate-400 h-12 px-8 rounded-2xl" onClick={() => window.location.reload()}>
-              システム再起動
-            </Button>
+          <div className="space-y-2">
+            <h2 className="text-3xl font-black text-slate-800">セキュリティ・ロック 🔒</h2>
+            <p className="text-slate-500 font-bold">
+              不審なアクセスが検出されたため、一時的にこの機能を制限しています。<br />
+              再試行まであと約 {Math.ceil((lockoutTime - Date.now()) / 60000)} 分です。
+            </p>
           </div>
+          <Button variant="outline" className="h-12 px-8 rounded-2xl font-black" onClick={() => window.location.reload()}>
+            システム再読み込み
+          </Button>
         </Card>
       </div>
     );
@@ -204,7 +204,7 @@ export function NoteManager() {
               note 投稿同期ハブ
             </CardTitle>
             <CardDescription className="text-xs md:text-sm font-bold text-purple-600/70">
-              lucky_minnow287 (北海学園大学一部新聞会) の全データを捕捉します。
+              公式 note アカウントの全データを補足します。
             </CardDescription>
           </div>
         </CardHeader>
@@ -260,7 +260,7 @@ export function NoteManager() {
                         </TableCell>
                         <TableCell className="text-right px-6 md:px-8">
                           {isImported ? (
-                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 h-8 md:h-9 px-3 md:px-4 font-black rounded-xl text-[10px]">インポート済み</Badge>
+                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 h-8 md:h-9 px-3 md:px-4 font-black rounded-xl text-[10px]">採用済み</Badge>
                           ) : (
                             <Button size="sm" onClick={() => handleImport(article)} className="h-8 md:h-9 gap-2 font-black bg-white text-purple-600 border-2 border-purple-100 hover:bg-purple-50 hover:border-purple-300 shadow-sm rounded-xl px-3 md:px-5 text-[10px]">
                               <PlusCircle className="h-3 w-3 md:h-4 md:w-4" />
@@ -279,7 +279,7 @@ export function NoteManager() {
                   <Share2 className="h-8 w-8 md:h-10 md:w-10 opacity-20" />
                 </div>
                 <p className="font-black text-base md:text-lg text-slate-400">同期ハブを起動してください</p>
-                <p className="text-xs md:text-sm font-bold mt-2 opacity-60 px-6">右上のボタンから最新のnoteデータを一括取得し、記事管理へ送ることができます。</p>
+                <p className="text-xs md:text-sm font-bold mt-2 opacity-60 px-6">最新のデータを取得し、アーカイブへ取り込むことができます。</p>
               </div>
             )}
           </CardContent>
@@ -294,11 +294,11 @@ export function NoteManager() {
             </div>
             <DialogTitle className="text-xl md:text-2xl font-black text-slate-800 text-center">管制認証 🔒</DialogTitle>
             <DialogDescription className="text-center font-bold text-slate-500 text-sm">
-              noteデータの同期には管理者権限が必要です。
+              同期プロセスの実行には管理者パスワードが必要です。
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 md:py-6 flex flex-col gap-2">
-            <label className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">パスワード</label>
+            <label className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">PASSCODE</label>
             <Input 
               type="password" 
               placeholder="" 

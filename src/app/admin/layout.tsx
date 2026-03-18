@@ -15,7 +15,8 @@ import {
   Lock,
   BookOpen,
   Info,
-  Share2
+  Share2,
+  ShieldX
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +29,7 @@ import { LoginForm } from "@/components/auth/login-form";
 import Image from "next/image";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { AUTHORIZED_EMAILS } from "@/lib/auth-constants";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
@@ -45,6 +47,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       setIsSidebarOpen(false);
     }
   }, [isMobile]);
+
+  // 権限チェック
+  const isAuthorized = user && AUTHORIZED_EMAILS.includes(user.email || "");
 
   const menuItems = [
     { id: "/admin", label: "ダッシュボード", icon: LayoutDashboard },
@@ -70,6 +75,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
+  // ログインしていない場合
   if (!user) {
     return (
       <div className="min-h-screen flex flex-col bg-[#F0F2F5]">
@@ -96,6 +102,28 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="w-full max-w-md">
             <LoginForm />
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ログインしているが権限がない場合
+  if (!isAuthorized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
+        <div className="max-w-md w-full bg-white rounded-[2rem] shadow-2xl p-10 text-center space-y-6">
+          <div className="bg-red-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto">
+            <ShieldX className="h-10 w-10 text-red-500" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-black text-slate-800">アクセス拒否</h2>
+            <p className="text-sm font-bold text-slate-500 leading-relaxed">
+              ログインしたメールアドレス（{user.email}）には管理権限が付与されていません。
+            </p>
+          </div>
+          <Button onClick={handleLogout} variant="destructive" className="w-full h-14 rounded-2xl font-black">
+            ログアウト
+          </Button>
         </div>
       </div>
     );

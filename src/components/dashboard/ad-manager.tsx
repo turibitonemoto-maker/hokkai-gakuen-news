@@ -1,10 +1,11 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Loader2, ExternalLink, AlertTriangle, Pencil, Users, ArrowLeft, Calendar, Clock, Lock, Megaphone } from "lucide-react";
+import { Plus, Trash2, Loader2, ExternalLink, AlertTriangle, Pencil, Users, ArrowLeft, Calendar, Clock, Lock, Megaphone, ShieldAlert } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import Image from "next/image";
@@ -73,10 +74,10 @@ export function AdManager() {
         setIsVerifying(true);
         setTimeout(() => {
           setIsVerifying(false);
-          const until = Date.now() + 5 * 60 * 1000;
+          const until = Date.now() + 15 * 60 * 1000;
           setLockoutTime(until);
           localStorage.setItem("lockout_until", until.toString());
-          toast({ variant: "destructive", title: "アクセス拒否", description: "頭を冷やしてください。" });
+          toast({ variant: "destructive", title: "アクセス拒否", description: "セキュリティ保護のためロックされました。" });
         }, 800);
       } else {
         toast({ variant: "destructive", title: "不一致", description: "パスワードが正しくありません。" });
@@ -97,29 +98,28 @@ export function AdManager() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="font-black text-slate-400 animate-pulse">確認中...</p>
+        <p className="font-black text-slate-400 animate-pulse">認証情報を照合中...</p>
       </div>
     );
   }
 
   if (lockoutTime && lockoutTime > Date.now()) {
     return (
-      <div className="max-w-4xl mx-auto mt-10 animate-in fade-in zoom-in duration-500">
-        <Card className="shadow-2xl border-none bg-black text-white rounded-[3rem] overflow-hidden text-center p-0">
-          <div className="relative aspect-video w-full bg-slate-900">
-            <iframe 
-              src="https://drive.google.com/file/d/1Exd3NJVJ4KeS5PNI9IgZJEDsWgvjshBJ/preview" 
-              className="absolute inset-0 w-full h-full border-none"
-              title="Trap Video"
-            ></iframe>
+      <div className="max-w-4xl mx-auto mt-10">
+        <Card className="shadow-2xl border-none bg-white rounded-[3rem] p-16 text-center space-y-8">
+          <div className="bg-red-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto">
+            <ShieldAlert className="h-12 w-12 text-red-500" />
           </div>
-          <div className="p-12 space-y-6">
-            <h2 className="text-3xl font-black mb-4 text-red-500">アクセス禁止 🔒</h2>
-            <p className="text-slate-400 font-bold text-lg">頭を冷やして出直してください。<br />再試行まであと約 {Math.ceil((lockoutTime - Date.now()) / 60000)} 分です。</p>
-            <Button variant="outline" className="border-slate-700 text-slate-400 h-12 px-8 rounded-2xl" onClick={() => window.location.reload()}>
-              システム再起動
-            </Button>
+          <div className="space-y-2">
+            <h2 className="text-3xl font-black text-slate-800">セキュリティ・ロック 🔒</h2>
+            <p className="text-slate-500 font-bold">
+              不審なアクセスが検出されたため、一時的にこの機能を制限しています。<br />
+              再試行まであと約 {Math.ceil((lockoutTime - Date.now()) / 60000)} 分です。
+            </p>
           </div>
+          <Button variant="outline" className="h-12 px-8 rounded-2xl font-black" onClick={() => window.location.reload()}>
+            システム再読み込み
+          </Button>
         </Card>
       </div>
     );
@@ -140,7 +140,7 @@ export function AdManager() {
           </CardHeader>
           <CardContent className="p-10 pt-4 space-y-6">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">パスワード</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">PASSCODE</label>
               <Input 
                 type="password" 
                 placeholder="" 
@@ -232,7 +232,7 @@ export function AdManager() {
                   この広告を完全に削除 🔒
                 </Button>
               </CardContent>
-            </Card>
+            </div>
           </div>
         </div>
 
@@ -277,7 +277,7 @@ export function AdManager() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-black text-slate-800 tracking-tight">広告管理 🔒</h2>
-          <p className="text-sm font-bold text-slate-500 mt-1">バナーの編集や統計データの確認を行います。</p>
+          <p className="text-sm font-bold text-slate-500 mt-1">広告バナーの掲載期間やクリック統計を管理します。</p>
         </div>
         <Button onClick={() => setIsAdding(true)} className="flex items-center gap-2 h-12 px-8 font-black rounded-2xl shadow-lg shadow-primary/20">
           <Plus className="h-5 w-5" />
@@ -335,7 +335,7 @@ export function AdManager() {
         <div className="py-24 text-center border-4 border-dashed rounded-[3rem] text-slate-300 bg-white/50 backdrop-blur-sm">
           <Megaphone className="h-16 w-16 mx-auto opacity-10 mb-4" />
           <p className="text-xl font-black">広告データがありません</p>
-          <p className="text-sm font-bold mt-2 opacity-50">新しい広告を登録しましょう。</p>
+          <p className="text-sm font-bold mt-2 opacity-50">新しいスポンサーを登録しましょう。</p>
         </div>
       )}
     </div>
