@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -455,7 +454,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                               <label className="text-[10px] font-bold text-slate-500 uppercase">ズーム: {transform.scale.toFixed(0)}%</label>
                             </div>
                             <Slider 
-                              min={-200} max={200} step={1} 
+                              min={-500} max={500} step={1} 
                               value={[transform.scale]} 
                               onValueChange={([val]) => form.setValue("mainImageTransform.scale", val)} 
                             />
@@ -465,7 +464,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                               <label className="text-[10px] font-bold text-slate-500 uppercase">水平位置: {transform.x.toFixed(0)}%</label>
                             </div>
                             <Slider 
-                              min={-200} max={200} step={1} 
+                              min={-500} max={500} step={1} 
                               value={[transform.x]} 
                               onValueChange={([val]) => form.setValue("mainImageTransform.x", val)} 
                             />
@@ -475,7 +474,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                               <label className="text-[10px] font-bold text-slate-500 uppercase">垂直位置: {transform.y.toFixed(0)}%</label>
                             </div>
                             <Slider 
-                              min={-200} max={200} step={1} 
+                              min={-500} max={500} step={1} 
                               value={[transform.y]} 
                               onValueChange={([val]) => form.setValue("mainImageTransform.y", val)} 
                             />
