@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Slider } from "@/components/ui/slider";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { 
   Image as LucideImage, 
@@ -30,7 +29,10 @@ import {
   MoreVertical,
   AlignCenter,
   Quote,
-  Sparkles
+  Sparkles,
+  Minimize2,
+  Maximize2,
+  Check
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditor, EditorContent, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react';
@@ -44,60 +46,56 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Separator } from "@/components/ui/separator";
 
 /**
- * 本文内：リサイズ ＆ キャプション機能付き画像コンポーネント
+ * note風：画像サイズ選択 ＆ キャプション機能付きコンポーネント
  */
-const ResizableImageComponent = ({ node, updateAttributes, selected }: any) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [isResizing, setIsResizing] = useState(false);
-
-  const onMouseDown = (event: React.MouseEvent) => {
-    event.preventDefault();
-    setIsResizing(true);
-
-    const startX = event.clientX;
-    const startWidth = containerRef.current?.offsetWidth || 0;
-
-    const onMouseMove = (moveEvent: MouseEvent) => {
-      const currentX = moveEvent.clientX;
-      const diffX = currentX - startX;
-      const newWidth = Math.max(100, startWidth + diffX);
-      updateAttributes({ width: `${newWidth}px` });
-    };
-
-    const onMouseUp = () => {
-      setIsResizing(false);
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup', onMouseUp);
-    };
-
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mouseup', onMouseUp);
+const NoteImageComponent = ({ node, updateAttributes, selected }: any) => {
+  const setWidth = (width: string) => {
+    updateAttributes({ width });
   };
 
+  const currentWidth = node.attrs.width || '60%';
+
   return (
-    <NodeViewWrapper className={cn("resizable-image-container", selected && "is-selected")}>
-      <div 
-        ref={containerRef}
-        className="mx-auto"
-        style={{ width: node.attrs.width || '60%', position: 'relative' }}
-      >
+    <NodeViewWrapper className={cn("resizable-image-container group", selected && "is-selected")}>
+      <div className="relative inline-block mx-auto" style={{ width: currentWidth }}>
         <img 
           src={node.attrs.src} 
           alt={node.attrs.alt} 
-          style={{ width: '100%', height: 'auto', objectFit: 'contain' }}
+          className="rounded-2xl shadow-lg border-4 border-white transition-all duration-300"
+          style={{ width: '100%', height: 'auto' }}
         />
-        <div 
-          className="resize-handle resize-handle-bottom-right" 
-          onMouseDown={onMouseDown}
-        />
+        
+        {/* Note-like Size Toolbar */}
+        {selected && (
+          <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-md border border-slate-200 rounded-full p-1 shadow-2xl flex items-center gap-1 z-50 animate-in fade-in slide-in-from-bottom-2">
+            <button 
+              onClick={() => setWidth('30%')}
+              className={cn("px-3 py-1 rounded-full text-[10px] font-black transition-all", currentWidth === '30%' ? "bg-primary text-white" : "hover:bg-slate-100 text-slate-500")}
+            >
+              小
+            </button>
+            <button 
+              onClick={() => setWidth('60%')}
+              className={cn("px-3 py-1 rounded-full text-[10px] font-black transition-all", currentWidth === '60%' ? "bg-primary text-white" : "hover:bg-slate-100 text-slate-500")}
+            >
+              中
+            </button>
+            <button 
+              onClick={() => setWidth('100%')}
+              className={cn("px-3 py-1 rounded-full text-[10px] font-black transition-all", currentWidth === '100%' ? "bg-primary text-white" : "hover:bg-slate-100 text-slate-500")}
+            >
+              大
+            </button>
+          </div>
+        )}
       </div>
 
       <input
         type="text"
-        placeholder="キャプションを入力..."
+        placeholder="画像の説明（キャプション）を入力..."
         value={node.attrs.caption || ''}
         onChange={(e) => updateAttributes({ caption: e.target.value })}
-        className="w-full mt-2 text-center text-sm font-bold text-slate-400 bg-transparent outline-none border-none placeholder:text-slate-200"
+        className="w-full mt-3 text-center text-sm font-bold text-slate-400 bg-transparent outline-none border-none placeholder:text-slate-200 focus:placeholder:opacity-0 transition-all"
       />
     </NodeViewWrapper>
   );
@@ -122,7 +120,7 @@ const CustomResizableImage = ImageExtension.extend({
     };
   },
   addNodeView() {
-    return ReactNodeViewRenderer(ResizableImageComponent);
+    return ReactNodeViewRenderer(NoteImageComponent);
   },
   renderHTML({ HTMLAttributes }) {
     return [
@@ -182,10 +180,10 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
   });
 
   useEffect(() => {
-    if (mainImagePreview) {
+    if (mainImagePreview && !article?.mainImageUrl) {
       form.setValue("mainImageTransform", { scale: 0, x: 0, y: 0 });
     }
-  }, [mainImagePreview, form]);
+  }, [mainImagePreview, form, article]);
 
   const handleEditorImageInsert = useCallback(async (file: File) => {
     if (!file.type.startsWith('image/')) return;
@@ -226,7 +224,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     },
     editorProps: {
       attributes: {
-        class: 'ProseMirror outline-none min-h-[600px] py-10 px-4 md:px-0 max-w-3xl mx-auto',
+        class: 'ProseMirror outline-none min-h-[600px] py-10 px-0 max-w-3xl mx-auto',
       },
     },
   });
@@ -334,24 +332,27 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
   }, [editor]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-white">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-white border-b h-14 flex items-center justify-between px-4">
+    <div className="flex flex-col min-h-screen bg-white font-body">
+      {/* Header - Fixed & Clean */}
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b h-14 flex items-center justify-between px-4">
         <Button variant="ghost" size="icon" onClick={onSuccess} className="rounded-full">
-          <ArrowLeft className="h-6 w-6" />
+          <ArrowLeft className="h-6 w-6 text-slate-600" />
         </Button>
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="rounded-full">
-            <MoreVertical className="h-5 w-5" />
-          </Button>
+        
+        <div className="flex items-center gap-2">
           <Form {...form}>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="ghost" className="font-bold text-slate-700">公開設定</Button>
+                <Button variant="ghost" className="font-black text-slate-700 h-9 px-4 rounded-full hover:bg-slate-100 transition-all">
+                  公開設定
+                </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[90vw] max-w-sm p-6 rounded-3xl shadow-2xl border-none" align="end" sideOffset={10}>
                 <div className="space-y-6">
-                  <h3 className="font-black text-lg">記事の公開設定</h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-black text-lg">記事の公開設定</h3>
+                    <Badge variant="outline" className="text-[10px] font-black uppercase">Admin Only</Badge>
+                  </div>
                   <Separator />
                   <FormField
                     control={form.control}
@@ -389,37 +390,40 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                     control={form.control}
                     name="isPublished"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-xl border p-4 bg-slate-50/50">
+                      <FormItem className="flex flex-row items-center justify-between rounded-2xl border p-4 bg-slate-50/50">
                         <div className="space-y-0.5">
-                          <FormLabel className="text-sm font-bold">公式サイトに公開</FormLabel>
+                          <FormLabel className="text-sm font-black">公式サイトに公開</FormLabel>
                         </div>
-                        <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                        <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} className="data-[state=checked]:bg-green-500" /></FormControl>
                       </FormItem>
                     )}
                   />
                   <Button 
                     onClick={form.handleSubmit(onSubmit)} 
                     disabled={isSaving} 
-                    className="w-full h-14 rounded-2xl font-black text-lg shadow-lg shadow-primary/20"
+                    className="w-full h-14 rounded-2xl font-black text-lg shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90 transition-transform active:scale-95"
                   >
-                    {isSaving ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
+                    {isSaving ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Check className="h-5 w-5 mr-2" />}
                     保存する
                   </Button>
                 </div>
               </PopoverContent>
             </Popover>
           </Form>
+          <Button variant="ghost" size="icon" className="rounded-full">
+            <MoreVertical className="h-5 w-5 text-slate-400" />
+          </Button>
         </div>
       </header>
 
-      {/* Main canvas */}
-      <main className="flex-1 overflow-y-auto pb-32">
-        <div className="max-w-3xl mx-auto px-6 py-10">
-          {/* Header Image Upload Area */}
-          <div className="mb-10 group relative">
+      {/* Main canvas - Note-like Immersive Experience */}
+      <main className="flex-1 overflow-y-auto pb-40">
+        <div className="max-w-3xl mx-auto px-6 pt-12 pb-20">
+          {/* Header Image Area */}
+          <div className="mb-12 group relative">
             <input type="file" accept="image/*" className="hidden" ref={mainImageInputRef} onChange={handleMainImageSelect} />
             {mainImagePreview ? (
-              <div className="relative aspect-[21/9] w-full rounded-2xl overflow-hidden border-4 border-white shadow-xl bg-slate-50">
+              <div className="relative aspect-[21/9] w-full rounded-3xl overflow-hidden border-4 border-white shadow-2xl bg-slate-50">
                 <Image 
                   src={mainImagePreview} 
                   alt="" 
@@ -430,36 +434,42 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                   }}
                   unoptimized
                 />
-                <div className="absolute top-2 right-2 flex gap-2">
-                  <Button variant="secondary" size="icon" className="rounded-full shadow-lg" onClick={() => mainImageInputRef.current?.click()}><RefreshCw className="h-4 w-4" /></Button>
+                <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button variant="secondary" size="icon" className="rounded-full shadow-lg bg-white/90 backdrop-blur-md" onClick={() => mainImageInputRef.current?.click()}><RefreshCw className="h-4 w-4" /></Button>
                   <Button variant="destructive" size="icon" className="rounded-full shadow-lg" onClick={() => { setMainImagePreview(""); setMainImageFile(null); }}><Trash2 className="h-4 w-4" /></Button>
                 </div>
               </div>
             ) : (
-              <Button 
-                variant="ghost" 
-                className="h-14 w-14 rounded-full border-2 border-dashed border-slate-200 bg-slate-50 text-slate-400 hover:border-primary hover:bg-primary/5 hover:text-primary transition-all p-0 flex items-center justify-center"
+              <div 
+                className="w-full aspect-[21/9] rounded-3xl border-2 border-dashed border-slate-100 bg-slate-50/50 flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-slate-50 hover:border-primary/20 transition-all group"
                 onClick={() => mainImageInputRef.current?.click()}
               >
-                <LucideImage className="h-6 w-6" />
-              </Button>
+                <div className="p-4 bg-white rounded-full shadow-sm text-slate-300 group-hover:text-primary group-hover:scale-110 transition-all">
+                  <LucideImage className="h-8 w-8" />
+                </div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">見出し画像を追加</p>
+              </div>
             )}
           </div>
 
           {/* Title Area */}
           <textarea
-            className="w-full text-4xl md:text-5xl font-black border-none focus:ring-0 resize-none px-0 py-2 leading-tight placeholder:text-slate-200 bg-transparent min-h-[100px]"
+            className="w-full text-4xl md:text-5xl font-black border-none focus:ring-0 resize-none px-0 py-2 leading-tight placeholder:text-slate-200 bg-transparent min-h-[80px]"
             placeholder="記事タイトル"
-            rows={2}
+            rows={1}
             value={form.watch("title")}
-            onChange={(e) => form.setValue("title", e.target.value)}
+            onChange={(e) => {
+              form.setValue("title", e.target.value);
+              e.target.style.height = 'auto';
+              e.target.style.height = e.target.scrollHeight + 'px';
+            }}
           />
 
           {/* Editor Area */}
-          <div className="mt-4">
+          <div className="mt-8">
             {editor && (
               <div className="prose-container relative">
-                {!editor.getText() && <p className="absolute top-10 left-4 text-slate-300 font-bold pointer-events-none">ご自由にお書きください。</p>}
+                {!editor.getText() && !editor.isActive('image') && <p className="absolute top-10 left-0 text-slate-200 font-bold pointer-events-none text-xl">ご自由にお書きください。</p>}
                 <EditorContent editor={editor} />
               </div>
             )}
@@ -467,101 +477,110 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
         </div>
       </main>
 
-      {/* Bottom Toolbar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t z-50">
-        <div className="max-w-3xl mx-auto">
-          <div className="px-4 py-1 flex justify-end">
-            <span className="text-[10px] font-black text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{charCount} 文字</span>
+      {/* Bottom Toolbar - Note-like Mobile Optimized */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
+        <div className="max-w-3xl mx-auto flex flex-col">
+          {/* Character Count Bar */}
+          <div className="px-6 py-1.5 flex justify-end">
+            <div className="text-[9px] font-black text-slate-400 bg-slate-50 px-3 py-1 rounded-full border border-slate-100 flex items-center gap-1.5 shadow-sm">
+              <span className="w-1 h-1 bg-green-500 rounded-full animate-pulse" />
+              {charCount.toLocaleString()} 文字
+            </div>
           </div>
-          <div className="h-14 flex items-center px-2 overflow-x-auto gap-1 no-scrollbar">
-            {/* The Plus button is front and center (far left) */}
+
+          <div className="h-16 flex items-center px-2 overflow-x-auto gap-1 no-scrollbar pb-safe-area-inset-bottom">
+            {/* The Plus button - Front & Center */}
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0 text-slate-600 hover:text-primary rounded-xl">
-                  <Plus className="h-6 w-6" />
+                <Button variant="ghost" size="icon" className="h-12 w-12 shrink-0 text-white bg-primary hover:bg-primary/90 rounded-2xl shadow-xl shadow-primary/20 ml-2 group active:scale-90 transition-all">
+                  <Plus className="h-7 w-7 group-hover:rotate-90 transition-transform duration-300" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent side="top" align="start" className="w-48 p-2 rounded-2xl shadow-2xl border-none">
+              <PopoverContent side="top" align="start" className="w-56 p-2 rounded-3xl shadow-2xl border-none mb-2 animate-in slide-in-from-bottom-4 zoom-in-95">
                 <div className="grid gap-1">
                   <button 
                     onClick={() => document.getElementById('editor-image-insert')?.click()}
-                    className="flex items-center gap-3 w-full p-3 hover:bg-slate-50 rounded-xl text-left transition-colors group"
+                    className="flex items-center gap-4 w-full p-4 hover:bg-slate-50 rounded-2xl text-left transition-all group"
                   >
-                    <LucideImage className="h-4 w-4 text-slate-400 group-hover:text-primary" />
-                    <span className="text-xs font-black text-slate-600">画像を挿入</span>
+                    <div className="bg-blue-50 p-2 rounded-xl group-hover:bg-blue-100 transition-colors">
+                      <LucideImage className="h-5 w-5 text-blue-500" />
+                    </div>
+                    <span className="text-sm font-black text-slate-700">画像を挿入</span>
                   </button>
                   <input type="file" id="editor-image-insert" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleEditorImageInsert(file); }} />
+                  
                   <button 
                     onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
-                    className="flex items-center gap-3 w-full p-3 hover:bg-slate-50 rounded-xl text-left transition-colors"
+                    className="flex items-center gap-4 w-full p-4 hover:bg-slate-50 rounded-2xl text-left transition-all group"
                   >
-                    <Heading2 className="h-4 w-4 text-slate-400" />
-                    <span className="text-xs font-black text-slate-600">大見出し</span>
+                    <div className="bg-slate-50 p-2 rounded-xl group-hover:bg-slate-100 transition-colors">
+                      <Heading2 className="h-5 w-5 text-slate-500" />
+                    </div>
+                    <span className="text-sm font-black text-slate-700">大見出し</span>
                   </button>
+                  
                   <button 
                     onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}
-                    className="flex items-center gap-3 w-full p-3 hover:bg-slate-50 rounded-xl text-left transition-colors"
+                    className="flex items-center gap-4 w-full p-4 hover:bg-slate-50 rounded-2xl text-left transition-all group"
                   >
-                    <Heading3 className="h-4 w-4 text-slate-400" />
-                    <span className="text-xs font-black text-slate-600">小見出し</span>
+                    <div className="bg-slate-50 p-2 rounded-xl group-hover:bg-slate-100 transition-colors">
+                      <Heading3 className="h-5 w-5 text-slate-500" />
+                    </div>
+                    <span className="text-sm font-black text-slate-700">小見出し</span>
                   </button>
                 </div>
               </PopoverContent>
             </Popover>
 
-            <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0 text-slate-300 rounded-xl"><Sparkles className="h-5 w-5" /></Button>
-            
-            <Separator orientation="vertical" className="h-6 mx-1" />
+            <Separator orientation="vertical" className="h-8 mx-2 bg-slate-100" />
 
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" className="h-10 px-3 shrink-0 text-sm font-black text-slate-600 rounded-xl">見出し <Plus className="ml-1 h-3 w-3 opacity-50" /></Button>
-              </PopoverTrigger>
-              <PopoverContent side="top" className="w-32 p-1 rounded-xl shadow-xl border-none">
-                <Button variant="ghost" className="w-full justify-start font-bold" onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}>大見出し</Button>
-                <Button variant="ghost" className="w-full justify-start font-bold" onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}>小見出し</Button>
-              </PopoverContent>
-            </Popover>
+            <div className="flex items-center gap-1">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className={cn("h-11 w-11 shrink-0 rounded-xl transition-all", editor?.isActive('bold') ? "text-primary bg-primary/5 shadow-inner" : "text-slate-400")} 
+                onClick={() => editor?.chain().focus().toggleBold().run()}
+              >
+                <Bold className="h-5 w-5" />
+              </Button>
 
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className={cn("h-10 w-10 shrink-0 rounded-xl", editor?.isActive('bold') && "text-primary bg-primary/5")} 
-              onClick={() => editor?.chain().focus().toggleBold().run()}
-            >
-              <Bold className="h-5 w-5" />
-            </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className={cn("h-11 w-11 shrink-0 rounded-xl transition-all", editor?.isActive({ textAlign: 'center' }) ? "text-primary bg-primary/5" : "text-slate-400")} 
+                onClick={() => editor?.chain().focus().setTextAlign('center').run()}
+              >
+                <AlignCenter className="h-5 w-5" />
+              </Button>
 
-            <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0 text-slate-600 rounded-xl"><AlignCenter className="h-5 w-5" /></Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className={cn("h-11 w-11 shrink-0 rounded-xl transition-all", editor?.isActive('bulletList') ? "text-primary bg-primary/5" : "text-slate-400")} 
+                onClick={() => editor?.chain().focus().toggleBulletList().run()}
+              >
+                <List className="h-5 w-5" />
+              </Button>
 
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className={cn("h-10 w-10 shrink-0 rounded-xl", editor?.isActive('bulletList') && "text-primary bg-primary/5")} 
-              onClick={() => editor?.chain().focus().toggleBulletList().run()}
-            >
-              <List className="h-5 w-5" />
-            </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className={cn("h-11 w-11 shrink-0 rounded-xl transition-all", editor?.isActive('link') ? "text-primary bg-primary/5" : "text-slate-400")} 
+                onClick={setLink}
+              >
+                <LinkIcon className="h-5 w-5" />
+              </Button>
 
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className={cn("h-10 w-10 shrink-0 rounded-xl", editor?.isActive('link') && "text-primary bg-primary/5")} 
-              onClick={setLink}
-            >
-              <LinkIcon className="h-5 w-5" />
-            </Button>
-
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className={cn("h-10 w-10 shrink-0 rounded-xl", editor?.isActive('blockquote') && "text-primary bg-primary/5")} 
-              onClick={() => editor?.chain().focus().toggleBlockquote().run()}
-            >
-              <Quote className="h-5 w-5" />
-            </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className={cn("h-11 w-11 shrink-0 rounded-xl transition-all", editor?.isActive('blockquote') ? "text-primary bg-primary/5" : "text-slate-400")} 
+                onClick={() => editor?.chain().focus().toggleBlockquote().run()}
+              >
+                <Quote className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
-          <div className="h-safe-area-inset-bottom" />
         </div>
       </div>
     </div>
