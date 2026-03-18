@@ -359,11 +359,30 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
         ref={editorImageInputRef}
         onChange={(e) => { const file = e.target.files?.[0]; if (file) handleEditorImageInsert(file); }} 
       />
+      <input 
+        type="file" 
+        accept="image/*" 
+        className="hidden" 
+        ref={mainImageInputRef} 
+        onChange={handleMainImageSelect} 
+      />
 
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b h-14 flex items-center justify-between px-4">
-        <Button variant="ghost" size="icon" onClick={onSuccess} className="rounded-full">
-          <ArrowLeft className="h-6 w-6 text-slate-600" />
-        </Button>
+        <div className="flex items-center gap-1 md:gap-2">
+          <Button variant="ghost" size="icon" onClick={onSuccess} className="rounded-full">
+            <ArrowLeft className="h-6 w-6 text-slate-600" />
+          </Button>
+          
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className={cn("rounded-full transition-all", mainImagePreview ? "text-primary" : "text-slate-400 hover:text-primary")}
+            onClick={() => mainImageInputRef.current?.click()}
+            title="見出し画像を追加・変更"
+          >
+            <LucideImage className="h-6 w-6" />
+          </Button>
+        </div>
         
         <div className="flex items-center gap-2">
           <Form {...form}>
@@ -444,10 +463,9 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
 
       <main className="flex-1 overflow-y-auto pb-40">
         <div className="max-w-3xl mx-auto px-6 pt-12 pb-20">
-          <div className="mb-12 group relative">
-            <input type="file" accept="image/*" className="hidden" ref={mainImageInputRef} onChange={handleMainImageSelect} />
-            {mainImagePreview ? (
-              <div className="relative aspect-[21/9] w-full rounded-3xl overflow-hidden border-4 border-white shadow-2xl bg-slate-50">
+          <div className={cn("mb-12 transition-all duration-500", mainImagePreview ? "opacity-100 scale-100" : "opacity-0 scale-95 h-0 overflow-hidden mb-0")}>
+            {mainImagePreview && (
+              <div className="relative group aspect-[21/9] w-full rounded-3xl overflow-hidden border-4 border-white shadow-2xl bg-slate-50">
                 <Image 
                   src={mainImagePreview} 
                   alt="" 
@@ -504,16 +522,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                   <Button variant="secondary" size="icon" className="rounded-full shadow-lg bg-white/90 backdrop-blur-md" onClick={() => mainImageInputRef.current?.click()}><RefreshCw className="h-4 w-4" /></Button>
                   <Button variant="destructive" size="icon" className="rounded-full shadow-lg" onClick={() => { setMainImagePreview(""); setMainImageFile(null); }}><Trash2 className="h-4 w-4" /></Button>
                 </div>
-              </div>
-            ) : (
-              <div 
-                className="w-full aspect-[21/9] rounded-3xl border-2 border-dashed border-slate-100 bg-slate-50/50 flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-slate-50 hover:border-primary/20 transition-all group"
-                onClick={() => mainImageInputRef.current?.click()}
-              >
-                <div className="p-4 bg-white rounded-full shadow-sm text-slate-300 group-hover:text-primary group-hover:scale-110 transition-all">
-                  <LucideImage className="h-8 w-8" />
-                </div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">見出し画像を追加</p>
               </div>
             )}
           </div>
