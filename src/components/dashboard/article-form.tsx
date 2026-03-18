@@ -214,23 +214,35 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
     },
   });
 
+  const sanitizeFolderName = (name: string) => {
+    return name.trim().replace(/[\/\?\s]/g, '_').slice(0, 50) || "untitled";
+  };
+
+  // 即時アップロード・プロトコル
   const handleEditorImageInsert = useCallback(async (file: File) => {
     if (!file.type.startsWith('image/') || !editor) return;
     setIsProcessing(true);
     try {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const base64 = reader.result as string;
-        editor.chain().focus().setImage({ src: base64 }).run();
-        toast({ title: "画像を挿入しました" });
-        setIsProcessing(false);
-      };
-      reader.readAsDataURL(file);
+      const uniqueSuffix = Date.now().toString(36);
+      const subFolder = sanitizeFolderName(form.getValues("title") || "editor_images");
+      const folderPath = `newspaper_archive/${subFolder}_${uniqueSuffix}`;
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", folderPath);
+
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      if (!res.ok) throw new Error("アップロードに失敗しました");
+      const data = await res.json();
+
+      editor.chain().focus().setImage({ src: data.secure_url }).run();
+      toast({ title: "画像を挿入しました" });
     } catch (error: any) {
-      toast({ variant: "destructive", title: "画像プレビューに失敗しました" });
+      toast({ variant: "destructive", title: "失敗", description: "アップロード中にエラーが発生しました。" });
+    } finally {
       setIsProcessing(false);
     }
-  }, [editor, toast]);
+  }, [editor, form, toast]);
 
   useEffect(() => {
     if (article?.mainImageUrl) setMainImagePreview(article.mainImageUrl);
@@ -243,41 +255,10 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
     setMainImagePreview(URL.createObjectURL(file));
   };
 
-  const sanitizeFolderName = (name: string) => {
-    return name.trim().replace(/[\/\?\s]/g, '_').slice(0, 50) || "untitled";
-  };
-
-  const processEditorImages = async (html: string, folder: string) => {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    const images = Array.from(doc.querySelectorAll('img'));
-    for (const img of images) {
-      const src = img.getAttribute('src');
-      if (src && (src.startsWith('data:image') || src.startsWith('blob:'))) {
-        try {
-          const response = await fetch(src);
-          const blob = await response.blob();
-          const file = new File([blob], `body_${Date.now()}.jpg`, { type: blob.type });
-          const formData = new FormData();
-          formData.append("file", file);
-          formData.append("folder", folder);
-          const res = await fetch("/api/upload", { method: "POST", body: formData });
-          if (!res.ok) throw new Error("本文画像のアップロードに失敗しました");
-          const data = await res.json();
-          img.setAttribute('src', data.secure_url);
-        } catch (e) {
-          console.error("Image upload failed:", e);
-        }
-      }
-    }
-    return doc.body.innerHTML;
-  };
-
   async function onSubmit(values: ArticleFormValues) {
     if (!firestore) return;
     setIsSaving(true);
     try {
-      // 衝突回避プロトコル: 記事タイトル + ユニークID でフォルダを分ける
       const uniqueSuffix = Date.now().toString(36);
       const subFolder = sanitizeFolderName(values.title);
       const folderPath = `newspaper_archive/${subFolder}_${uniqueSuffix}`;
@@ -293,10 +274,8 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
         finalMainImageUrl = data.secure_url;
       }
 
-      const processedContent = await processEditorImages(values.content, folderPath);
       const data = {
         ...values,
-        content: processedContent,
         mainImageUrl: finalMainImageUrl,
         updatedAt: serverTimestamp(),
         updatedBy: user?.email || "unknown"
@@ -437,11 +416,13 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
                 <FloatingMenu editor={editor} tippyOptions={{ duration: 100 }}>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-10 w-10 text-white bg-primary hover:bg-primary/90 rounded-2xl shadow-xl -ml-12"><Plus className="h-6 w-6" /></Button>
+                      <Button variant="ghost" size="icon" className="h-10 w-10 text-white bg-primary hover:bg-primary/90 rounded-2xl shadow-xl -ml-12" disabled={isProcessing}>
+                        {isProcessing ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-6 w-6" />}
+                      </Button>
                     </PopoverTrigger>
                     <PopoverContent side="right" className="w-56 p-2 rounded-3xl shadow-2xl border-none">
                       <div className="grid gap-1">
-                        <button type="button" onClick={() => editorImageInputRef.current?.click()} className="flex items-center gap-4 w-full p-4 hover:bg-slate-50 rounded-2xl">
+                        <button type="button" onClick={() => editorImageInputRef.current?.click()} className="flex items-center gap-4 w-full p-4 hover:bg-slate-50 rounded-2xl" disabled={isProcessing}>
                           <div className="bg-blue-50 p-2 rounded-xl"><LucideImage className="h-5 w-5 text-blue-500" /></div>
                           <span className="text-sm font-black text-slate-700">画像を挿入</span>
                         </button>
@@ -462,7 +443,9 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
 
       <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t z-50">
         <div className="max-w-3xl mx-auto h-16 flex items-center px-4 gap-2">
-          <Button variant="ghost" size="icon" className="h-12 w-12 text-white bg-primary rounded-2xl shadow-xl" onClick={() => editorImageInputRef.current?.click()}><Plus className="h-7 w-7" /></Button>
+          <Button variant="ghost" size="icon" className="h-12 w-12 text-white bg-primary rounded-2xl shadow-xl" onClick={() => editorImageInputRef.current?.click()} disabled={isProcessing}>
+            {isProcessing ? <Loader2 className="h-6 w-6 animate-spin" /> : <Plus className="h-7 w-7" />}
+          </Button>
           <Separator orientation="vertical" className="h-8 mx-2" />
           <div className="flex-1 flex gap-1">
             <Button variant="ghost" size="icon" onClick={() => editor?.chain().focus().toggleBold().run()} className={cn("rounded-xl", editor?.isActive('bold') && "bg-primary/5 text-primary")}><Bold className="h-5 w-5" /></Button>
