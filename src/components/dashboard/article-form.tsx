@@ -209,7 +209,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     },
     editorProps: {
       attributes: {
-        class: 'ProseMirror outline-none min-h-[600px] p-8 md:p-12',
+        class: 'ProseMirror outline-none min-h-[600px] p-4 md:p-12',
       },
       handleDrop: (view, event, slice, moved) => {
         if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]) {
@@ -323,28 +323,28 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-w-5xl mx-auto pb-20">
-        <div className="flex items-start gap-4 md:gap-6 border-b-2 border-slate-100 pb-6 group/title">
-          <div className="relative pt-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-w-5xl mx-auto pb-20 px-2 md:px-0">
+        <div className="flex items-start gap-3 md:gap-6 border-b-2 border-slate-100 pb-6 group/title">
+          <div className="relative pt-2 md:pt-4">
             <input type="file" accept="image/*" className="hidden" ref={mainImageInputRef} onChange={handleMainImageSelect} />
             <Button 
               type="button" 
               variant="ghost" 
               className={cn(
-                "h-16 w-16 md:h-20 md:w-20 rounded-[1.5rem] border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all shrink-0",
+                "h-12 w-12 md:h-20 md:w-20 rounded-[1rem] md:rounded-[1.5rem] border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all shrink-0",
                 mainImagePreview ? "border-primary bg-primary/5 text-primary" : "border-slate-200 bg-slate-50 text-slate-400 hover:border-slate-300 hover:bg-slate-100"
               )}
               onClick={() => mainImageInputRef.current?.click()}
             >
-              {mainImagePreview ? <RefreshCw className="h-6 w-6" /> : <LucideImage className="h-6 w-6" />}
-              <span className="text-[8px] font-black uppercase tracking-tighter">Header</span>
+              {mainImagePreview ? <RefreshCw className="h-5 w-5 md:h-6 md:w-6" /> : <LucideImage className="h-5 w-5 md:h-6 md:w-6" />}
+              <span className="text-[6px] md:text-[8px] font-black uppercase tracking-tighter hidden md:inline">Header</span>
             </Button>
             {mainImagePreview && (
               <Button
                 type="button"
                 variant="destructive"
                 size="icon"
-                className="absolute -top-1 -right-1 h-6 w-6 rounded-full shadow-lg scale-0 group-hover/title:scale-100 transition-transform"
+                className="absolute -top-1 -right-1 h-5 w-5 md:h-6 md:w-6 rounded-full shadow-lg scale-0 group-hover/title:scale-100 transition-transform"
                 onClick={(e) => {
                   e.stopPropagation();
                   setMainImagePreview("");
@@ -352,7 +352,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                   form.setValue("mainImageUrl", "");
                 }}
               >
-                <Trash2 className="h-3 w-3" />
+                <Trash2 className="h-2 w-2 md:h-3 md:w-3" />
               </Button>
             )}
           </div>
@@ -363,7 +363,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
               render={({ field }) => (
                 <FormItem className="space-y-0">
                   <FormControl>
-                    <Input className="h-auto py-2 text-3xl md:text-5xl font-black border-none bg-transparent shadow-none px-0 focus-visible:ring-0 placeholder:text-slate-200 leading-tight" placeholder="タイトルを入力してください" {...field} />
+                    <Input className="h-auto py-1 md:py-2 text-xl md:text-5xl font-black border-none bg-transparent shadow-none px-0 focus-visible:ring-0 placeholder:text-slate-200 leading-tight" placeholder="タイトルを入力してください" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -374,7 +374,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
 
         {mainImagePreview && (
           <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
-            <div className="relative aspect-[21/9] w-full rounded-[2.5rem] overflow-hidden border-4 border-white shadow-2xl bg-slate-100">
+            <div className="relative aspect-[21/9] w-full rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden border-4 border-white shadow-2xl bg-slate-100">
               <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
                 <Image 
                   src={mainImagePreview} 
@@ -390,11 +390,11 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
                 />
               </div>
             </div>
-            <div className="bg-slate-50/50 p-6 rounded-3xl border border-slate-100 space-y-4">
+            <div className="bg-slate-50/50 p-4 md:p-6 rounded-2xl md:rounded-3xl border border-slate-100 space-y-4">
               <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                 <Maximize className="h-3 w-3" /> 見出し画像の構図を調整
               </h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold text-slate-500">ズーム: {transform.scale.toFixed(0)}%</label>
                   <Slider min={-200} max={200} step={1} value={[transform.scale]} onValueChange={([val]) => form.setValue("mainImageTransform.scale", val)} />
@@ -412,7 +412,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 items-end">
           <FormField
             control={form.control}
             name="categoryId"
@@ -447,20 +447,20 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
           />
         </div>
 
-        <div className="relative pt-10">
+        <div className="relative pt-6 md:pt-10">
           {editor && (
             <FloatingMenu 
               editor={editor} 
               tippyOptions={{ duration: 100, placement: 'left-start' }}
-              className="flex items-center gap-1 -ml-12"
+              className="flex items-center gap-1 -ml-8 md:-ml-12"
             >
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button type="button" variant="ghost" size="icon" className="h-10 w-10 rounded-full bg-white shadow-md border border-slate-100 text-slate-400 hover:text-primary hover:scale-110 transition-all">
-                    <Plus className="h-5 w-5" />
+                  <Button type="button" variant="ghost" size="icon" className="h-10 w-10 md:h-12 md:w-12 rounded-full bg-white shadow-2xl border-2 border-slate-100 text-slate-400 hover:text-primary hover:scale-110 transition-all z-50">
+                    <Plus className="h-6 w-6 md:h-7 md:w-7" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent side="right" className="w-48 p-2 rounded-2xl shadow-2xl border-none">
+                <PopoverContent side="right" className="w-48 p-2 rounded-2xl shadow-2xl border-none z-50">
                   <div className="grid gap-1">
                     <button 
                       type="button"
@@ -500,13 +500,13 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
             </FloatingMenu>
           )}
 
-          <div className="min-h-[600px] bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-inner relative group/editor">
+          <div className="min-h-[600px] bg-white rounded-[1.5rem] md:rounded-[2rem] border border-slate-100 overflow-hidden shadow-inner relative group/editor">
             <EditorContent editor={editor} />
             <input type="file" accept="image/*" className="hidden" id="editor-image-upload" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleEditorImageInsert(file); }}/>
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6 pt-10 border-t sticky bottom-6 z-20 bg-white/80 backdrop-blur-md p-6 rounded-[2.5rem] shadow-2xl border border-white">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6 pt-10 border-t sticky bottom-4 md:bottom-6 z-20 bg-white/80 backdrop-blur-md p-4 md:p-6 rounded-2xl md:rounded-[2.5rem] shadow-2xl border border-white">
           <FormField
             control={form.control}
             name="isPublished"
@@ -517,10 +517,10 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
               </FormItem>
             )}
           />
-          <div className="flex gap-3">
-            <Button type="button" variant="outline" onClick={onSuccess} className="w-32 h-14 rounded-2xl font-bold border-slate-200">キャンセル</Button>
-            <Button type="submit" disabled={isSaving} className="w-48 h-14 shadow-2xl font-black rounded-2xl text-lg bg-primary hover:bg-primary/90">
-              {isSaving ? <Loader2 className="h-6 w-6 animate-spin mr-2" /> : null}{isSaving ? "転送・保存中" : "記事を保存する"}
+          <div className="flex gap-2 w-full md:w-auto">
+            <Button type="button" variant="outline" onClick={onSuccess} className="flex-1 md:w-32 h-12 md:h-14 rounded-xl md:rounded-2xl font-bold border-slate-200">キャンセル</Button>
+            <Button type="submit" disabled={isSaving} className="flex-[2] md:w-48 h-12 md:h-14 shadow-2xl font-black rounded-xl md:rounded-2xl text-base md:text-lg bg-primary hover:bg-primary/90">
+              {isSaving ? <Loader2 className="h-5 w-5 md:h-6 md:w-6 animate-spin mr-2" /> : null}{isSaving ? "保存中" : "記事を保存する"}
             </Button>
           </div>
         </div>

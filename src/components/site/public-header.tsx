@@ -1,14 +1,17 @@
+
 "use client";
 
 import Link from 'next/link';
-import { Menu, Search, User, BookOpen } from 'lucide-react';
+import { Menu, User, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 export function PublicHeader() {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -17,6 +20,13 @@ export function PublicHeader() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const navLinks = [
+    { href: "/", label: "ホーム" },
+    { href: "/articles", label: "記事一覧" },
+    { href: "/viewer", label: "紙面ビューアー" },
+    { href: "/about", label: "新聞会について" },
+  ];
 
   return (
     <header 
@@ -38,17 +48,16 @@ export function PublicHeader() {
                 priority
               />
             </div>
-            <div>
+            <div className="hidden sm:block">
               <h1 className="text-xl font-bold text-slate-800 leading-tight">北海学園新聞会</h1>
               <p className="text-[10px] text-slate-500 font-medium tracking-widest uppercase">北海学園大学一部新聞会</p>
             </div>
           </Link>
 
           <nav className="hidden md:flex items-center gap-8">
-            <NavLink href="/">ホーム</NavLink>
-            <NavLink href="/articles">記事一覧</NavLink>
-            <NavLink href="/viewer">紙面ビューアー</NavLink>
-            <NavLink href="/about">新聞会について</NavLink>
+            {navLinks.map((link) => (
+              <NavLink key={link.href} href={link.href}>{link.label}</NavLink>
+            ))}
           </nav>
 
           <div className="flex items-center gap-2">
@@ -58,9 +67,40 @@ export function PublicHeader() {
                 管理者
               </Button>
             </Link>
-            <Button variant="ghost" size="icon" className="md:hidden">
-              <Menu className="h-6 w-6" />
-            </Button>
+            
+            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="md:hidden rounded-full hover:bg-slate-100">
+                  <Menu className="h-6 w-6" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-72 p-0 border-none bg-white">
+                <SheetHeader className="p-6 border-b">
+                  <SheetTitle className="flex items-center gap-3">
+                    <Image src="/icon.png" alt="" width={24} height={24} />
+                    北海学園新聞会
+                  </SheetTitle>
+                </SheetHeader>
+                <div className="p-6 space-y-4">
+                  {navLinks.map((link) => (
+                    <Link 
+                      key={link.href} 
+                      href={link.href} 
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="block text-lg font-black text-slate-700 hover:text-primary transition-colors py-2 border-b border-slate-50"
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                  <Link href="/admin" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button className="w-full mt-6 h-12 font-black rounded-xl gap-2">
+                      <User className="h-4 w-4" />
+                      管理者入口
+                    </Button>
+                  </Link>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </div>
