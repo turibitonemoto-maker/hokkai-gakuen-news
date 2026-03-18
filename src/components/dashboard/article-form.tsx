@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -37,6 +38,7 @@ import { useEditor, EditorContent, NodeViewWrapper, ReactNodeViewRenderer, Float
 import StarterKit from '@tiptap/starter-kit';
 import ImageExtension from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
+import Placeholder from '@tiptap/extension-placeholder';
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
@@ -90,7 +92,7 @@ const NoteImageComponent = ({ node, updateAttributes, selected, deleteNode }: an
             <div className="w-px h-4 bg-slate-200 mx-1" />
             <button 
               type="button"
-              onClick={deleteNode}
+              onClick={() => deleteNode()}
               className="p-1.5 rounded-full hover:bg-red-50 text-red-500 transition-all"
               title="画像を削除"
             >
@@ -174,7 +176,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
   const [mainImagePreview, setMainImagePreview] = useState<string>("");
   const mainImageInputRef = useRef<HTMLInputElement>(null);
   const editorImageInputRef = useRef<HTMLInputElement>(null);
-  const editorRef = useRef<any>(null);
 
   const form = useForm<ArticleFormValues>({
     resolver: zodResolver(articleSchema),
@@ -198,24 +199,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
     }
   }, [mainImagePreview, form, article]);
 
-  const handleEditorImageInsert = useCallback(async (file: File) => {
-    if (!file.type.startsWith('image/')) return;
-    setIsProcessing(true);
-    try {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const base64 = reader.result as string;
-        editorRef.current?.chain().focus().setImage({ src: base64 }).run();
-        toast({ title: "画像を挿入しました" });
-        setIsProcessing(false);
-      };
-      reader.readAsDataURL(file);
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "画像プレビューに失敗しました" });
-      setIsProcessing(false);
-    }
-  }, [toast]);
-
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -226,12 +209,13 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
           class: 'text-primary font-bold underline',
         },
       }),
+      Placeholder.configure({
+        placeholder: 'ご自由にお書きください。',
+        emptyNodeClass: 'is-editor-empty',
+      }),
     ],
     content: article?.content || "",
     immediatelyRender: false,
-    onCreate: ({ editor }) => {
-      editorRef.current = editor;
-    },
     onUpdate: ({ editor }) => {
       form.setValue("content", editor.getHTML());
     },
@@ -241,6 +225,24 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
       },
     },
   });
+
+  const handleEditorImageInsert = useCallback(async (file: File) => {
+    if (!file.type.startsWith('image/') || !editor) return;
+    setIsProcessing(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = reader.result as string;
+        editor.chain().focus().setImage({ src: base64 }).run();
+        toast({ title: "画像を挿入しました" });
+        setIsProcessing(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "画像プレビューに失敗しました" });
+      setIsProcessing(false);
+    }
+  }, [editor, toast]);
 
   const charCount = useMemo(() => {
     if (!editor) return 0;
@@ -344,7 +346,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
 
   return (
     <div className="flex flex-col min-h-screen bg-white font-body">
-      {/* 安定した画像入力要素 - どこからでも呼べるようにルートに配置 */}
+      {/* 安定した画像入力要素 */}
       <input 
         type="file" 
         id="editor-image-insert-hidden" 
@@ -437,7 +439,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
         </div>
       </header>
 
-      {/* Main canvas - Note-like Immersive Experience */}
+      {/* Main canvas */}
       <main className="flex-1 overflow-y-auto pb-40">
         <div className="max-w-3xl mx-auto px-6 pt-12 pb-20">
           {/* Header Image Area */}
@@ -544,8 +546,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
           <div className="mt-8">
             {editor && (
               <div className="prose-container relative">
-                {!editor.getText() && !editor.isActive('image') && <p className="absolute top-10 left-0 text-slate-200 font-bold pointer-events-none text-xl">ご自由にお書きください。</p>}
-                
                 {/* Note-like Floating Menu (+) */}
                 <FloatingMenu editor={editor} tippyOptions={{ duration: 100 }}>
                   <Popover>
@@ -598,7 +598,7 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
         </div>
       </main>
 
-      {/* Bottom Toolbar - Note-like Mobile Optimized */}
+      {/* Bottom Toolbar */}
       <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
         <div className="max-w-3xl mx-auto flex flex-col">
           {/* Character Count Bar */}
@@ -610,7 +610,6 @@ export function ArticleForm({ article, onSuccess }: ArticleFormProps) {
           </div>
 
           <div className="h-16 flex items-center px-2 overflow-x-auto gap-1 no-scrollbar pb-safe-area-inset-bottom">
-            {/* The Plus button - Front & Center */}
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-12 w-12 shrink-0 text-white bg-primary hover:bg-primary/90 rounded-2xl shadow-xl shadow-primary/20 ml-2 group active:scale-90 transition-all">

@@ -52,6 +52,12 @@
   @apply mb-4 leading-normal; 
 }
 
+/* Placeholder Extension Styling */
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  @apply text-slate-200 float-left pointer-events-none h-0 font-bold text-xl;
+}
+
 .ProseMirror h1, .article-content h1 {
   @apply text-3xl font-black mb-6 mt-10 tracking-tighter text-slate-900;
 }
@@ -93,24 +99,6 @@
 /* キャプション表示スタイル */
 .image-caption-text {
   @apply mt-3 text-sm font-bold text-slate-400 text-center block;
-}
-
-/* リサイズハンドルのスタイリング */
-.resize-handle {
-  @apply absolute w-4 h-4 bg-primary border-2 border-white rounded-full shadow-lg opacity-0 transition-opacity;
-  z-index: 50;
-  cursor: nwse-resize;
-}
-
-.resizable-image-container.is-selected .resize-handle {
-  @apply opacity-100;
-}
-
-.resize-handle-bottom-right { bottom: 32px; right: -8px; }
-
-.ProseMirror p.is-editor-empty:first-child::before {
-  content: "本文を入力してください...";
-  @apply text-slate-200 float-left pointer-events-none h-0 font-bold;
 }
 
 .page-fade-in {
