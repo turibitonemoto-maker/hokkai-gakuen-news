@@ -25,8 +25,6 @@ import {
   Type, 
   Plus,
   Maximize,
-  CheckCircle2,
-  AlertCircle,
   ShieldCheck
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
@@ -56,8 +54,9 @@ export function PresidentMessageManager() {
   const [lockoutTime, setLockoutTime] = useState<number | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
   
+  // ローカルファイルの保持
+  const [authorImageFile, setAuthorImageFile] = useState<File | null>(null);
   const [authorImagePreview, setAuthorImagePreview] = useState<string>("");
   
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -113,59 +112,18 @@ export function PresidentMessageManager() {
   }, [messageData, form, editor]);
 
   /**
-   * 会長写真の即時アップロード ＆ 旧写真の物理抹消プロトコル
+   * 写真選択：ローカルプレビューのみ実行
    */
-  const handleFacePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFacePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !file.type.startsWith('image/')) return;
     
-    // 現在の（削除対象となる）URLを保持
-    const oldImageUrl = form.getValues("authorImageUrl");
-    
-    setIsUploading(true);
-    try {
-      // 1. 新しい写真をアップロード (指定された「会長挨拶写真」フォルダへ)
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("folder", `会長挨拶写真`);
-      
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      if (!res.ok) throw new Error("アップロードに失敗しました");
-      const data = await res.json();
-      
-      const newImageUrl = data.secure_url;
-
-      // 2. 旧写真が存在する場合、クラウドから物理抹消
-      if (oldImageUrl && oldImageUrl.includes("res.cloudinary.com")) {
-        try {
-          await fetch("/api/upload/delete", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ urls: [oldImageUrl] }),
-          });
-          console.log("[Cloud Cleanup] 旧写真を抹消しました。");
-        } catch (delError) {
-          console.error("[Cloud Cleanup] 旧写真の削除に失敗しましたが、続行します:", delError);
-        }
-      }
-      
-      // 3. フォーム状態を更新
-      form.setValue("authorImageUrl", newImageUrl);
-      setAuthorImagePreview(newImageUrl);
-      form.setValue("authorImageTransform", { scale: 0, x: 0, y: 0 });
-      
-      toast({ title: "写真を更新しました", description: "クラウドの資源を最適化しました。" });
-    } catch (error: any) {
-      console.error("Upload error:", error);
-      toast({ 
-        variant: "destructive", 
-        title: "アップロード失敗", 
-        description: "ネットワーク環境またはCloudinaryの設定を確認してください。" 
-      });
-    } finally {
-      setIsUploading(false);
-      if (e.target) e.target.value = "";
-    }
+    const blobUrl = URL.createObjectURL(file);
+    setAuthorImageFile(file);
+    setAuthorImagePreview(blobUrl);
+    // 構図をリセット
+    form.setValue("authorImageTransform", { scale: 0, x: 0, y: 0 });
+    if (e.target) e.target.value = "";
   };
 
   const handleUnlock = () => {
@@ -174,7 +132,7 @@ export function PresidentMessageManager() {
     if (password === correctPassword) {
       setIsUnlocked(true);
       setFailCount(0);
-      toast({ title: "認証完了", description: "管制区画への進入を許可しました。" });
+      toast({ title: "認証完了" });
     } else {
       const newCount = failCount + 1;
       setFailCount(newCount);
@@ -185,34 +143,64 @@ export function PresidentMessageManager() {
           const until = Date.now() + 15 * 60 * 1000;
           setLockoutTime(until);
           localStorage.setItem("lockout_until", until.toString());
-          toast({ variant: "destructive", title: "アクセス拒否", description: "セキュリティ・ロックが発動しました。" });
+          toast({ variant: "destructive", title: "アクセス拒否" });
         }, 800);
       } else {
-        toast({ variant: "destructive", title: "不一致", description: `パスワードが正しくありません。残り ${3 - newCount} 回。` });
+        toast({ variant: "destructive", title: "不一致", description: `残り ${3 - newCount} 回。` });
       }
     }
   };
 
-  function onSubmit(values: PresidentMessageValues) {
+  /**
+   * 保存処理：写真のアップロードと物理抹消をここで実行
+   */
+  async function onSubmit(values: PresidentMessageValues) {
     if (!firestore || !docRef || !editor) return;
     setIsSaving(true);
     
-    const dataToSave = {
-      ...values,
-      content: editor.getHTML(),
-      updatedAt: serverTimestamp(),
-      updatedBy: user?.email || "unknown"
-    };
+    try {
+      let finalImageUrl = values.authorImageUrl;
 
-    setDocumentNonBlocking(docRef, dataToSave, { merge: true });
-    
-    setTimeout(() => {
+      // 1. 写真が新しく選ばれている場合はアップロード
+      if (authorImageFile) {
+        const formData = new FormData();
+        formData.append("file", authorImageFile);
+        formData.append("folder", `会長挨拶写真`); // 指定フォルダ
+        
+        const res = await fetch("/api/upload", { method: "POST", body: formData });
+        if (!res.ok) throw new Error("アップロードに失敗しました");
+        const data = await res.json();
+        finalImageUrl = data.secure_url;
+
+        // 2. 旧写真が存在する場合、クラウドから物理抹消
+        const oldUrl = messageData?.authorImageUrl;
+        if (oldUrl && oldUrl !== finalImageUrl && oldUrl.includes("res.cloudinary.com")) {
+          fetch("/api/upload/delete", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ urls: [oldUrl] }),
+          }).catch(console.error);
+        }
+      }
+
+      // 3. Firestore への保存
+      const dataToSave = {
+        ...values,
+        authorImageUrl: finalImageUrl,
+        content: editor.getHTML(),
+        updatedAt: serverTimestamp(),
+        updatedBy: user?.email || "unknown"
+      };
+
+      setDocumentNonBlocking(docRef, dataToSave, { merge: true });
+      
+      toast({ title: "保存完了", description: "会長挨拶の聖典を更新しました。" });
+      setAuthorImageFile(null); // ファイルをクリア
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "保存失敗", description: error.message });
+    } finally {
       setIsSaving(false);
-      toast({ 
-        title: "保存完了", 
-        description: "会長挨拶の聖典を更新しました。",
-      });
-    }, 500);
+    }
   }
 
   if (isVerifying) return (
@@ -230,8 +218,7 @@ export function PresidentMessageManager() {
         </div>
         <h2 className="text-3xl font-black text-white mb-4">セキュリティ・ロック 🔒</h2>
         <p className="text-slate-400 font-bold leading-relaxed">
-          不正な操作試行が検出されたため、この機能を一時的に制限しています。<br />
-          再試行まであと約 {Math.ceil((lockoutTime - Date.now()) / 60000)} 分です。
+          不正な操作試行が検出されたため、一時的にこの機能を制限しています。
         </p>
       </Card>
     </div>
@@ -288,13 +275,13 @@ export function PresidentMessageManager() {
         </div>
 
         <div className="relative group">
-          <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleFacePhotoSelect} disabled={isUploading} />
+          <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleFacePhotoSelect} disabled={isSaving} />
           <div 
             className={cn(
               "relative w-48 h-48 rounded-[3.5rem] overflow-hidden shadow-2xl border-8 border-white bg-slate-50 cursor-pointer hover:scale-[1.05] transition-all duration-500 flex items-center justify-center group",
-              isUploading && "opacity-50 cursor-wait animate-pulse"
+              isSaving && "opacity-50 cursor-wait animate-pulse"
             )}
-            onClick={() => !isUploading && fileInputRef.current?.click()}
+            onClick={() => !isSaving && fileInputRef.current?.click()}
           >
             {authorImagePreview ? (
               <Image
@@ -316,7 +303,7 @@ export function PresidentMessageManager() {
               </div>
             )}
             
-            {isUploading ? (
+            {isSaving ? (
               <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-sm">
                 <Loader2 className="h-8 w-8 animate-spin text-white" />
               </div>
@@ -368,14 +355,14 @@ export function PresidentMessageManager() {
                 <FormField control={form.control} name="title" render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">挨拶の見出し</FormLabel>
-                    <FormControl><Input className="h-14 font-bold rounded-2xl bg-slate-50/50 border-none shadow-inner text-lg focus:ring-2 focus:ring-primary/20" placeholder="例：新入生の皆さんへ" {...field} /></FormControl>
+                    <FormControl><Input className="h-14 font-bold rounded-2xl bg-slate-50/50 border-none shadow-inner text-lg" placeholder="例：新入生の皆さんへ" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="authorName" render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">会長氏名</FormLabel>
-                    <FormControl><Input className="h-14 font-bold rounded-2xl bg-slate-50/50 border-none shadow-inner text-lg focus:ring-2 focus:ring-primary/20" placeholder="氏名を入力" {...field} /></FormControl>
+                    <FormControl><Input className="h-14 font-bold rounded-2xl bg-slate-50/50 border-none shadow-inner text-lg" placeholder="氏名を入力" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -397,7 +384,7 @@ export function PresidentMessageManager() {
               <div className="flex justify-center pt-10 border-t border-slate-50">
                 <Button 
                   type="submit" 
-                  disabled={isSaving || isUploading} 
+                  disabled={isSaving} 
                   className="px-20 h-16 font-black rounded-2xl shadow-2xl bg-primary text-xl hover:scale-105 transition-transform active:scale-95 disabled:opacity-50"
                 >
                   {isSaving ? (

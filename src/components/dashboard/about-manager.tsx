@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Loader2, Save, Info, Lock, Bold, Italic, Heading2, List, Type, Image as LucideImage, ShieldCheck } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import ImageExtension from '@tiptap/extension-image';
@@ -27,7 +27,9 @@ export function AboutManager() {
   const [lockoutTime, setLockoutTime] = useState<number | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
+  
+  // ローカルファイルの保持 (blobUrl -> File)
+  const [editorFiles, setEditorFiles] = useState<Map<string, File>>(new Map());
   
   const firestore = useFirestore();
   const { user } = useUser();
@@ -64,26 +66,19 @@ export function AboutManager() {
 
   const { data: aboutData, isLoading } = useDoc(docRef);
 
-  async function handleImageInsert(file: File) {
-    if (!file.type.startsWith('image/')) return;
-    setIsProcessing(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("folder", `newspaper_archive/about`);
-      
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      if (!res.ok) throw new Error("アップロードに失敗しました");
-      const data = await res.json();
+  /**
+   * エディタ内画像：ローカルプレビュー
+   */
+  const handleImageSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !file.type.startsWith('image/')) return;
 
-      editor?.chain().focus().setImage({ src: data.secure_url }).run();
-      toast({ title: "画像を挿入しました" });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "失敗", description: "クラウドへの転送に失敗しました。" });
-    } finally {
-      setIsProcessing(false);
-    }
-  }
+    const blobUrl = URL.createObjectURL(file);
+    setEditorFiles(prev => new Map(prev).set(blobUrl, file));
+    
+    editor?.chain().focus().setImage({ src: blobUrl }).run();
+    if (e.target) e.target.value = "";
+  }, [editor]);
 
   useEffect(() => {
     if (aboutData && editor) {
@@ -130,21 +125,59 @@ export function AboutManager() {
     }
   };
 
+  /**
+   * 保存処理：画像の一括アップロードと置換をここで実行
+   */
   async function handleSave() {
     if (!firestore || !docRef || !editor) return;
     setIsSaving(true);
     
-    const htmlContent = editor.getHTML();
-    setDocumentNonBlocking(docRef, {
-      content: htmlContent, 
-      updatedAt: serverTimestamp(),
-      updatedBy: user?.email || "unknown"
-    }, { merge: true });
+    try {
+      let finalContent = editor.getHTML();
+      const blobRegex = /src="(blob:[^"]+)"/g;
+      let match;
+      const uploadedUrlsMap = new Map<string, string>();
 
-    setTimeout(() => {
-      setIsSaving(false);
+      // 1. 本文内のローカル画像を抽出
+      const blobUrls: string[] = [];
+      while ((match = blobRegex.exec(finalContent)) !== null) {
+        blobUrls.push(match[1]);
+      }
+
+      // 2. Cloudinary へ一括アップロード
+      for (const blobUrl of blobUrls) {
+        const file = editorFiles.get(blobUrl);
+        if (file) {
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("folder", `newspaper_archive/about`);
+          
+          const res = await fetch("/api/upload", { method: "POST", body: formData });
+          if (!res.ok) throw new Error("画像アップロードに失敗しました");
+          const data = await res.json();
+          uploadedUrlsMap.set(blobUrl, data.secure_url);
+        }
+      }
+
+      // 3. 本文のURLを置換
+      uploadedUrlsMap.forEach((cloudUrl, blobUrl) => {
+        finalContent = finalContent.split(blobUrl).join(cloudUrl);
+      });
+
+      // 4. Firestore への保存
+      setDocumentNonBlocking(docRef, {
+        content: finalContent, 
+        updatedAt: serverTimestamp(),
+        updatedBy: user?.email || "unknown"
+      }, { merge: true });
+
       toast({ title: "保存完了", description: "About Us の聖典を更新しました。" });
-    }, 500);
+      setEditorFiles(new Map()); // クリア
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "失敗", description: error.message });
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   if (isVerifying) return <div className="flex justify-center p-12"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
@@ -214,12 +247,9 @@ export function AboutManager() {
               <Button type="button" variant="ghost" size="icon" className={cn("h-10 w-10 rounded-xl transition-all", editor?.isActive('bulletList') && "bg-white shadow-md text-primary")} onClick={() => editor?.chain().focus().toggleBulletList().run()}><List className="h-5 w-5" /></Button>
               <div className="w-px h-6 bg-slate-200 mx-2" />
               <div className="relative">
-                <input type="file" accept="image/*" className="hidden" id="about-image-upload" onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) handleImageInsert(file);
-                }}/>
-                <Button type="button" variant="ghost" size="icon" className={cn("h-10 w-10 rounded-xl transition-all", isProcessing && "animate-pulse")} onClick={() => document.getElementById('about-image-upload')?.click()} disabled={isProcessing}>
-                  {isProcessing ? <Loader2 className="h-5 w-5 animate-spin" /> : <LucideImage className="h-5 w-5" />}
+                <input type="file" accept="image/*" className="hidden" id="about-image-upload" onChange={handleImageSelect}/>
+                <Button type="button" variant="ghost" size="icon" className="h-10 w-10 rounded-xl transition-all" onClick={() => document.getElementById('about-image-upload')?.click()} disabled={isSaving}>
+                  <LucideImage className="h-5 w-5" />
                 </Button>
               </div>
             </div>
@@ -229,7 +259,7 @@ export function AboutManager() {
             </div>
 
             <div className="flex justify-center pt-6 border-t border-slate-50">
-              <Button type="button" onClick={handleSave} disabled={isSaving || isProcessing} className="px-24 h-16 font-black rounded-2xl shadow-2xl bg-primary text-xl hover:scale-105 transition-transform active:scale-95 disabled:opacity-50">
+              <Button type="button" onClick={handleSave} disabled={isSaving} className="px-24 h-16 font-black rounded-2xl shadow-2xl bg-primary text-xl hover:scale-105 transition-transform active:scale-95 disabled:opacity-50">
                 {isSaving ? <><Loader2 className="h-6 w-6 animate-spin mr-3" /> 保存中...</> : <><Save className="h-6 w-6 mr-3" /> 内容を保存する</>}
               </Button>
             </div>

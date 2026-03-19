@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -233,7 +234,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
     setEditorFiles(prev => new Map(prev).set(blobUrl, file));
     
     editor.chain().focus().setImage({ src: blobUrl }).run();
-    e.target.value = ""; // 同じファイルを選べるようにリセット
+    if (e.target) e.target.value = "";
   }, [editor]);
 
   /**
@@ -246,7 +247,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
     const blobUrl = URL.createObjectURL(file);
     setMainImageFile(file);
     setMainImagePreview(blobUrl);
-    e.target.value = "";
+    if (e.target) e.target.value = "";
   };
 
   const handleMainImageRemove = () => {
@@ -288,12 +289,10 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
 
       // 2. 本文内画像のアップロードと置換
       let finalContent = values.content;
-      // blob: から始まる src を正規表現で抽出
       const blobRegex = /src="(blob:[^"]+)"/g;
       let match;
       const uploadedUrlsMap = new Map<string, string>();
 
-      // 重複を避けるため一度リストアップ
       const blobUrls: string[] = [];
       while ((match = blobRegex.exec(finalContent)) !== null) {
         blobUrls.push(match[1]);
@@ -307,7 +306,6 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
         }
       }
 
-      // 置換の実行
       uploadedUrlsMap.forEach((cloudUrl, blobUrl) => {
         finalContent = finalContent.split(blobUrl).join(cloudUrl);
       });
@@ -329,7 +327,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
         addDocumentNonBlocking(colRef, { ...data, createdAt: serverTimestamp(), viewCount: 0 });
       }
 
-      // 4. 古い画像の削除（必要に応じて実行）
+      // 4. 古い画像の削除
       if (article?.mainImageUrl && article.mainImageUrl !== finalMainImageUrl && article.mainImageUrl.includes("res.cloudinary.com")) {
         fetch("/api/upload/delete", {
           method: "POST",
@@ -359,7 +357,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
 
   return (
     <div className="flex flex-col min-h-screen bg-white font-body">
-      {/* 隠しインプット群 */}
+      {/* 隠しインプット群：常に存在を保証 */}
       <input type="file" accept="image/*" className="hidden" ref={editorImageInputRef} onChange={handleEditorImageSelect} />
       <input type="file" accept="image/*" className="hidden" ref={mainImageInputRef} onChange={handleMainImageSelect} />
 
@@ -465,25 +463,17 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
             {editor && (
               <div className="prose-container relative">
                 <FloatingMenu editor={editor} tippyOptions={{ duration: 100 }}>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-10 w-10 text-white bg-primary hover:bg-primary/90 rounded-2xl shadow-xl -ml-12">
-                        <Plus className="h-6 w-6" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent side="right" className="w-56 p-2 rounded-3xl shadow-2xl border-none">
-                      <div className="grid gap-1">
-                        <button type="button" onClick={() => editorImageInputRef.current?.click()} className="flex items-center gap-4 w-full p-4 hover:bg-slate-50 rounded-2xl">
-                          <div className="bg-blue-50 p-2 rounded-xl"><LucideImage className="h-5 w-5 text-blue-500" /></div>
-                          <span className="text-sm font-black text-slate-700">画像を挿入</span>
-                        </button>
-                        <button type="button" onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()} className="flex items-center gap-4 w-full p-4 hover:bg-slate-50 rounded-2xl">
-                          <div className="bg-slate-50 p-2 rounded-xl"><Heading2 className="h-5 w-5 text-slate-500" /></div>
-                          <span className="text-sm font-black text-slate-700">大見出し</span>
-                        </button>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+                  <div className="flex items-center gap-1">
+                    <Button 
+                      type="button"
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-10 w-10 text-white bg-primary hover:bg-primary/90 rounded-2xl shadow-xl -ml-12"
+                      onClick={() => editorImageInputRef.current?.click()}
+                    >
+                      <Plus className="h-6 w-6" />
+                    </Button>
+                  </div>
                 </FloatingMenu>
                 <EditorContent editor={editor} />
               </div>
