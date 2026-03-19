@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -255,6 +254,27 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
     setMainImagePreview(URL.createObjectURL(file));
   };
 
+  const handleMainImageRemove = async () => {
+    const currentUrl = form.getValues("mainImageUrl");
+    setMainImagePreview("");
+    setMainImageFile(null);
+    form.setValue("mainImageUrl", "");
+    
+    // Cloudinaryにある旧URLなら即座に抹消を試みる
+    if (currentUrl && currentUrl.includes("res.cloudinary.com")) {
+      try {
+        await fetch("/api/upload/delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ urls: [currentUrl] }),
+        });
+        toast({ title: "画像をクラウドから抹消しました" });
+      } catch (e) {
+        console.error("Cloud delete failed:", e);
+      }
+    }
+  };
+
   async function onSubmit(values: ArticleFormValues) {
     if (!firestore) return;
     setIsSaving(true);
@@ -263,7 +283,9 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
       const subFolder = sanitizeFolderName(values.title);
       const folderPath = `newspaper_archive/${subFolder}_${uniqueSuffix}`;
       
+      const oldMainImageUrl = article?.mainImageUrl;
       let finalMainImageUrl = values.mainImageUrl;
+
       if (mainImageFile) {
         const formData = new FormData();
         formData.append("file", mainImageFile);
@@ -272,6 +294,19 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
         if (!res.ok) throw new Error("メイン画像のアップロードに失敗しました");
         const data = await res.json();
         finalMainImageUrl = data.secure_url;
+
+        // 新画像アップロード成功時、旧メイン画像があれば削除
+        if (oldMainImageUrl && oldMainImageUrl !== finalMainImageUrl && oldMainImageUrl.includes("res.cloudinary.com")) {
+          try {
+            await fetch("/api/upload/delete", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ urls: [oldMainImageUrl] }),
+            });
+          } catch (e) {
+            console.error("Cleanup error:", e);
+          }
+        }
       }
 
       const data = {
@@ -393,7 +428,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
                     </div>
                   </PopoverContent>
                 </Popover>
-                <Button variant="destructive" size="icon" className="rounded-full" onClick={() => { setMainImagePreview(""); setMainImageFile(null); }}><Trash2 className="h-4 w-4" /></Button>
+                <Button variant="destructive" size="icon" className="rounded-full" onClick={handleMainImageRemove}><Trash2 className="h-4 w-4" /></Button>
               </div>
             </div>
           )}

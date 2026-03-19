@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -24,7 +23,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { cn } from "@/lib/utils";
+import { cn, extractCloudinaryUrls } from "@/lib/utils";
 
 const CATEGORY_LABELS: Record<string, string> = {
   Campus: "キャンパス",
@@ -118,9 +117,12 @@ export function ArticleManager() {
     setIsDeleting(true);
     
     try {
-      const urlsToDel = [];
+      // 本文中の画像URLをすべて抽出
+      const contentImages = extractCloudinaryUrls(articleToDelete.content || "");
+      const urlsToDel = [...contentImages];
       if (articleToDelete.mainImageUrl) urlsToDel.push(articleToDelete.mainImageUrl);
       
+      // Cloudinaryから物理削除
       if (urlsToDel.length > 0) {
         await fetch("/api/upload/delete", {
           method: "POST",
@@ -130,7 +132,7 @@ export function ArticleManager() {
       }
 
       deleteDocumentNonBlocking(doc(firestore, "articles", articleToDelete.id));
-      toast({ title: "削除しました", description: "表紙画像も連動して抹消されました。" });
+      toast({ title: "削除しました", description: `表紙と本文中の画像計 ${urlsToDel.length} 点も抹消されました。` });
     } catch (e) {
       console.error("Delete error:", e);
       toast({ variant: "destructive", title: "削除失敗" });
@@ -277,7 +279,7 @@ export function ArticleManager() {
               <AlertDialogTitle className="text-2xl font-black">記事を完全に消去しますか？</AlertDialogTitle>
             </div>
             <AlertDialogDescription className="font-bold text-slate-500">
-              「{articleToDelete?.title}」のデータと表紙画像が物理的に抹消されます。
+              「{articleToDelete?.title}」のデータと表紙画像、さらに本文中に挿入された画像もすべて物理的に抹消されます。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2 mt-6">
