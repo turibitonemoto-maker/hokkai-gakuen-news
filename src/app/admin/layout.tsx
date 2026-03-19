@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -14,8 +13,7 @@ import {
   Loader2,
   Lock,
   BookOpen,
-  Info,
-  ShieldX
+  Info
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,9 +27,6 @@ import Image from "next/image";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
-/**
- * 共通サイドバー・ナビゲーション項目
- */
 const MENU_ITEMS = [
   { id: "/admin", label: "ダッシュボード", icon: LayoutDashboard },
   { id: "/admin/articles", label: "記事・公開管理", icon: FileText },
@@ -42,9 +37,6 @@ const MENU_ITEMS = [
   { id: "/admin/maintenance", label: "システム制御", icon: ShieldAlert, isProtected: true },
 ];
 
-/**
- * サイドバーのコンテンツ部分
- */
 function SidebarContent({ 
   pathname, 
   isSidebarOpen, 
@@ -155,25 +147,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="bg-white p-1 rounded-xl shadow-md border">
-                <Image 
-                  src="/icon.png" 
-                  alt="北海学園新聞会" 
-                  width={32} 
-                  height={32} 
-                  className="rounded-lg"
-                  priority
-                />
+                <Image src="/icon.png" alt="北海学園新聞会" width={32} height={32} className="rounded-lg" priority />
               </div>
-              <div>
-                <h1 className="text-xl font-bold text-slate-800 leading-tight">北海学園新聞会</h1>
-              </div>
+              <div><h1 className="text-xl font-bold text-slate-800 leading-tight">北海学園新聞会</h1></div>
             </div>
           </div>
         </header>
         <div className="flex-1 flex items-center justify-center p-4">
-          <div className="w-full max-w-md">
-            <LoginForm />
-          </div>
+          <div className="w-full max-w-md"><LoginForm /></div>
         </div>
       </div>
     );
@@ -189,78 +170,37 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="min-h-screen bg-slate-50 flex font-body overflow-x-hidden">
       {!isMobile && (
-        <aside 
-          className={cn(
-            "bg-[#1e293b] text-slate-300 transition-all duration-300 flex flex-col fixed inset-y-0 z-50",
-            isSidebarOpen ? "w-64" : "w-20"
-          )}
-        >
-          <SidebarContent 
-            pathname={pathname} 
-            isSidebarOpen={isSidebarOpen} 
-            isMobile={false} 
-            onLogout={handleLogout} 
-          />
+        <aside className={cn("bg-[#1e293b] text-slate-300 transition-all duration-300 flex flex-col fixed inset-y-0 z-50", isSidebarOpen ? "w-64" : "w-20")}>
+          <SidebarContent pathname={pathname} isSidebarOpen={isSidebarOpen} isMobile={false} onLogout={handleLogout} />
         </aside>
       )}
 
       {isMobile && (
         <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-          <SheetTrigger asChild>
-            <div className="hidden" />
-          </SheetTrigger>
+          <SheetTrigger asChild><div className="hidden" /></SheetTrigger>
           <SheetContent side="left" className="p-0 w-72 bg-[#1e293b] border-none">
-            <SheetHeader className="sr-only">
-              <SheetTitle>ナビゲーションメニュー</SheetTitle>
-            </SheetHeader>
-            <SidebarContent 
-              pathname={pathname} 
-              isSidebarOpen={true} 
-              isMobile={true} 
-              onLogout={handleLogout} 
-              onCloseMobile={() => setIsMobileMenuOpen(false)}
-            />
+            <SheetHeader className="sr-only"><SheetTitle>ナビゲーションメニュー</SheetTitle></SheetHeader>
+            <SidebarContent pathname={pathname} isSidebarOpen={true} isMobile={true} onLogout={handleLogout} onCloseMobile={() => setIsMobileMenuOpen(false)} />
           </SheetContent>
         </Sheet>
       )}
 
-      <div 
-        className={cn(
-          "flex-1 flex flex-col transition-all duration-300 min-w-0",
-          !isMobile ? (isSidebarOpen ? "ml-64" : "ml-20") : "ml-0"
-        )}
-      >
+      <div className={cn("flex-1 flex flex-col transition-all duration-300 min-w-0", !isMobile ? (isSidebarOpen ? "ml-64" : "ml-20") : "ml-0")}>
         <header className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 md:px-8 flex items-center justify-between sticky top-0 z-40 shadow-sm">
           <div className="flex items-center gap-2 md:gap-4">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => isMobile ? setIsMobileMenuOpen(true) : setIsSidebarOpen(!isSidebarOpen)} 
-              className="text-slate-500 rounded-full hover:bg-slate-100"
-            >
+            <Button variant="ghost" size="icon" onClick={() => isMobile ? setIsMobileMenuOpen(true) : setIsSidebarOpen(!isSidebarOpen)} className="text-slate-500 rounded-full hover:bg-slate-100">
               <Menu className="h-5 w-5" />
             </Button>
             <h2 className="text-lg md:text-xl font-black text-slate-800 tracking-tight flex items-center gap-2 md:gap-3 truncate">
-              <Image 
-                src="/icon.png" 
-                alt="" 
-                width={24} 
-                height={24} 
-                className="rounded shadow-sm shrink-0"
-              />
+              <Image src="/icon.png" alt="" width={24} height={24} className="rounded shadow-sm shrink-0" />
               <span className="truncate">{activeLabel}</span>
             </h2>
           </div>
           <div className="flex items-center gap-2 md:gap-3">
-            <Badge variant="outline" className="flex bg-slate-50 text-slate-500 font-bold border-slate-200 px-3 py-1 rounded-full">
-              {user.email}
-            </Badge>
+            <Badge variant="outline" className="flex bg-slate-50 text-slate-500 font-bold border-slate-200 px-3 py-1 rounded-full">{user.email}</Badge>
           </div>
         </header>
-
-        <main className="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto overflow-x-hidden">
-          {children}
-        </main>
+        <main className="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto overflow-x-hidden">{children}</main>
       </div>
     </div>
   );

@@ -1,7 +1,6 @@
-"use client";
-
-import { NoteManager } from "@/components/dashboard/note-manager";
-
-export default function NoteAdminPage() {
-  return <NoteManager />;
+'use client';
+import { redirect } from 'next/navigation';
+export default function NoteRedirectPage() {
+  redirect('/admin');
+  return null;
 }

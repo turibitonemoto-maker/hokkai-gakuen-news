@@ -1,11 +1,8 @@
-
 import { v2 as cloudinary } from "cloudinary";
 import { NextResponse } from "next/server";
 
-/**
- * フォルダ指定対応アップロード API
- * FormData に 'folder' フィールドを含めることで、Cloudinary上の保存先を物理的に整理します。
- */
+export const maxDuration = 60; // タイムアウト対策
+
 export async function POST(request: Request) {
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME?.trim();
   const apiKey = process.env.CLOUDINARY_API_KEY?.trim();
@@ -13,9 +10,10 @@ export async function POST(request: Request) {
 
   try {
     if (!cloudName || !apiKey || !apiSecret) {
+      console.error("[Upload API] Cloudinary credentials missing in environment variables.");
       return NextResponse.json({ 
         error: "Cloudinary設定が不完全です", 
-        details: ".env.local を確認してください。" 
+        details: "環境変数が設定されていません。管理者に連絡してください。" 
       }, { status: 500 });
     }
 
@@ -36,9 +34,6 @@ export async function POST(request: Request) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // 診断ログ
-    console.log(`[Upload API] TARGET_CLOUD_NAME: ${cloudName}, FOLDER: ${folder}`);
-
     const result: any = await new Promise((resolve, reject) => {
       cloudinary.uploader.upload_stream(
         {
@@ -50,7 +45,6 @@ export async function POST(request: Request) {
             console.error("Cloudinary SDK Error:", error);
             reject(error);
           } else {
-            console.log("Cloudinary Upload Success!");
             resolve(result);
           }
         }
@@ -61,8 +55,8 @@ export async function POST(request: Request) {
   } catch (error: any) {
     console.error("Upload API Error:", error);
     return NextResponse.json({ 
-      error: error.message || "Internal server error",
-      details: "アップロード中に障害が発生しました。クラウド名や権限を確認してください。"
+      error: "アップロード障害",
+      details: error.message || "内部サーバーエラーが発生しました。"
     }, { status: 500 });
   }
 }
