@@ -124,10 +124,10 @@ export function PresidentMessageManager() {
     
     setIsUploading(true);
     try {
-      // 1. 新しい写真をアップロード
+      // 1. 新しい写真をアップロード (指定された「会長挨拶写真」フォルダへ)
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("folder", `newspaper_archive/governance`);
+      formData.append("folder", `会長挨拶写真`);
       
       const res = await fetch("/api/upload", { method: "POST", body: formData });
       if (!res.ok) throw new Error("アップロードに失敗しました");
@@ -164,7 +164,6 @@ export function PresidentMessageManager() {
       });
     } finally {
       setIsUploading(false);
-      // インプットをクリアして同じファイルを再度選べるようにする
       if (e.target) e.target.value = "";
     }
   };
