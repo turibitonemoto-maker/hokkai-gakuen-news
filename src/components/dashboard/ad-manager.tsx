@@ -232,7 +232,7 @@ export function AdManager() {
                   この広告を完全に削除 🔒
                 </Button>
               </CardContent>
-            </div>
+            </Card>
           </div>
         </div>
 
