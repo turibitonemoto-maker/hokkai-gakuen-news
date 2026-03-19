@@ -21,13 +21,10 @@ import {
   Italic, 
   List, 
   Maximize, 
-  RefreshCw, 
   Trash2, 
   Plus, 
   Link as LinkIcon, 
-  Heading3,
   ArrowLeft,
-  MoreVertical,
   AlignCenter,
   Quote,
   Check
@@ -39,14 +36,14 @@ import ImageExtension from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
 import TextAlign from '@tiptap/extension-text-align';
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 
 /**
- * note風：画像サイズ選択 ＆ 抹消機能付きコンポーネント
+ * 画像サイズ選択 ＆ 抹消機能付きコンポーネント
  */
 const NoteImageComponent = ({ node, updateAttributes, selected, deleteNode }: any) => {
   const setWidth = (width: string) => {
@@ -164,10 +161,14 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
   const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
+  
   const [isSaving, setIsSaving] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
+  
+  // ローカルファイルの保持（blobUrl -> File）
+  const [editorFiles, setEditorFiles] = useState<Map<string, File>>(new Map());
   const [mainImageFile, setMainImageFile] = useState<File | null>(null);
   const [mainImagePreview, setMainImagePreview] = useState<string>("");
+
   const mainImageInputRef = useRef<HTMLInputElement>(null);
   const editorImageInputRef = useRef<HTMLInputElement>(null);
 
@@ -213,104 +214,108 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
     },
   });
 
-  const sanitizeFolderName = (name: string) => {
-    return name.trim().replace(/[\/\?\s]/g, '_').slice(0, 50) || "untitled";
-  };
-
-  // 即時アップロード・プロトコル
-  const handleEditorImageInsert = useCallback(async (file: File) => {
-    if (!file.type.startsWith('image/') || !editor) return;
-    setIsProcessing(true);
-    try {
-      const uniqueSuffix = Date.now().toString(36);
-      const subFolder = sanitizeFolderName(form.getValues("title") || "editor_images");
-      const folderPath = `newspaper_archive/${subFolder}_${uniqueSuffix}`;
-
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("folder", folderPath);
-
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      if (!res.ok) throw new Error("アップロードに失敗しました");
-      const data = await res.json();
-
-      editor.chain().focus().setImage({ src: data.secure_url }).run();
-      toast({ title: "画像を挿入しました" });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "失敗", description: "アップロード中にエラーが発生しました。" });
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [editor, form, toast]);
-
   useEffect(() => {
     if (article?.mainImageUrl) setMainImagePreview(article.mainImageUrl);
   }, [article]);
 
+  const sanitizeFolderName = (name: string) => {
+    return name.trim().replace(/[\/\?\s]/g, '_').slice(0, 50) || "untitled";
+  };
+
+  /**
+   * エディタ内画像：ローカルプレビュー
+   */
+  const handleEditorImageSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !file.type.startsWith('image/') || !editor) return;
+
+    const blobUrl = URL.createObjectURL(file);
+    setEditorFiles(prev => new Map(prev).set(blobUrl, file));
+    
+    editor.chain().focus().setImage({ src: blobUrl }).run();
+    e.target.value = ""; // 同じファイルを選べるようにリセット
+  }, [editor]);
+
+  /**
+   * メイン画像：ローカルプレビュー
+   */
   const handleMainImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !file.type.startsWith('image/')) return;
+    
+    const blobUrl = URL.createObjectURL(file);
     setMainImageFile(file);
-    setMainImagePreview(URL.createObjectURL(file));
+    setMainImagePreview(blobUrl);
+    e.target.value = "";
   };
 
-  const handleMainImageRemove = async () => {
-    const currentUrl = form.getValues("mainImageUrl");
+  const handleMainImageRemove = () => {
     setMainImagePreview("");
     setMainImageFile(null);
     form.setValue("mainImageUrl", "");
-    
-    // Cloudinaryにある旧URLなら即座に抹消を試みる
-    if (currentUrl && currentUrl.includes("res.cloudinary.com")) {
-      try {
-        await fetch("/api/upload/delete", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ urls: [currentUrl] }),
-        });
-        toast({ title: "画像をクラウドから抹消しました" });
-      } catch (e) {
-        console.error("Cloud delete failed:", e);
-      }
-    }
   };
 
+  /**
+   * Cloudinary への物理アップロード
+   */
+  async function uploadToCloudinary(file: File, folder: string) {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("folder", folder);
+    const res = await fetch("/api/upload", { method: "POST", body: formData });
+    if (!res.ok) throw new Error("アップロードに失敗しました");
+    const data = await res.json();
+    return data.secure_url;
+  }
+
+  /**
+   * 保存処理：画像の一括アップロードと置換をここで実行
+   */
   async function onSubmit(values: ArticleFormValues) {
     if (!firestore) return;
     setIsSaving(true);
+    
     try {
-      const uniqueSuffix = Date.now().toString(36);
+      const uniqueId = article?.id || Date.now().toString(36);
       const subFolder = sanitizeFolderName(values.title);
-      const folderPath = `newspaper_archive/${subFolder}_${uniqueSuffix}`;
+      const folderPath = `newspaper_archive/${subFolder}_${uniqueId}`;
       
-      const oldMainImageUrl = article?.mainImageUrl;
+      // 1. メイン画像のアップロード
       let finalMainImageUrl = values.mainImageUrl;
-
       if (mainImageFile) {
-        const formData = new FormData();
-        formData.append("file", mainImageFile);
-        formData.append("folder", folderPath);
-        const res = await fetch("/api/upload", { method: "POST", body: formData });
-        if (!res.ok) throw new Error("メイン画像のアップロードに失敗しました");
-        const data = await res.json();
-        finalMainImageUrl = data.secure_url;
+        finalMainImageUrl = await uploadToCloudinary(mainImageFile, folderPath);
+      }
 
-        // 新画像アップロード成功時、旧メイン画像があれば削除
-        if (oldMainImageUrl && oldMainImageUrl !== finalMainImageUrl && oldMainImageUrl.includes("res.cloudinary.com")) {
-          try {
-            await fetch("/api/upload/delete", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ urls: [oldMainImageUrl] }),
-            });
-          } catch (e) {
-            console.error("Cleanup error:", e);
-          }
+      // 2. 本文内画像のアップロードと置換
+      let finalContent = values.content;
+      // blob: から始まる src を正規表現で抽出
+      const blobRegex = /src="(blob:[^"]+)"/g;
+      let match;
+      const uploadedUrlsMap = new Map<string, string>();
+
+      // 重複を避けるため一度リストアップ
+      const blobUrls: string[] = [];
+      while ((match = blobRegex.exec(finalContent)) !== null) {
+        blobUrls.push(match[1]);
+      }
+
+      for (const blobUrl of blobUrls) {
+        const file = editorFiles.get(blobUrl);
+        if (file) {
+          const cloudUrl = await uploadToCloudinary(file, folderPath);
+          uploadedUrlsMap.set(blobUrl, cloudUrl);
         }
       }
 
+      // 置換の実行
+      uploadedUrlsMap.forEach((cloudUrl, blobUrl) => {
+        finalContent = finalContent.split(blobUrl).join(cloudUrl);
+      });
+
+      // 3. Firestore への保存
       const data = {
         ...values,
+        content: finalContent,
         mainImageUrl: finalMainImageUrl,
         updatedAt: serverTimestamp(),
         updatedBy: user?.email || "unknown"
@@ -323,6 +328,16 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
         const colRef = collection(firestore, "articles");
         addDocumentNonBlocking(colRef, { ...data, createdAt: serverTimestamp(), viewCount: 0 });
       }
+
+      // 4. 古い画像の削除（必要に応じて実行）
+      if (article?.mainImageUrl && article.mainImageUrl !== finalMainImageUrl && article.mainImageUrl.includes("res.cloudinary.com")) {
+        fetch("/api/upload/delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ urls: [article.mainImageUrl] }),
+        }).catch(console.error);
+      }
+
       toast({ title: "保存完了" });
       onSuccess();
     } catch (error: any) {
@@ -344,13 +359,14 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
 
   return (
     <div className="flex flex-col min-h-screen bg-white font-body">
-      <input type="file" accept="image/*" className="hidden" ref={editorImageInputRef} onChange={(e) => { const file = e.target.files?.[0]; if (file) handleEditorImageInsert(file); }} />
+      {/* 隠しインプット群 */}
+      <input type="file" accept="image/*" className="hidden" ref={editorImageInputRef} onChange={handleEditorImageSelect} />
       <input type="file" accept="image/*" className="hidden" ref={mainImageInputRef} onChange={handleMainImageSelect} />
 
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b h-14 flex items-center justify-between px-4">
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="icon" onClick={onSuccess} className="rounded-full"><ArrowLeft className="h-6 w-6 text-slate-600" /></Button>
-          <Button variant="ghost" size="icon" className={cn("rounded-full", mainImagePreview ? "text-primary" : "text-slate-400")} onClick={() => mainImageInputRef.current?.click()}><LucideImage className="h-6 w-6" /></Button>
+          <Button variant="ghost" size="icon" className={cn("rounded-full", (mainImagePreview || form.watch("mainImageUrl")) ? "text-primary" : "text-slate-400")} onClick={() => mainImageInputRef.current?.click()}><LucideImage className="h-6 w-6" /></Button>
         </div>
         
         <div className="flex items-center gap-2">
@@ -413,7 +429,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
                 style={{ transform: `translate(${transform.x}%, ${transform.y}%) scale(${Math.max(0.01, 1 + transform.scale / 100)})` }}
                 unoptimized
               />
-              <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100">
+              <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                 <Popover>
                   <PopoverTrigger asChild><Button variant="secondary" size="icon" className="rounded-full shadow-lg"><Maximize className="h-4 w-4 text-primary" /></Button></PopoverTrigger>
                   <PopoverContent className="w-80 p-6 rounded-3xl shadow-2xl border-none">
@@ -451,13 +467,13 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
                 <FloatingMenu editor={editor} tippyOptions={{ duration: 100 }}>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-10 w-10 text-white bg-primary hover:bg-primary/90 rounded-2xl shadow-xl -ml-12" disabled={isProcessing}>
-                        {isProcessing ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-6 w-6" />}
+                      <Button variant="ghost" size="icon" className="h-10 w-10 text-white bg-primary hover:bg-primary/90 rounded-2xl shadow-xl -ml-12">
+                        <Plus className="h-6 w-6" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent side="right" className="w-56 p-2 rounded-3xl shadow-2xl border-none">
                       <div className="grid gap-1">
-                        <button type="button" onClick={() => editorImageInputRef.current?.click()} className="flex items-center gap-4 w-full p-4 hover:bg-slate-50 rounded-2xl" disabled={isProcessing}>
+                        <button type="button" onClick={() => editorImageInputRef.current?.click()} className="flex items-center gap-4 w-full p-4 hover:bg-slate-50 rounded-2xl">
                           <div className="bg-blue-50 p-2 rounded-xl"><LucideImage className="h-5 w-5 text-blue-500" /></div>
                           <span className="text-sm font-black text-slate-700">画像を挿入</span>
                         </button>
@@ -478,8 +494,8 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
 
       <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t z-50">
         <div className="max-w-3xl mx-auto h-16 flex items-center px-4 gap-2">
-          <Button variant="ghost" size="icon" className="h-12 w-12 text-white bg-primary rounded-2xl shadow-xl" onClick={() => editorImageInputRef.current?.click()} disabled={isProcessing}>
-            {isProcessing ? <Loader2 className="h-6 w-6 animate-spin" /> : <Plus className="h-7 w-7" />}
+          <Button variant="ghost" size="icon" className="h-12 w-12 text-white bg-primary rounded-2xl shadow-xl" onClick={() => editorImageInputRef.current?.click()}>
+            <Plus className="h-7 w-7" />
           </Button>
           <Separator orientation="vertical" className="h-8 mx-2" />
           <div className="flex-1 flex gap-1">
