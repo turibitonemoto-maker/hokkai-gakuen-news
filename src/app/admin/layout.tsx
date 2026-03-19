@@ -29,7 +29,6 @@ import { LoginForm } from "@/components/auth/login-form";
 import Image from "next/image";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { AUTHORIZED_EMAILS } from "@/lib/auth-constants";
 
 /**
  * 共通サイドバー・ナビゲーション項目
@@ -184,30 +183,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  // 3. 権限チェック
-  const isAuthorized = AUTHORIZED_EMAILS.includes(user.email || "");
-  if (!isAuthorized) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
-        <div className="max-w-md w-full bg-white rounded-[2rem] shadow-2xl p-10 text-center space-y-6">
-          <div className="bg-red-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto">
-            <ShieldX className="h-10 w-10 text-red-500" />
-          </div>
-          <div className="space-y-2">
-            <h2 className="text-2xl font-black text-slate-800">アクセス拒否</h2>
-            <p className="text-sm font-bold text-slate-500 leading-relaxed">
-              ログインしたメールアドレス（{user.email}）には管理権限が付与されていません。
-            </p>
-          </div>
-          <Button onClick={handleLogout} variant="destructive" className="w-full h-14 rounded-2xl font-black">
-            ログアウト
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  // 4. 記事作成・編集時はサイドバーなしのフルスクリーン（認可済みユーザーのみ到達可能）
+  // 3. 記事作成・編集時はサイドバーなしのフルスクリーン（認可済みユーザーのみ到達可能）
   const isEditorPage = pathname === '/admin/new' || pathname.startsWith('/admin/edit/');
   if (isEditorPage) {
     return <div className="min-h-screen bg-white font-body">{children}</div>;
