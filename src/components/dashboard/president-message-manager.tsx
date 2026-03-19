@@ -16,7 +16,6 @@ import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { 
   Loader2, 
   Save, 
-  User as UserIcon, 
   Lock, 
   Bold, 
   Italic, 
@@ -24,15 +23,13 @@ import {
   List, 
   Type, 
   Plus,
-  Maximize,
-  ShieldCheck
+  Maximize
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { Badge } from "@/components/ui/badge";
 
 const presidentMessageSchema = z.object({
   title: z.string().min(1, "題名を入力してください"),
@@ -111,9 +108,6 @@ export function PresidentMessageManager() {
     }
   }, [messageData, form, editor]);
 
-  /**
-   * 写真選択：ローカルプレビューのみ実行
-   */
   const handleFacePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !file.type.startsWith('image/')) return;
@@ -121,7 +115,6 @@ export function PresidentMessageManager() {
     const blobUrl = URL.createObjectURL(file);
     setAuthorImageFile(file);
     setAuthorImagePreview(blobUrl);
-    // 構図をリセット
     form.setValue("authorImageTransform", { scale: 0, x: 0, y: 0 });
     if (e.target) e.target.value = "";
   };
@@ -152,7 +145,7 @@ export function PresidentMessageManager() {
   };
 
   /**
-   * 保存処理：写真のアップロードと物理抹消をここで実行
+   * 保存処理：写真のアップロードとFirestore保存を同時に執行
    */
   async function onSubmit(values: PresidentMessageValues) {
     if (!firestore || !docRef || !editor) return;
@@ -165,10 +158,10 @@ export function PresidentMessageManager() {
       if (authorImageFile) {
         const formData = new FormData();
         formData.append("file", authorImageFile);
-        formData.append("folder", `会長挨拶写真`); // 指定フォルダ
+        formData.append("folder", "会長挨拶写真");
         
         const res = await fetch("/api/upload", { method: "POST", body: formData });
-        if (!res.ok) throw new Error("アップロードに失敗しました");
+        if (!res.ok) throw new Error("写真のアップロードに失敗しました");
         const data = await res.json();
         finalImageUrl = data.secure_url;
 
@@ -194,8 +187,8 @@ export function PresidentMessageManager() {
 
       setDocumentNonBlocking(docRef, dataToSave, { merge: true });
       
-      toast({ title: "保存完了", description: "会長挨拶の聖典を更新しました。" });
-      setAuthorImageFile(null); // ファイルをクリア
+      toast({ title: "保存完了", description: "会長挨拶を更新しました。" });
+      setAuthorImageFile(null);
     } catch (error: any) {
       toast({ variant: "destructive", title: "保存失敗", description: error.message });
     } finally {
@@ -206,7 +199,7 @@ export function PresidentMessageManager() {
   if (isVerifying) return (
     <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4 text-center p-10">
       <Loader2 className="h-12 w-12 animate-spin text-primary" />
-      <p className="font-black text-slate-400">管制情報を照合中...</p>
+      <p className="font-black text-slate-400">認証情報を照合中...</p>
     </div>
   );
 
@@ -238,7 +231,7 @@ export function PresidentMessageManager() {
             <Lock className="h-10 w-10 text-primary" />
           </div>
           <CardTitle className="text-2xl font-black tracking-tight text-slate-800">会長挨拶管理 🔒</CardTitle>
-          <CardDescription className="font-bold text-slate-500 px-6">この重要区画を編集するには認証が必要です。</CardDescription>
+          <CardDescription className="font-bold text-slate-500 px-6">この区画を編集するには認証が必要です。</CardDescription>
         </CardHeader>
         <CardContent className="p-10 space-y-6">
           <div className="space-y-2">
@@ -265,13 +258,8 @@ export function PresidentMessageManager() {
     <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in duration-700 pb-20">
       <div className="flex flex-col items-center gap-8">
         <div className="text-center space-y-2">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <Badge variant="outline" className="bg-white text-primary border-primary/20 font-black text-[10px] px-3 py-1 rounded-full uppercase tracking-widest">
-              Executive Zone
-            </Badge>
-          </div>
           <h2 className="text-3xl font-black text-slate-800 tracking-tight">会長挨拶管理 🔒</h2>
-          <p className="text-sm font-bold text-slate-400 uppercase tracking-[0.3em]">Master Control</p>
+          <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">President Greeting Management</p>
         </div>
 
         <div className="relative group">
@@ -299,7 +287,7 @@ export function PresidentMessageManager() {
             ) : (
               <div className="flex flex-col items-center gap-2 text-slate-300">
                 <Plus className="h-12 w-12" />
-                <span className="text-[8px] font-black uppercase tracking-widest">Upload Photo</span>
+                <span className="text-[8px] font-black uppercase tracking-widest">写真を追加</span>
               </div>
             )}
             
@@ -317,7 +305,7 @@ export function PresidentMessageManager() {
 
         {authorImagePreview && (
           <div className="w-full max-w-xl bg-white/50 backdrop-blur-sm p-8 rounded-[3rem] border border-slate-100 shadow-sm space-y-6 animate-in slide-in-from-top-4 duration-500">
-            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center justify-center gap-2">
+            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2">
               <Maximize className="h-3 w-3 text-primary" /> 構図の微調整
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

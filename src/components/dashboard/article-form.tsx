@@ -164,6 +164,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
   const { toast } = useToast();
   
   const [isSaving, setIsSaving] = useState(false);
+  const [isEditorReady, setIsEditorReady] = useState(false);
   
   // ローカルファイルの保持（blobUrl -> File）
   const [editorFiles, setEditorFiles] = useState<Map<string, File>>(new Map());
@@ -208,6 +209,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
     onUpdate: ({ editor }) => {
       form.setValue("content", editor.getHTML());
     },
+    onCreate: () => setIsEditorReady(true),
     editorProps: {
       attributes: {
         class: 'ProseMirror outline-none min-h-[600px] py-10 px-0 max-w-3xl mx-auto',
@@ -233,6 +235,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
     const blobUrl = URL.createObjectURL(file);
     setEditorFiles(prev => new Map(prev).set(blobUrl, file));
     
+    // エディタへ流し込む
     editor.chain().focus().setImage({ src: blobUrl }).run();
     if (e.target) e.target.value = "";
   }, [editor]);
@@ -327,7 +330,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
         addDocumentNonBlocking(colRef, { ...data, createdAt: serverTimestamp(), viewCount: 0 });
       }
 
-      // 4. 古い画像の削除
+      // 4. 古い画像の削除（差し替えられた場合）
       if (article?.mainImageUrl && article.mainImageUrl !== finalMainImageUrl && article.mainImageUrl.includes("res.cloudinary.com")) {
         fetch("/api/upload/delete", {
           method: "POST",
@@ -357,7 +360,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
 
   return (
     <div className="flex flex-col min-h-screen bg-white font-body">
-      {/* 隠しインプット群：常に存在を保証 */}
+      {/* 隠しインプット：常に最上位で安定稼働 */}
       <input type="file" accept="image/*" className="hidden" ref={editorImageInputRef} onChange={handleEditorImageSelect} />
       <input type="file" accept="image/*" className="hidden" ref={mainImageInputRef} onChange={handleMainImageSelect} />
 
@@ -377,7 +380,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <h3 className="font-black text-lg">記事の公開設定</h3>
-                    <Badge variant="outline" className="text-[10px] font-black uppercase">Admin Only</Badge>
+                    <Badge variant="outline" className="text-[10px] font-black uppercase">Editor</Badge>
                   </div>
                   <Separator />
                   <FormField control={form.control} name="categoryId" render={({ field }) => (
@@ -494,7 +497,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
             <Button variant="ghost" size="icon" onClick={setLink} className={cn("rounded-xl", editor?.isActive('link') && "bg-primary/5 text-primary")}><LinkIcon className="h-5 w-5" /></Button>
             <Button variant="ghost" size="icon" onClick={() => editor?.chain().focus().toggleBlockquote().run()} className={cn("rounded-xl", editor?.isActive('blockquote') && "bg-primary/5 text-primary")}><Quote className="h-5 w-5" /></Button>
           </div>
-          <div className="text-[10px] font-black text-slate-400 bg-slate-50 px-3 py-1 rounded-full">{editor?.getText().length.toLocaleString()} 文字</div>
+          <div className="text-[10px] font-black text-slate-400 bg-slate-50 px-3 py-1 rounded-full">{editor?.getText().length.toLocaleString() || 0} 文字</div>
         </div>
       </div>
     </div>

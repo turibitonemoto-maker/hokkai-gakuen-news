@@ -15,7 +15,6 @@ import {
   Lock,
   BookOpen,
   Info,
-  Share2,
   ShieldX
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -37,7 +36,6 @@ const MENU_ITEMS = [
   { id: "/admin", label: "ダッシュボード", icon: LayoutDashboard },
   { id: "/admin/articles", label: "記事・公開管理", icon: FileText },
   { id: "/admin/viewer", label: "紙面ビューアー", icon: BookOpen },
-  { id: "/admin/note", label: "note管理", icon: Share2 },
   { id: "/admin/ads", label: "広告管理", icon: Megaphone, isProtected: true },
   { id: "/admin/president", label: "会長挨拶", icon: UserRound, isProtected: true },
   { id: "/admin/about", label: "About Us", icon: Info, isProtected: true },
@@ -45,7 +43,7 @@ const MENU_ITEMS = [
 ];
 
 /**
- * サイドバーのコンテンツ部分（再利用と再描画の効率化のためメイン関数外で定義）
+ * サイドバーのコンテンツ部分
  */
 function SidebarContent({ 
   pathname, 
@@ -142,7 +140,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     router.push('/admin');
   };
 
-  // 1. 物理的なマウント待ち または ユーザー情報の読み込み中
   if (!mounted || isUserLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -151,7 +148,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  // 2. ログインしていない場合
   if (!user) {
     return (
       <div className="min-h-screen flex flex-col bg-[#F0F2F5]">
@@ -183,7 +179,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  // 3. 記事作成・編集時はサイドバーなしのフルスクリーン（認可済みユーザーのみ到達可能）
   const isEditorPage = pathname === '/admin/new' || pathname.startsWith('/admin/edit/');
   if (isEditorPage) {
     return <div className="min-h-screen bg-white font-body">{children}</div>;
