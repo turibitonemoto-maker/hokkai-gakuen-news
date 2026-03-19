@@ -26,7 +26,8 @@ import {
   Plus,
   Maximize,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  ShieldCheck
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { useEditor, EditorContent } from '@tiptap/react';
@@ -111,13 +112,19 @@ export function PresidentMessageManager() {
     }
   }, [messageData, form, editor]);
 
-  // 会長写真の即時アップロード・プロトコル
+  /**
+   * 会長写真の即時アップロード ＆ 旧写真の物理抹消プロトコル
+   */
   const handleFacePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !file.type.startsWith('image/')) return;
     
+    // 現在の（削除対象となる）URLを保持
+    const oldImageUrl = form.getValues("authorImageUrl");
+    
     setIsUploading(true);
     try {
+      // 1. 新しい写真をアップロード
       const formData = new FormData();
       formData.append("file", file);
       formData.append("folder", `newspaper_archive/governance`);
@@ -126,19 +133,39 @@ export function PresidentMessageManager() {
       if (!res.ok) throw new Error("アップロードに失敗しました");
       const data = await res.json();
       
-      form.setValue("authorImageUrl", data.secure_url);
-      setAuthorImagePreview(data.secure_url);
+      const newImageUrl = data.secure_url;
+
+      // 2. 旧写真が存在する場合、クラウドから物理抹消
+      if (oldImageUrl && oldImageUrl.includes("res.cloudinary.com")) {
+        try {
+          await fetch("/api/upload/delete", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ urls: [oldImageUrl] }),
+          });
+          console.log("[Cloud Cleanup] 旧写真を抹消しました。");
+        } catch (delError) {
+          console.error("[Cloud Cleanup] 旧写真の削除に失敗しましたが、続行します:", delError);
+        }
+      }
+      
+      // 3. フォーム状態を更新
+      form.setValue("authorImageUrl", newImageUrl);
+      setAuthorImagePreview(newImageUrl);
       form.setValue("authorImageTransform", { scale: 0, x: 0, y: 0 });
-      toast({ title: "写真を更新しました", description: "クラウドへの保存が完了しました。" });
+      
+      toast({ title: "写真を更新しました", description: "クラウドの資源を最適化しました。" });
     } catch (error: any) {
       console.error("Upload error:", error);
       toast({ 
         variant: "destructive", 
         title: "アップロード失敗", 
-        description: "デプロイ環境のCloudinary設定を確認してください。" 
+        description: "ネットワーク環境またはCloudinaryの設定を確認してください。" 
       });
     } finally {
       setIsUploading(false);
+      // インプットをクリアして同じファイルを再度選べるようにする
+      if (e.target) e.target.value = "";
     }
   };
 
@@ -183,7 +210,7 @@ export function PresidentMessageManager() {
     setTimeout(() => {
       setIsSaving(false);
       toast({ 
-        title: "保存しました", 
+        title: "保存完了", 
         description: "会長挨拶の聖典を更新しました。",
       });
     }, 500);
