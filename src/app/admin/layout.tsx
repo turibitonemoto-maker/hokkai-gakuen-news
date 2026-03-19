@@ -31,6 +31,96 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { AUTHORIZED_EMAILS } from "@/lib/auth-constants";
 
+/**
+ * 共通サイドバー・ナビゲーション項目
+ */
+const MENU_ITEMS = [
+  { id: "/admin", label: "ダッシュボード", icon: LayoutDashboard },
+  { id: "/admin/articles", label: "記事・公開管理", icon: FileText },
+  { id: "/admin/viewer", label: "紙面ビューアー", icon: BookOpen },
+  { id: "/admin/note", label: "note管理", icon: Share2 },
+  { id: "/admin/ads", label: "広告管理", icon: Megaphone, isProtected: true },
+  { id: "/admin/president", label: "会長挨拶", icon: UserRound, isProtected: true },
+  { id: "/admin/about", label: "About Us", icon: Info, isProtected: true },
+  { id: "/admin/maintenance", label: "システム制御", icon: ShieldAlert, isProtected: true },
+];
+
+/**
+ * サイドバーのコンテンツ部分（再利用と再描画の効率化のためメイン関数外で定義）
+ */
+function SidebarContent({ 
+  pathname, 
+  isSidebarOpen, 
+  isMobile, 
+  onLogout, 
+  onCloseMobile 
+}: { 
+  pathname: string; 
+  isSidebarOpen: boolean; 
+  isMobile: boolean; 
+  onLogout: () => void;
+  onCloseMobile?: () => void;
+}) {
+  return (
+    <div className="flex flex-col h-full bg-[#1e293b] text-slate-300">
+      <div className="p-6 flex items-center gap-3 border-b border-slate-700/50">
+        <div className="bg-white p-1 rounded-lg shrink-0 shadow-lg">
+          <Image 
+            src="/icon.png" 
+            alt="北海学園新聞会" 
+            width={24} 
+            height={24} 
+            className="rounded-md"
+            priority
+          />
+        </div>
+        {(isSidebarOpen || isMobile) && (
+          <div className="overflow-hidden whitespace-nowrap text-left">
+            <h1 className="text-sm font-black text-white leading-tight">北海学園新聞会</h1>
+          </div>
+        )}
+      </div>
+
+      <nav className="flex-1 p-4 space-y-1.5 mt-4 overflow-y-auto">
+        {MENU_ITEMS.map((item) => (
+          <Link key={item.id} href={item.id} onClick={onCloseMobile}>
+            <button
+              className={cn(
+                "w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all group relative",
+                pathname === item.id 
+                  ? "bg-primary text-white shadow-lg shadow-primary/20" 
+                  : "hover:bg-slate-800 hover:text-white"
+              )}
+            >
+              <item.icon className={cn("h-5 w-5 shrink-0 transition-transform group-hover:scale-110", pathname === item.id ? "text-white" : "text-slate-400 group-hover:text-white")} />
+              {(isSidebarOpen || isMobile) && (
+                <>
+                  <span className="text-sm font-bold tracking-tight">{item.label}</span>
+                  {item.isProtected && (
+                    <Lock className="h-3 w-3 ml-auto opacity-40 group-hover:opacity-100 transition-opacity" />
+                  )}
+                </>
+              )}
+              {pathname === item.id && (isSidebarOpen || isMobile) && !item.isProtected && <ChevronRight className="h-4 w-4 ml-auto opacity-50" />}
+            </button>
+          </Link>
+        ))}
+      </nav>
+
+      <div className="p-4 border-t border-slate-700/50 flex flex-col gap-2">
+        <Button 
+          variant="ghost" 
+          className="w-full text-slate-400 hover:text-white hover:bg-slate-800 justify-start gap-3 px-3 rounded-xl h-12"
+          onClick={onLogout}
+        >
+          <LogOut className="h-5 w-5" />
+          {(isSidebarOpen || isMobile) && <span className="text-sm font-bold">ログアウト</span>}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
@@ -48,25 +138,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   }, [isMobile]);
 
-  // 権限チェック
-  const isAuthorized = user && AUTHORIZED_EMAILS.includes(user.email || "");
-
-  const menuItems = [
-    { id: "/admin", label: "ダッシュボード", icon: LayoutDashboard },
-    { id: "/admin/articles", label: "記事・公開管理", icon: FileText },
-    { id: "/admin/viewer", label: "紙面ビューアー", icon: BookOpen },
-    { id: "/admin/note", label: "note管理", icon: Share2 },
-    { id: "/admin/ads", label: "広告管理", icon: Megaphone, isProtected: true },
-    { id: "/admin/president", label: "会長挨拶", icon: UserRound, isProtected: true },
-    { id: "/admin/about", label: "About Us", icon: Info, isProtected: true },
-    { id: "/admin/maintenance", label: "システム制御", icon: ShieldAlert, isProtected: true },
-  ];
-
   const handleLogout = async () => {
     await signOut(auth);
     router.push('/admin');
   };
 
+  // 1. 物理的なマウント待ち または ユーザー情報の読み込み中
   if (!mounted || isUserLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -75,7 +152,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  // ログインしていない場合
+  // 2. ログインしていない場合
   if (!user) {
     return (
       <div className="min-h-screen flex flex-col bg-[#F0F2F5]">
@@ -107,7 +184,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  // ログインしているが権限がない場合
+  // 3. 権限チェック
+  const isAuthorized = AUTHORIZED_EMAILS.includes(user.email || "");
   if (!isAuthorized) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
@@ -129,72 +207,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  // 記事作成・編集時はサイドバーなしのフルスクリーン
+  // 4. 記事作成・編集時はサイドバーなしのフルスクリーン（認可済みユーザーのみ到達可能）
   const isEditorPage = pathname === '/admin/new' || pathname.startsWith('/admin/edit/');
   if (isEditorPage) {
     return <div className="min-h-screen bg-white font-body">{children}</div>;
   }
 
-  const activeLabel = menuItems.find(i => i.id === pathname)?.label || "管理";
-
-  const SidebarContent = () => (
-    <div className="flex flex-col h-full bg-[#1e293b] text-slate-300">
-      <div className="p-6 flex items-center gap-3 border-b border-slate-700/50">
-        <div className="bg-white p-1 rounded-lg shrink-0 shadow-lg">
-          <Image 
-            src="/icon.png" 
-            alt="北海学園新聞会" 
-            width={24} 
-            height={24} 
-            className="rounded-md"
-            priority
-          />
-        </div>
-        {(isSidebarOpen || isMobile) && (
-          <div className="overflow-hidden whitespace-nowrap text-left">
-            <h1 className="text-sm font-black text-white leading-tight">北海学園新聞会</h1>
-          </div>
-        )}
-      </div>
-
-      <nav className="flex-1 p-4 space-y-1.5 mt-4 overflow-y-auto">
-        {menuItems.map((item) => (
-          <Link key={item.id} href={item.id} onClick={() => setIsMobileMenuOpen(false)}>
-            <button
-              className={cn(
-                "w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all group relative",
-                pathname === item.id 
-                  ? "bg-primary text-white shadow-lg shadow-primary/20" 
-                  : "hover:bg-slate-800 hover:text-white"
-              )}
-            >
-              <item.icon className={cn("h-5 w-5 shrink-0 transition-transform group-hover:scale-110", pathname === item.id ? "text-white" : "text-slate-400 group-hover:text-white")} />
-              {(isSidebarOpen || isMobile) && (
-                <>
-                  <span className="text-sm font-bold tracking-tight">{item.label}</span>
-                  {item.isProtected && (
-                    <Lock className="h-3 w-3 ml-auto opacity-40 group-hover:opacity-100 transition-opacity" />
-                  )}
-                </>
-              )}
-              {pathname === item.id && (isSidebarOpen || isMobile) && !item.isProtected && <ChevronRight className="h-4 w-4 ml-auto opacity-50" />}
-            </button>
-          </Link>
-        ))}
-      </nav>
-
-      <div className="p-4 border-t border-slate-700/50 flex flex-col gap-2">
-        <Button 
-          variant="ghost" 
-          className="w-full text-slate-400 hover:text-white hover:bg-slate-800 justify-start gap-3 px-3 rounded-xl h-12"
-          onClick={handleLogout}
-        >
-          <LogOut className="h-5 w-5" />
-          {(isSidebarOpen || isMobile) && <span className="text-sm font-bold">ログアウト</span>}
-        </Button>
-      </div>
-    </div>
-  );
+  const activeLabel = MENU_ITEMS.find(i => i.id === pathname)?.label || "管理";
 
   return (
     <div className="min-h-screen bg-slate-50 flex font-body overflow-x-hidden">
@@ -205,7 +224,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             isSidebarOpen ? "w-64" : "w-20"
           )}
         >
-          <SidebarContent />
+          <SidebarContent 
+            pathname={pathname} 
+            isSidebarOpen={isSidebarOpen} 
+            isMobile={false} 
+            onLogout={handleLogout} 
+          />
         </aside>
       )}
 
@@ -218,7 +242,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <SheetHeader className="sr-only">
               <SheetTitle>ナビゲーションメニュー</SheetTitle>
             </SheetHeader>
-            <SidebarContent />
+            <SidebarContent 
+              pathname={pathname} 
+              isSidebarOpen={true} 
+              isMobile={true} 
+              onLogout={handleLogout} 
+              onCloseMobile={() => setIsMobileMenuOpen(false)}
+            />
           </SheetContent>
         </Sheet>
       )}
