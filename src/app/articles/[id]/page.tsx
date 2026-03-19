@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
@@ -30,10 +29,13 @@ export default function ArticleDetailPage() {
 
   useEffect(() => {
     if (article?.content) {
-      setSanitizedContent(DOMPurify.sanitize(article.content));
+      // リンクを許可するようにDOMPurifyを設定
+      setSanitizedContent(DOMPurify.sanitize(article.content, {
+        ADD_TAGS: ['a'],
+        ADD_ATTR: ['href', 'target', 'rel']
+      }));
     }
     
-    // 閲覧数のインクリメント回路
     if (firestore && id && article && !isLoading && !hasIncremented.current) {
       const incrementView = async () => {
         try {

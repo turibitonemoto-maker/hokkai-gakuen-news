@@ -31,10 +31,10 @@ const MENU_ITEMS = [
   { id: "/admin", label: "ダッシュボード", icon: LayoutDashboard },
   { id: "/admin/articles", label: "記事・公開管理", icon: FileText },
   { id: "/admin/viewer", label: "紙面ビューアー", icon: BookOpen },
-  { id: "/admin/ads", label: "広告管理", icon: Megaphone, isProtected: true },
-  { id: "/admin/president", label: "会長挨拶", icon: UserRound, isProtected: true },
-  { id: "/admin/about", label: "About Us", icon: Info, isProtected: true },
-  { id: "/admin/maintenance", label: "システム制御", icon: ShieldAlert, isProtected: true },
+  { id: "/admin/ads", label: "広告管理", icon: Megaphone },
+  { id: "/admin/president", label: "会長挨拶", icon: UserRound },
+  { id: "/admin/about", label: "About Us", icon: Info },
+  { id: "/admin/maintenance", label: "システム設定", icon: ShieldAlert },
 ];
 
 function SidebarContent({ 
@@ -83,14 +83,9 @@ function SidebarContent({
             >
               <item.icon className={cn("h-5 w-5 shrink-0 transition-transform group-hover:scale-110", pathname === item.id ? "text-white" : "text-slate-400 group-hover:text-white")} />
               {(isSidebarOpen || isMobile) && (
-                <>
-                  <span className="text-sm font-bold tracking-tight">{item.label}</span>
-                  {item.isProtected && (
-                    <Lock className="h-3 w-3 ml-auto opacity-40 group-hover:opacity-100 transition-opacity" />
-                  )}
-                </>
+                <span className="text-sm font-bold tracking-tight">{item.label}</span>
               )}
-              {pathname === item.id && (isSidebarOpen || isMobile) && !item.isProtected && <ChevronRight className="h-4 w-4 ml-auto opacity-50" />}
+              {pathname === item.id && (isSidebarOpen || isMobile) && <ChevronRight className="h-4 w-4 ml-auto opacity-50" />}
             </button>
           </Link>
         ))}
@@ -142,20 +137,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (!user) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#F0F2F5]">
-        <header className="py-6 px-8 bg-white border-b shadow-sm sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="bg-white p-1 rounded-xl shadow-md border">
-                <Image src="/icon.png" alt="北海学園新聞会" width={32} height={32} className="rounded-lg" priority />
-              </div>
-              <div><h1 className="text-xl font-bold text-slate-800 leading-tight">北海学園新聞会</h1></div>
-            </div>
-          </div>
-        </header>
-        <div className="flex-1 flex items-center justify-center p-4">
-          <div className="w-full max-w-md"><LoginForm /></div>
-        </div>
+      <div className="min-h-screen flex flex-center items-center justify-center p-4 bg-[#F0F2F5]">
+        <div className="w-full max-w-md"><LoginForm /></div>
       </div>
     );
   }
@@ -197,7 +180,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </h2>
           </div>
           <div className="flex items-center gap-2 md:gap-3">
-            <Badge variant="outline" className="flex bg-slate-50 text-slate-500 font-bold border-slate-200 px-3 py-1 rounded-full">{user.email}</Badge>
+            <Badge variant="outline" className="hidden sm:flex bg-slate-50 text-slate-500 font-bold border-slate-200 px-3 py-1 rounded-full">{user.email}</Badge>
           </div>
         </header>
         <main className="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto overflow-x-hidden">{children}</main>

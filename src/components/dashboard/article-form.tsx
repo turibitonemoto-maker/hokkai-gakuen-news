@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { 
@@ -30,7 +29,7 @@ import {
   Check
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useEditor, EditorContent, NodeViewWrapper, ReactNodeViewRenderer, FloatingMenu } from '@tiptap/react';
+import { useEditor, EditorContent, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import ImageExtension from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
@@ -124,8 +123,12 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
     extensions: [
       StarterKit,
       CustomResizableImage,
-      LinkExtension.configure({ openOnClick: false, HTMLAttributes: { class: 'text-primary font-bold underline' } }),
-      Placeholder.configure({ placeholder: 'ご自由にお書きください。' }),
+      LinkExtension.configure({ 
+        openOnClick: false, 
+        HTMLAttributes: { class: 'text-primary font-bold underline' },
+        autolink: true
+      }),
+      Placeholder.configure({ placeholder: 'ここから物語を始めてください...' }),
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
     ],
     content: article?.content || "",
@@ -159,25 +162,22 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
     formData.append("file", file);
     formData.append("folder", folder);
     const res = await fetch("/api/upload", { method: "POST", body: formData });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error || "アップロード失敗");
-    }
+    if (!res.ok) throw new Error("アップロードに失敗しました");
     const data = await res.json();
     return data.secure_url;
   }
 
   async function onSubmit(values: ArticleFormValues) {
-    if (!firestore) return;
+    if (!firestore || !editor) return;
     setIsSaving(true);
     try {
       const uniqueId = article?.id || Date.now().toString(36);
-      const folderPath = `newspaper_archive/${values.title.trim().replace(/\s/g, '_')}_${uniqueId}`;
+      const folderPath = `newspaper_archive/${uniqueId}`;
       
       let finalMainImageUrl = values.mainImageUrl;
       if (mainImageFile) finalMainImageUrl = await uploadToCloudinary(mainImageFile, folderPath);
 
-      let finalContent = values.content;
+      let finalContent = editor.getHTML();
       const blobRegex = /src="(blob:[^"]+)"/g;
       let match;
       const uploadedMap = new Map<string, string>();
@@ -194,7 +194,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
       if (article?.id) setDocumentNonBlocking(doc(firestore, "articles", article.id), data, { merge: true });
       else addDocumentNonBlocking(collection(firestore, "articles"), { ...data, createdAt: serverTimestamp(), viewCount: 0 });
 
-      toast({ title: "保存完了" });
+      toast({ title: "保存が完了しました" });
       onSuccess();
     } catch (error: any) {
       toast({ variant: "destructive", title: "失敗", description: error.message });
@@ -226,7 +226,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
                     <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest">公開日</FormLabel><FormControl><Input type="date" className="h-12 rounded-xl font-bold" {...field} /></FormControl></FormItem>
                   )} />
                   <FormField control={form.control} name="isPublished" render={({ field }) => (
-                    <FormItem className="flex items-center justify-between rounded-2xl border p-4 bg-slate-50/50"><FormLabel className="text-sm font-black">公開</FormLabel><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem>
+                    <FormItem className="flex items-center justify-between rounded-2xl border p-4 bg-slate-50/50"><FormLabel className="text-sm font-black">公開する</FormLabel><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem>
                   )} />
                   <Button onClick={form.handleSubmit(onSubmit)} disabled={isSaving} className="w-full h-14 rounded-2xl font-black text-lg bg-primary">{isSaving ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Check className="h-5 w-5 mr-2" />}保存する</Button>
                 </div>
@@ -259,10 +259,14 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
           <div className="flex-1 flex gap-1">
             <Button variant="ghost" size="icon" onClick={() => editor?.chain().focus().toggleBold().run()} className={cn("rounded-xl", editor?.isActive('bold') && "bg-primary/5 text-primary")}><Bold className="h-5 w-5" /></Button>
             <Button variant="ghost" size="icon" onClick={() => editor?.chain().focus().setTextAlign('center').run()} className={cn("rounded-xl", editor?.isActive({ textAlign: 'center' }) && "bg-primary/5 text-primary")}><AlignCenter className="h-5 w-5" /></Button>
-            <Button variant="ghost" size="icon" onClick={() => { const url = window.prompt('URL:'); if (url) editor?.chain().focus().setLink({ href: url }).run(); }} className={cn("rounded-xl", editor?.isActive('link') && "bg-primary/5 text-primary")}><LinkIcon className="h-5 w-5" /></Button>
+            <Button variant="ghost" size="icon" onClick={() => { 
+              const url = window.prompt('埋め込むURLを入力:'); 
+              if (url) editor?.chain().focus().setLink({ href: url }).run(); 
+              else if (url === '') editor?.chain().focus().unsetLink().run();
+            }} className={cn("rounded-xl", editor?.isActive('link') && "bg-primary/5 text-primary")}><LinkIcon className="h-5 w-5" /></Button>
             <Button variant="ghost" size="icon" onClick={() => editor?.chain().focus().toggleBlockquote().run()} className={cn("rounded-xl", editor?.isActive('blockquote') && "bg-primary/5 text-primary")}><Quote className="h-5 w-5" /></Button>
           </div>
-          <div className="text-[10px] font-black text-slate-400 bg-slate-50 px-3 py-1 rounded-full">{editor?.getText().length.toLocaleString() || 0} 文字</div>
+          <div className="hidden sm:block text-[10px] font-black text-slate-400 bg-slate-50 px-3 py-1 rounded-full">{editor?.getText().length.toLocaleString() || 0} 文字</div>
         </div>
       </div>
     </div>
