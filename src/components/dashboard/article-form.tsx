@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -126,7 +127,8 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
       LinkExtension.configure({ 
         openOnClick: false, 
         HTMLAttributes: { class: 'text-primary font-bold underline' },
-        autolink: true
+        autolink: true,
+        linkOnPaste: true
       }),
       Placeholder.configure({ placeholder: 'ここから物語を始めてください...' }),
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
@@ -162,7 +164,10 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
     formData.append("file", file);
     formData.append("folder", folder);
     const res = await fetch("/api/upload", { method: "POST", body: formData });
-    if (!res.ok) throw new Error("アップロードに失敗しました");
+    if (!res.ok) {
+      const errData = await res.json();
+      throw new Error(errData.details || "アップロードに失敗しました");
+    }
     const data = await res.json();
     return data.secure_url;
   }
@@ -172,7 +177,8 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
     setIsSaving(true);
     try {
       const uniqueId = article?.id || Date.now().toString(36);
-      const folderPath = `newspaper_archive/${uniqueId}`;
+      const safeTitle = values.title.replace(/[\/\s]/g, '_').slice(0, 30);
+      const folderPath = `newspaper_archive/${safeTitle}_${uniqueId}`;
       
       let finalMainImageUrl = values.mainImageUrl;
       if (mainImageFile) finalMainImageUrl = await uploadToCloudinary(mainImageFile, folderPath);
@@ -197,11 +203,26 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
       toast({ title: "保存が完了しました" });
       onSuccess();
     } catch (error: any) {
+      console.error("Save error:", error);
       toast({ variant: "destructive", title: "失敗", description: error.message });
     } finally {
       setIsSaving(false);
     }
   }
+
+  const insertLink = useCallback(() => {
+    if (!editor) return;
+    const previousUrl = editor.getAttributes('link').href;
+    const url = window.prompt('埋め込むURLを入力:', previousUrl);
+    
+    if (url === null) return;
+    if (url === '') {
+      editor.chain().focus().extendMarkRange('link').unsetLink().run();
+      return;
+    }
+    
+    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+  }, [editor]);
 
   return (
     <div className="flex flex-col min-h-screen bg-white font-body">
@@ -259,11 +280,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
           <div className="flex-1 flex gap-1">
             <Button variant="ghost" size="icon" onClick={() => editor?.chain().focus().toggleBold().run()} className={cn("rounded-xl", editor?.isActive('bold') && "bg-primary/5 text-primary")}><Bold className="h-5 w-5" /></Button>
             <Button variant="ghost" size="icon" onClick={() => editor?.chain().focus().setTextAlign('center').run()} className={cn("rounded-xl", editor?.isActive({ textAlign: 'center' }) && "bg-primary/5 text-primary")}><AlignCenter className="h-5 w-5" /></Button>
-            <Button variant="ghost" size="icon" onClick={() => { 
-              const url = window.prompt('埋め込むURLを入力:'); 
-              if (url) editor?.chain().focus().setLink({ href: url }).run(); 
-              else if (url === '') editor?.chain().focus().unsetLink().run();
-            }} className={cn("rounded-xl", editor?.isActive('link') && "bg-primary/5 text-primary")}><LinkIcon className="h-5 w-5" /></Button>
+            <Button variant="ghost" size="icon" onClick={insertLink} className={cn("rounded-xl", editor?.isActive('link') && "bg-primary/5 text-primary")}><LinkIcon className="h-5 w-5" /></Button>
             <Button variant="ghost" size="icon" onClick={() => editor?.chain().focus().toggleBlockquote().run()} className={cn("rounded-xl", editor?.isActive('blockquote') && "bg-primary/5 text-primary")}><Quote className="h-5 w-5" /></Button>
           </div>
           <div className="hidden sm:block text-[10px] font-black text-slate-400 bg-slate-50 px-3 py-1 rounded-full">{editor?.getText().length.toLocaleString() || 0} 文字</div>

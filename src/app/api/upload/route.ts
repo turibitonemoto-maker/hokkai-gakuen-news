@@ -1,7 +1,8 @@
+
 import { v2 as cloudinary } from "cloudinary";
 import { NextResponse } from "next/server";
 
-export const maxDuration = 60; // タイムアウト対策を拡張
+export const maxDuration = 60;
 
 export async function POST(request: Request) {
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME?.trim();
@@ -39,7 +40,10 @@ export async function POST(request: Request) {
           resource_type: "auto",
         },
         (error, result) => {
-          if (error) reject(error);
+          if (error) {
+            console.error("Cloudinary uploader error:", error);
+            reject(error);
+          }
           else resolve(result);
         }
       ).end(buffer);
@@ -47,7 +51,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(result);
   } catch (error: any) {
-    console.error("Cloudinary Upload Error:", error);
+    console.error("Cloudinary Upload API Error:", error);
     return NextResponse.json({ 
       error: "Upload failed",
       details: error.message

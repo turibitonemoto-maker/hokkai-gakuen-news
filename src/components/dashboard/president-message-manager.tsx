@@ -1,11 +1,12 @@
+
 "use client";
 
 import { useDoc, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { doc, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Card, CardContent } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Slider } from "@/components/ui/slider";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,7 +20,6 @@ import {
   Italic, 
   Heading2, 
   List, 
-  Plus,
   Maximize,
   ShieldCheck,
   User
@@ -119,18 +119,19 @@ export function PresidentMessageManager() {
     try {
       let finalImageUrl = values.authorImageUrl;
 
-      // 保存時に一括アップロードを実行
       if (authorImageFile) {
         const formData = new FormData();
         formData.append("file", authorImageFile);
         formData.append("folder", "会長挨拶写真");
         
         const res = await fetch("/api/upload", { method: "POST", body: formData });
-        if (!res.ok) throw new Error("画像のアップロードに失敗しました");
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.details || "画像のアップロードに失敗しました");
+        }
         const data = await res.json();
         finalImageUrl = data.secure_url;
 
-        // 古い画像の削除
         const oldUrl = messageData?.authorImageUrl;
         if (oldUrl && oldUrl !== finalImageUrl && oldUrl.includes("res.cloudinary.com")) {
           fetch("/api/upload/delete", {
@@ -153,7 +154,8 @@ export function PresidentMessageManager() {
       toast({ title: "保存しました" });
       setAuthorImageFile(null);
     } catch (error: any) {
-      toast({ variant: "destructive", title: "エラー", description: error.message });
+      console.error("Save error:", error);
+      toast({ variant: "destructive", title: "保存失敗", description: error.message });
     } finally {
       setIsSaving(false);
     }
@@ -209,7 +211,7 @@ export function PresidentMessageManager() {
                   <FormItem><FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">見出し</FormLabel><FormControl><Input className="h-14 font-bold rounded-2xl bg-slate-50/50" {...field} /></FormControl></FormItem>
                 )} />
                 <FormField control={form.control} name="authorName" render={({ field }) => (
-                  <FormItem><FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">会長氏名</FormLabel><FormControl><Input className="h-14 font-bold rounded-2xl bg-slate-50/50" {...field} /></FormControl></FormItem>
+                  <FormItem><FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">氏名</FormLabel><FormControl><Input className="h-14 font-bold rounded-2xl bg-slate-50/50" {...field} /></FormControl></FormItem>
                 )} />
               </div>
               <div className="space-y-4">
