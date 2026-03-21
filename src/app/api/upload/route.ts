@@ -2,6 +2,7 @@
 import { v2 as cloudinary } from "cloudinary";
 import { NextResponse } from "next/server";
 
+// デプロイ環境でのタイムアウト対策
 export const maxDuration = 60;
 
 export async function POST(request: Request) {

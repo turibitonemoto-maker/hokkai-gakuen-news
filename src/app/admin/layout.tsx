@@ -12,7 +12,6 @@ import {
   LogOut,
   ShieldAlert,
   Loader2,
-  Lock,
   BookOpen,
   Info
 } from "lucide-react";

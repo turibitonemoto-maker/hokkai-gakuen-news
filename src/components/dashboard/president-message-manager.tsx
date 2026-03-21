@@ -132,6 +132,7 @@ export function PresidentMessageManager() {
         const data = await res.json();
         finalImageUrl = data.secure_url;
 
+        // 古い画像の削除
         const oldUrl = messageData?.authorImageUrl;
         if (oldUrl && oldUrl !== finalImageUrl && oldUrl.includes("res.cloudinary.com")) {
           fetch("/api/upload/delete", {
@@ -192,7 +193,7 @@ export function PresidentMessageManager() {
 
         {authorImagePreview && (
           <div className="w-full max-w-xl bg-white/50 p-8 rounded-[3rem] border border-slate-100 space-y-6">
-            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2"><Maximize className="h-3 w-3 text-primary" /> 肖像画の構図調整</h4>
+            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2"><Maximize className="h-3 w-3 text-primary" /> 肖像の調整</h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="space-y-3"><label className="text-[9px] font-bold text-slate-500 block text-center">ズーム</label><Slider min={-200} max={500} step={1} value={[transform.scale]} onValueChange={([val]) => form.setValue("authorImageTransform.scale", val)} /></div>
               <div className="space-y-3"><label className="text-[9px] font-bold text-slate-500 block text-center">水平位置</label><Slider min={-500} max={500} step={1} value={[transform.x]} onValueChange={([val]) => form.setValue("authorImageTransform.x", val)} /></div>
