@@ -81,7 +81,7 @@ export function LoginForm() {
           <div className="bg-white p-2 rounded-[2rem] shadow-2xl border-4 border-slate-50 overflow-hidden transform hover:scale-110 transition-transform">
             <Image 
               src="/icon.png" 
-              alt="北海学園新聞会" 
+              alt="北海学園大学新聞" 
               width={100} 
               height={100} 
               className="rounded-2xl"
@@ -90,7 +90,7 @@ export function LoginForm() {
           </div>
         </div>
         <CardTitle className="text-3xl font-black text-slate-800 tracking-tight">
-          北海学園新聞会
+          北海学園大学新聞
         </CardTitle>
       </CardHeader>
       <CardContent className="grid gap-6 px-10 pb-16">

@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -16,16 +17,16 @@ export function PublicFooter() {
               <div className="bg-white p-1 rounded-xl shadow-md border">
                 <Image 
                   src="/icon.png" 
-                  alt="北海学園新聞会" 
+                  alt="北海学園大学新聞" 
                   width={32} 
                   height={32} 
                   className="rounded-lg"
                 />
               </div>
-              <h1 className="text-xl font-bold text-white leading-tight">北海学園新聞会</h1>
+              <h1 className="text-xl font-bold text-white leading-tight">北海学園大学新聞</h1>
             </Link>
             <p className="text-sm leading-relaxed text-slate-400">
-              北海学園大学一部新聞会は、学内のニュースや学生生活に密着した情報を発信する公認サークルです。
+              北海学園大学新聞は、学内のニュースや学生生活に密着した情報を発信する公認サークルです。
             </p>
             <div className="flex gap-4">
               <a href="https://twitter.com/hokkai_shinbun" target="_blank" rel="noopener noreferrer" className="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-primary transition-all">
@@ -78,7 +79,7 @@ export function PublicFooter() {
         </div>
 
         <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-medium text-slate-500">
-          <p>© {currentYear} 北海学園新聞会. All rights reserved.</p>
+          <p>© {currentYear} 北海学園大学新聞. All rights reserved.</p>
         </div>
       </div>
     </footer>

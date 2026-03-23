@@ -58,8 +58,7 @@ export function SidebarContent({ ads }: { ads: any[] }) {
           </CardHeader>
           <CardContent className="pt-8">
             <div className="flex flex-col items-center mb-8">
-              {/* マスター・フレーム (管理画面と完全同期: w-48 h-48, rounded-[3rem]) */}
-              <div className="relative h-48 w-48 rounded-[3rem] overflow-hidden shadow-xl mb-4 border-2 border-white bg-slate-50 flex items-center justify-center">
+              <div className="relative h-48 w-48 rounded-[3.5rem] overflow-hidden shadow-xl mb-4 border-2 border-white bg-slate-50 flex items-center justify-center">
                 {president.authorImageUrl ? (
                   <Image
                     src={president.authorImageUrl}
@@ -81,7 +80,7 @@ export function SidebarContent({ ads }: { ads: any[] }) {
                 )}
               </div>
               <h4 className="font-black text-slate-800 text-lg">{president.authorName}</h4>
-              <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-1">北海学園大学一部新聞会 会長</p>
+              <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-1">北海学園大学新聞 会長</p>
             </div>
             
             <div className="relative">

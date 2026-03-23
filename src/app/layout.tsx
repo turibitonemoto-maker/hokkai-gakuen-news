@@ -1,11 +1,12 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: '北海学園新聞会 | 管制システム',
-  description: '北海学園新聞会の公式コンテンツ管理システムです。',
+  title: '北海学園大学新聞 | 管制システム',
+  description: '北海学園大学新聞の公式コンテンツ管理システムです。',
   icons: {
     icon: '/icon.png',
     shortcut: '/icon.png',

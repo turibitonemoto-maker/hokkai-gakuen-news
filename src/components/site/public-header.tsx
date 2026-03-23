@@ -41,7 +41,7 @@ export function PublicHeader() {
             <div className="bg-white p-1 rounded-xl shadow-md border group-hover:scale-105 transition-transform">
               <Image 
                 src="/icon.png" 
-                alt="北海学園新聞会" 
+                alt="北海学園大学新聞" 
                 width={32} 
                 height={32} 
                 className="rounded-lg"
@@ -49,8 +49,8 @@ export function PublicHeader() {
               />
             </div>
             <div className="hidden sm:block">
-              <h1 className="text-xl font-bold text-slate-800 leading-tight">北海学園新聞会</h1>
-              <p className="text-[10px] text-slate-500 font-medium tracking-widest uppercase">北海学園大学一部新聞会</p>
+              <h1 className="text-xl font-bold text-slate-800 leading-tight">北海学園大学新聞</h1>
+              <p className="text-[10px] text-slate-500 font-medium tracking-widest uppercase">北海学園大学新聞</p>
             </div>
           </Link>
 
@@ -78,7 +78,7 @@ export function PublicHeader() {
                 <SheetHeader className="p-6 border-b">
                   <SheetTitle className="flex items-center gap-3">
                     <Image src="/icon.png" alt="" width={24} height={24} />
-                    北海学園新聞会
+                    北海学園大学新聞
                   </SheetTitle>
                 </SheetHeader>
                 <div className="p-6 space-y-4">

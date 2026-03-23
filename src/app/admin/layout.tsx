@@ -56,7 +56,7 @@ function SidebarContent({
         <div className="bg-white p-1 rounded-lg shrink-0 shadow-lg">
           <Image 
             src="/icon.png" 
-            alt="北海学園新聞会" 
+            alt="北海学園大学新聞" 
             width={24} 
             height={24} 
             className="rounded-md"
@@ -65,7 +65,7 @@ function SidebarContent({
         </div>
         {(isSidebarOpen || isMobile) && (
           <div className="overflow-hidden whitespace-nowrap text-left">
-            <h1 className="text-sm font-black text-white leading-tight">北海学園新聞会</h1>
+            <h1 className="text-sm font-black text-white leading-tight">北海学園大学新聞</h1>
           </div>
         )}
       </div>

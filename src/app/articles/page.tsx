@@ -36,7 +36,7 @@ export default function ArticlesPage() {
           </div>
           <h1 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter uppercase">Articles</h1>
           <p className="text-slate-500 font-bold max-w-xl">
-            北海学園大学一部新聞会が届ける、キャンパスの「今」を記録した記事アーカイブ。
+            北海学園大学新聞が届ける、キャンパスの「今」を記録した記事アーカイブ。
           </p>
         </div>
 

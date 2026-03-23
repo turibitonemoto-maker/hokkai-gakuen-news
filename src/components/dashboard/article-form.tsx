@@ -221,12 +221,11 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
       return;
     }
     
-    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+    editor.chain().focus().extendMarkRange('link').setLink({ href: url, target: '_blank' }).run();
   }, [editor]);
 
   return (
     <div className="flex flex-col min-h-screen bg-white font-body">
-      {/* 隠しインプットを最上位に配置して参照を安定化 */}
       <input type="file" accept="image/*" className="hidden" ref={editorImageInputRef} onChange={handleEditorImageSelect} />
       <input type="file" accept="image/*" className="hidden" ref={mainImageInputRef} onChange={handleMainImageSelect} />
 
