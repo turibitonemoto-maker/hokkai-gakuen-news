@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useDoc, useFirestore, useMemoFirebase } from "@/firebase";
@@ -158,7 +159,7 @@ export function MaintenanceManager() {
             <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
               <Lock className="h-10 w-10 text-primary" />
             </div>
-            <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">システム設定 🔒</CardTitle>
+            <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">システム設定</CardTitle>
             <CardDescription className="text-sm font-bold text-slate-500 px-6 mt-2">
               この重要区画を編集するには認証が必要です。
             </CardDescription>
@@ -189,7 +190,7 @@ export function MaintenanceManager() {
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-700">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-black text-slate-800 tracking-tight">システム設定 🔒</h2>
+          <h2 className="text-3xl font-black text-slate-800 tracking-tight">システム設定</h2>
           <p className="text-sm font-bold text-slate-500 mt-1">サイトの稼働状況をコントロールします。</p>
         </div>
         <Button 
@@ -230,7 +231,7 @@ export function MaintenanceManager() {
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-center justify-between rounded-3xl border border-slate-100 p-10 bg-slate-50/30">
                     <div className="space-y-1.5">
-                      <FormLabel className="text-xl font-black text-slate-800">メンテナンスモード 🔒</FormLabel>
+                      <FormLabel className="text-xl font-black text-slate-800">メンテナンスモード</FormLabel>
                       <FormDescription className="text-sm font-medium text-slate-500 max-w-md">
                         有効にすると全ページがメンテナンス画面に切り替わり、一般公開が停止されます。
                       </FormDescription>

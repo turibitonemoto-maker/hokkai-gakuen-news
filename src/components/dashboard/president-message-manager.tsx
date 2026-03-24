@@ -5,7 +5,7 @@ import { useDoc, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { doc, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Slider } from "@/components/ui/slider";
 import { useForm } from "react-hook-form";
@@ -107,7 +107,7 @@ export function PresidentMessageManager() {
     immediatelyRender: false,
     editorProps: {
       attributes: {
-        class: 'ProseMirror outline-none min-h-[300px] p-8 text-lg leading-relaxed',
+        class: 'ProseMirror outline-none min-h-[300px] p-8 text-lg leading-relaxed text-slate-700',
       },
     },
   });
@@ -177,8 +177,8 @@ export function PresidentMessageManager() {
         <Card className="shadow-2xl border-none bg-white rounded-3xl overflow-hidden">
           <CardHeader className="text-center pt-10 pb-6 bg-slate-50/50">
             <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"><Lock className="h-10 w-10 text-primary" /></div>
-            <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">会長挨拶管理 🔒</CardTitle>
-            <CardDescription className="text-sm font-bold text-slate-500 px-6 mt-2">この重要区画を編集するには認証が必要です。</CardDescription>
+            <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">会長挨拶管理</CardTitle>
+            <p className="text-sm font-bold text-slate-500 px-6 mt-2">この重要区画を編集するには認証が必要です。</p>
           </CardHeader>
           <CardContent className="p-10 pt-4 space-y-6">
             <div className="space-y-2">
@@ -198,7 +198,7 @@ export function PresidentMessageManager() {
     <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in duration-700 pb-20">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-black text-slate-800 tracking-tight">会長挨拶管理 🔒</h2>
+          <h2 className="text-3xl font-black text-slate-800 tracking-tight">会長挨拶管理</h2>
           <p className="text-sm font-bold text-slate-500 mt-1">会長のプロフィールとメッセージを管理します。</p>
         </div>
       </div>

@@ -82,7 +82,7 @@ export function AboutManager() {
     immediatelyRender: false,
     editorProps: {
       attributes: {
-        class: 'ProseMirror outline-none min-h-[500px] p-8 md:p-12 text-lg leading-relaxed',
+        class: 'ProseMirror outline-none min-h-[500px] p-8 md:p-12 text-lg leading-relaxed text-slate-700',
       },
     },
   });
@@ -163,7 +163,7 @@ export function AboutManager() {
         <Card className="shadow-2xl border-none bg-white rounded-3xl overflow-hidden">
           <CardHeader className="text-center pt-10 pb-6 bg-slate-50/50">
             <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"><Lock className="h-10 w-10 text-primary" /></div>
-            <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">About Us 管理 🔒</CardTitle>
+            <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">About Us 管理</CardTitle>
             <CardDescription className="text-sm font-bold text-slate-500 px-6 mt-2">この区画を編集するには認証が必要です。</CardDescription>
           </CardHeader>
           <CardContent className="p-10 pt-4 space-y-6">
@@ -186,7 +186,7 @@ export function AboutManager() {
         <div className="flex items-center gap-4">
           <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100"><Info className="h-8 w-8 text-primary" /></div>
           <div>
-            <h2 className="text-3xl font-black text-slate-800 tracking-tight">About Us 管理 🔒</h2>
+            <h2 className="text-3xl font-black text-slate-800 tracking-tight">About Us 管理</h2>
             <p className="text-sm font-bold text-slate-500">北海学園大学新聞の紹介内容を管理します。</p>
           </div>
         </div>
