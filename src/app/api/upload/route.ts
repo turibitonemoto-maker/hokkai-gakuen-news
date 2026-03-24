@@ -2,7 +2,7 @@
 import { v2 as cloudinary } from "cloudinary";
 import { NextResponse } from "next/server";
 
-export const maxDuration = 60;
+export const maxDuration = 60; // デプロイ環境のタイムアウト対策
 export const dynamic = 'force-dynamic';
 
 /**
@@ -15,7 +15,7 @@ export async function POST(request: Request) {
   const apiSecret = process.env.CLOUDINARY_API_SECRET?.trim();
 
   if (!cloudName || !apiKey || !apiSecret) {
-    return NextResponse.json({ error: "Cloudinary credentials missing in environment" }, { status: 500 });
+    return NextResponse.json({ error: "Cloudinary credentials missing" }, { status: 500 });
   }
 
   cloudinary.config({
@@ -27,8 +27,9 @@ export async function POST(request: Request) {
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File;
-    // フォルダ名が指定されていない、または日本語等の場合は安全なデフォルトを使用
     const rawFolder = formData.get("folder") as string;
+    
+    // フォルダ名が指定されていない、または日本語等の場合は安全なデフォルトを使用
     const folder = rawFolder && /^[a-zA-Z0-9_\-/]+$/.test(rawFolder) ? rawFolder : "newspaper_archive_uploads";
 
     if (!file) {
@@ -46,7 +47,7 @@ export async function POST(request: Request) {
         },
         (error, result) => {
           if (error) {
-            console.error("Cloudinary stream upload error:", error);
+            console.error("Cloudinary upload error:", error);
             reject(error);
           } else {
             resolve(result);

@@ -172,8 +172,6 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
     if (!firestore || !editor) return;
     setIsSaving(true);
     try {
-      const uniqueId = article?.id || Date.now().toString(36);
-      const safeTitle = values.title.replace(/[\/\?\s]/g, '_').slice(0, 30);
       const folderPath = `newspaper_archive`;
       
       let finalMainImageUrl = values.mainImageUrl;
@@ -221,7 +219,6 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
 
   return (
     <div className="flex flex-col min-h-screen bg-white font-body">
-      {/* 物理的に固定された画像入力トリガー */}
       <input type="file" accept="image/*" className="hidden" ref={editorImageInputRef} onChange={handleEditorImageSelect} />
       <input type="file" accept="image/*" className="hidden" ref={mainImageInputRef} onChange={handleMainImageSelect} />
       
