@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -162,10 +163,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
     formData.append("file", file);
     formData.append("folder", folder);
     const res = await fetch("/api/upload", { method: "POST", body: formData });
-    if (!res.ok) {
-      const errData = await res.json();
-      throw new Error(errData.message || errData.error || "アップロードに失敗しました");
-    }
+    if (!res.ok) throw new Error("アップロードに失敗しました");
     const data = await res.json();
     return data.secure_url;
   }
@@ -198,10 +196,9 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
       if (article?.id) setDocumentNonBlocking(doc(firestore, "articles", article.id), data, { merge: true });
       else addDocumentNonBlocking(collection(firestore, "articles"), { ...data, createdAt: serverTimestamp(), viewCount: 0 });
 
-      toast({ title: "保存が完了しました" });
+      toast({ title: "保存しました" });
       onSuccess();
     } catch (error: any) {
-      console.error("Save error:", error);
       toast({ variant: "destructive", title: "失敗", description: error.message });
     } finally {
       setIsSaving(false);
@@ -212,18 +209,13 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
     if (!editor) return;
     const previousUrl = editor.getAttributes('link').href;
     const url = window.prompt('埋め込むURLを入力:', previousUrl);
-    
     if (url === null) return;
     if (url === '') {
       editor.chain().focus().extendMarkRange('link').unsetLink().run();
       return;
     }
-
     let finalUrl = url;
-    if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
-      finalUrl = `https://${url}`;
-    }
-    
+    if (url && !url.startsWith('http://') && !url.startsWith('https://')) finalUrl = `https://${url}`;
     editor.chain().focus().extendMarkRange('link').setLink({ href: finalUrl, target: '_blank' }).run();
   }, [editor]);
 
@@ -231,7 +223,6 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
     <div className="flex flex-col min-h-screen bg-white font-body">
       <input type="file" accept="image/*" className="hidden" ref={editorImageInputRef} onChange={handleEditorImageSelect} />
       <input type="file" accept="image/*" className="hidden" ref={mainImageInputRef} onChange={handleMainImageSelect} />
-
       <header className="sticky top-0 z-50 bg-white/95 border-b h-14 flex items-center justify-between px-4">
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="icon" onClick={onSuccess} className="rounded-full"><ArrowLeft className="h-6 w-6 text-slate-600" /></Button>
@@ -259,7 +250,6 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
           </Form>
         </div>
       </header>
-
       <main className="flex-1 overflow-y-auto pb-40">
         <div className="max-w-3xl mx-auto px-6 pt-12">
           {mainImagePreview && (
@@ -275,7 +265,6 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
           <div className="mt-8">{editor && <div className="prose-container relative"><EditorContent editor={editor} /></div>}</div>
         </div>
       </main>
-
       <div className="fixed bottom-0 left-0 right-0 bg-white/95 border-t z-50 h-16 flex items-center px-4 gap-2">
         <div className="max-w-3xl mx-auto w-full flex items-center gap-2">
           <Button variant="ghost" size="icon" className="h-12 w-12 text-white bg-primary rounded-2xl shadow-xl" onClick={() => editorImageInputRef.current?.click()}><Plus className="h-7 w-7" /></Button>
@@ -286,7 +275,6 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
             <Button variant="ghost" size="icon" onClick={insertLink} className={cn("rounded-xl", editor?.isActive('link') && "bg-primary/5 text-primary")}><LinkIcon className="h-5 w-5" /></Button>
             <Button variant="ghost" size="icon" onClick={() => editor?.chain().focus().toggleBlockquote().run()} className={cn("rounded-xl", editor?.isActive('blockquote') && "bg-primary/5 text-primary")}><Quote className="h-5 w-5" /></Button>
           </div>
-          <div className="hidden sm:block text-[10px] font-black text-slate-400 bg-slate-50 px-3 py-1 rounded-full">{editor?.getText().length.toLocaleString() || 0} 文字</div>
         </div>
       </div>
     </div>

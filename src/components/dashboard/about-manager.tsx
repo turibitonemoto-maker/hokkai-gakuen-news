@@ -4,24 +4,64 @@
 import { useDoc, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { doc, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { Loader2, Save, Info, Bold, Italic, Heading2, List, Type, Image as LucideImage } from "lucide-react";
+import { Loader2, Save, Info, Bold, Italic, Heading2, List, Type, Image as LucideImage, Lock, ShieldAlert } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import ImageExtension from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
 
 export function AboutManager() {
   const [isSaving, setIsSaving] = useState(false);
   const [editorFiles, setEditorFiles] = useState<Map<string, File>>(new Map());
+  const [password, setPassword] = useState("");
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [failCount, setFailCount] = useState(0);
+  const [lockoutTime, setLockoutTime] = useState<number | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
   
   const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
+
+  useEffect(() => {
+    const storedLockout = localStorage.getItem("lockout_until");
+    if (storedLockout) {
+      const until = parseInt(storedLockout);
+      if (until > Date.now()) setLockoutTime(until);
+      else localStorage.removeItem("lockout_until");
+    }
+  }, []);
+
+  const handleUnlock = () => {
+    if (lockoutTime && lockoutTime > Date.now()) return;
+    const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "zansin";
+    if (password === correctPassword) {
+      setIsUnlocked(true);
+      setFailCount(0);
+      toast({ title: "認証完了" });
+    } else {
+      const newCount = failCount + 1;
+      setFailCount(newCount);
+      if (newCount >= 3) {
+        setIsVerifying(true);
+        setTimeout(() => {
+          setIsVerifying(false);
+          const until = Date.now() + 15 * 60 * 1000;
+          setLockoutTime(until);
+          localStorage.setItem("lockout_until", until.toString());
+          toast({ variant: "destructive", title: "アクセス拒否" });
+        }, 800);
+      } else {
+        toast({ variant: "destructive", title: "不一致", description: `あと ${3 - newCount} 回でロックされます。` });
+      }
+    }
+  };
 
   const editor = useEditor({
     extensions: [
@@ -57,10 +97,8 @@ export function AboutManager() {
   const handleImageSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !file.type.startsWith('image/')) return;
-
     const blobUrl = URL.createObjectURL(file);
     setEditorFiles(prev => new Map(prev).set(blobUrl, file));
-    
     editor?.chain().focus().setImage({ src: blobUrl }).run();
     if (e.target) e.target.value = "";
   }, [editor]);
@@ -76,17 +114,13 @@ export function AboutManager() {
   async function handleSave() {
     if (!firestore || !docRef || !editor) return;
     setIsSaving(true);
-    
     try {
       let finalContent = editor.getHTML();
       const blobRegex = /src="(blob:[^"]+)"/g;
       let match;
       const uploadedUrlsMap = new Map<string, string>();
-
       const blobUrls: string[] = [];
-      while ((match = blobRegex.exec(finalContent)) !== null) {
-        blobUrls.push(match[1]);
-      }
+      while ((match = blobRegex.exec(finalContent)) !== null) blobUrls.push(match[1]);
 
       for (const blobUrl of blobUrls) {
         const file = editorFiles.get(blobUrl);
@@ -94,7 +128,6 @@ export function AboutManager() {
           const formData = new FormData();
           formData.append("file", file);
           formData.append("folder", `newspaper_archive/about`);
-          
           const res = await fetch("/api/upload", { method: "POST", body: formData });
           if (!res.ok) throw new Error("アップロードに失敗しました");
           const data = await res.json();
@@ -121,18 +154,40 @@ export function AboutManager() {
     }
   }
 
+  if (isVerifying) return <div className="flex flex-col items-center justify-center min-h-[400px] gap-4"><Loader2 className="h-12 w-12 animate-spin text-primary" /><p className="font-black text-slate-400">認証情報を照合中...</p></div>;
+  if (lockoutTime && lockoutTime > Date.now()) return <div className="max-w-4xl mx-auto mt-10"><Card className="shadow-2xl rounded-[3rem] p-16 text-center space-y-8"><div className="bg-red-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto"><ShieldAlert className="h-12 w-12 text-red-500" /></div><h2 className="text-3xl font-black text-slate-800">セキュリティ・ロック 🔒</h2><p className="text-slate-500 font-bold">一時的にこの機能を制限しています。約 {Math.ceil((lockoutTime - Date.now()) / 60000)} 分後にお試しください。</p></Card></div>;
+  
+  if (!isUnlocked) {
+    return (
+      <div className="max-w-md mx-auto mt-20">
+        <Card className="shadow-2xl border-none bg-white rounded-3xl overflow-hidden">
+          <CardHeader className="text-center pt-10 pb-6 bg-slate-50/50">
+            <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"><Lock className="h-10 w-10 text-primary" /></div>
+            <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">About Us 管理 🔒</CardTitle>
+            <CardDescription className="text-sm font-bold text-slate-500 px-6 mt-2">この区画を編集するには認証が必要です。</CardDescription>
+          </CardHeader>
+          <CardContent className="p-10 pt-4 space-y-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">PASSCODE</label>
+              <Input type="password" className="text-center h-14 text-lg font-bold rounded-2xl" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleUnlock()} autoFocus />
+            </div>
+            <Button className="w-full h-14 font-black rounded-2xl" onClick={handleUnlock}>認証する</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 pb-20 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex items-center gap-4">
-          <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
-            <Info className="h-8 w-8 text-primary" />
-          </div>
+          <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100"><Info className="h-8 w-8 text-primary" /></div>
           <div>
-            <h2 className="text-3xl font-black text-slate-800 tracking-tight">About Us 管理</h2>
-            <p className="text-sm font-bold text-slate-500">紹介ページの内容を管理します。</p>
+            <h2 className="text-3xl font-black text-slate-800 tracking-tight">About Us 管理 🔒</h2>
+            <p className="text-sm font-bold text-slate-500">北海学園大学新聞の紹介内容を管理します。</p>
           </div>
         </div>
       </div>
@@ -151,9 +206,7 @@ export function AboutManager() {
               <div className="w-px h-6 bg-slate-200 mx-2" />
               <div className="relative">
                 <input type="file" accept="image/*" className="hidden" id="about-image-upload" onChange={handleImageSelect}/>
-                <Button type="button" variant="ghost" size="icon" className="h-10 w-10 rounded-xl transition-all" onClick={() => document.getElementById('about-image-upload')?.click()} disabled={isSaving}>
-                  <LucideImage className="h-5 w-5" />
-                </Button>
+                <Button type="button" variant="ghost" size="icon" className="h-10 w-10 rounded-xl transition-all" onClick={() => document.getElementById('about-image-upload')?.click()} disabled={isSaving}><LucideImage className="h-5 w-5" /></Button>
               </div>
             </div>
             

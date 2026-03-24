@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -24,7 +25,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { LoginForm } from "@/components/auth/login-form";
 import Image from "next/image";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 const MENU_ITEMS = [
   { id: "/admin", label: "ダッシュボード", icon: LayoutDashboard },
@@ -143,9 +144,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   const isEditorPage = pathname === '/admin/new' || pathname.startsWith('/admin/edit/');
-  if (isEditorPage) {
-    return <div className="min-h-screen bg-white font-body">{children}</div>;
-  }
+  if (isEditorPage) return <div className="min-h-screen bg-white font-body">{children}</div>;
 
   const activeLabel = MENU_ITEMS.find(i => i.id === pathname)?.label || "管理";
 
