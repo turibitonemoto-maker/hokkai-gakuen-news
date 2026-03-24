@@ -174,7 +174,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
     try {
       const uniqueId = article?.id || Date.now().toString(36);
       const safeTitle = values.title.replace(/[\/\?\s]/g, '_').slice(0, 30);
-      const folderPath = `newspaper_archive/${safeTitle}_${uniqueId}`;
+      const folderPath = `newspaper_archive`;
       
       let finalMainImageUrl = values.mainImageUrl;
       if (mainImageFile) finalMainImageUrl = await uploadToCloudinary(mainImageFile, folderPath);
@@ -221,8 +221,10 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
 
   return (
     <div className="flex flex-col min-h-screen bg-white font-body">
+      {/* 物理的に固定された画像入力トリガー */}
       <input type="file" accept="image/*" className="hidden" ref={editorImageInputRef} onChange={handleEditorImageSelect} />
       <input type="file" accept="image/*" className="hidden" ref={mainImageInputRef} onChange={handleMainImageSelect} />
+      
       <header className="sticky top-0 z-50 bg-white/95 border-b h-14 flex items-center justify-between px-4">
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="icon" onClick={onSuccess} className="rounded-full"><ArrowLeft className="h-6 w-6 text-slate-600" /></Button>
@@ -250,6 +252,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
           </Form>
         </div>
       </header>
+
       <main className="flex-1 overflow-y-auto pb-40">
         <div className="max-w-3xl mx-auto px-6 pt-12">
           {mainImagePreview && (
@@ -265,6 +268,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
           <div className="mt-8">{editor && <div className="prose-container relative"><EditorContent editor={editor} /></div>}</div>
         </div>
       </main>
+
       <div className="fixed bottom-0 left-0 right-0 bg-white/95 border-t z-50 h-16 flex items-center px-4 gap-2">
         <div className="max-w-3xl mx-auto w-full flex items-center gap-2">
           <Button variant="ghost" size="icon" className="h-12 w-12 text-white bg-primary rounded-2xl shadow-xl" onClick={() => editorImageInputRef.current?.click()}><Plus className="h-7 w-7" /></Button>

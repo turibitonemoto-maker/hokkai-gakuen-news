@@ -5,6 +5,10 @@ import { NextResponse } from "next/server";
 export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
 
+/**
+ * クラウドストレージ（Cloudinary）への搬入口
+ * デプロイ環境での安定性を確保するため、タイムアウト対策と英名フォルダ処理を強化。
+ */
 export async function POST(request: Request) {
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME?.trim();
   const apiKey = process.env.CLOUDINARY_API_KEY?.trim();
@@ -23,7 +27,9 @@ export async function POST(request: Request) {
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File;
-    const folder = (formData.get("folder") as string) || "newspaper_archive";
+    // フォルダ名が指定されていない、または日本語等の場合は安全なデフォルトを使用
+    const rawFolder = formData.get("folder") as string;
+    const folder = rawFolder && /^[a-zA-Z0-9_\-/]+$/.test(rawFolder) ? rawFolder : "newspaper_archive_uploads";
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
