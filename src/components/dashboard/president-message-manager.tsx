@@ -59,7 +59,7 @@ export function PresidentMessageManager() {
 
   const handleUnlock = () => {
     if (lockoutTime && lockoutTime > Date.now()) return;
-    const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "zansin";
+    const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
     if (password === correctPassword) {
       setIsUnlocked(true);
       setFailCount(0);
@@ -178,12 +178,12 @@ export function PresidentMessageManager() {
           <CardHeader className="text-center pt-10 pb-6 bg-slate-50/50">
             <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"><Lock className="h-10 w-10 text-primary" /></div>
             <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">会長挨拶管理</CardTitle>
-            <p className="text-sm font-bold text-slate-500 px-6 mt-2">この重要区画を編集するには認証が必要です。</p>
+            <p className="text-sm font-bold text-slate-500 px-6 mt-2">編集には認証が必要です。</p>
           </CardHeader>
           <CardContent className="p-10 pt-4 space-y-6">
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">PASSCODE</label>
-              <Input type="password" placeholder="zansin キーを入力" className="text-center h-14 text-lg font-bold rounded-2xl" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleUnlock()} autoFocus />
+              <Input type="password" placeholder="パスワードを入力" className="text-center h-14 text-lg font-bold rounded-2xl" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleUnlock()} autoFocus />
             </div>
             <Button className="w-full h-14 font-black rounded-2xl" onClick={handleUnlock}>認証する</Button>
           </CardContent>
@@ -199,7 +199,7 @@ export function PresidentMessageManager() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-black text-slate-800 tracking-tight">会長挨拶管理</h2>
-          <p className="text-sm font-bold text-slate-500 mt-1">会長のプロフィールとメッセージを管理します。</p>
+          <p className="text-sm font-bold text-slate-500 mt-1">会長のプロフィールとメッセージを更新します。</p>
         </div>
       </div>
 

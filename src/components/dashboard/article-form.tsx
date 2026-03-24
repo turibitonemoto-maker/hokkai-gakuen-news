@@ -206,7 +206,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
   const insertLink = useCallback(() => {
     if (!editor) return;
     const previousUrl = editor.getAttributes('link').href;
-    const url = window.prompt('URLを入力 (例: https://...)', previousUrl);
+    const url = window.prompt('URLを入力', previousUrl);
     if (url === null) return;
     if (url === '') {
       editor.chain().focus().extendMarkRange('link').unsetLink().run();

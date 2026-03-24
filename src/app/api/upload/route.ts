@@ -25,8 +25,8 @@ export async function POST(request: Request) {
     const file = formData.get("file") as File;
     const rawFolder = formData.get("folder") as string;
     
-    // 英数字ベースの安定したフォルダ名を優先
-    const folder = rawFolder && /^[a-zA-Z0-9_\-/]+$/.test(rawFolder) ? rawFolder : "newspaper_archive_uploads";
+    // 常に英数字ベースの安全なフォルダ名を優先
+    const folder = rawFolder && /^[a-zA-Z0-9_\-/]+$/.test(rawFolder) ? rawFolder : "newspaper_archive";
 
     if (!file) {
       return NextResponse.json({ error: "No file" }, { status: 400 });

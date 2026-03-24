@@ -50,7 +50,6 @@ export function PublicHeader() {
             </div>
             <div className="hidden sm:block">
               <h1 className="text-xl font-bold text-slate-800 leading-tight">北海学園大学新聞</h1>
-              <p className="text-[10px] text-slate-500 font-medium tracking-widest uppercase">独立管制センター</p>
             </div>
           </Link>
 
@@ -63,8 +62,7 @@ export function PublicHeader() {
           <div className="flex items-center gap-2">
             <Link href="/admin">
               <Button variant="outline" size="sm" className="hidden sm:flex gap-2 items-center border-primary/20 hover:bg-primary/5 text-primary font-bold">
-                <User className="h-4 w-4" />
-                管理者
+                <User className="h-4 w-4" /> 管理者
               </Button>
             </Link>
             
@@ -94,8 +92,7 @@ export function PublicHeader() {
                   ))}
                   <Link href="/admin" onClick={() => setIsMobileMenuOpen(false)}>
                     <Button className="w-full mt-6 h-12 font-black rounded-xl gap-2">
-                      <User className="h-4 w-4" />
-                      管理者入口
+                      <User className="h-4 w-4" /> 管理者入口
                     </Button>
                   </Link>
                 </div>
