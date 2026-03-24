@@ -2,20 +2,16 @@
 import { v2 as cloudinary } from "cloudinary";
 import { NextResponse } from "next/server";
 
-export const maxDuration = 60; // デプロイ環境のタイムアウト対策
+export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
 
-/**
- * クラウドストレージ（Cloudinary）への搬入口
- * デプロイ環境での安定性を確保するため、タイムアウト対策と英名フォルダ処理を強化。
- */
 export async function POST(request: Request) {
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME?.trim();
   const apiKey = process.env.CLOUDINARY_API_KEY?.trim();
   const apiSecret = process.env.CLOUDINARY_API_SECRET?.trim();
 
   if (!cloudName || !apiKey || !apiSecret) {
-    return NextResponse.json({ error: "Cloudinary credentials missing" }, { status: 500 });
+    return NextResponse.json({ error: "Cloudinary settings missing" }, { status: 500 });
   }
 
   cloudinary.config({
@@ -29,11 +25,11 @@ export async function POST(request: Request) {
     const file = formData.get("file") as File;
     const rawFolder = formData.get("folder") as string;
     
-    // フォルダ名が指定されていない、または日本語等の場合は安全なデフォルトを使用
+    // 英数字ベースの安定したフォルダ名を優先
     const folder = rawFolder && /^[a-zA-Z0-9_\-/]+$/.test(rawFolder) ? rawFolder : "newspaper_archive_uploads";
 
     if (!file) {
-      return NextResponse.json({ error: "No file provided" }, { status: 400 });
+      return NextResponse.json({ error: "No file" }, { status: 400 });
     }
 
     const arrayBuffer = await file.arrayBuffer();
@@ -41,17 +37,10 @@ export async function POST(request: Request) {
 
     const uploadResult: any = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          folder: folder,
-          resource_type: "auto",
-        },
+        { folder, resource_type: "auto" },
         (error, result) => {
-          if (error) {
-            console.error("Cloudinary upload error:", error);
-            reject(error);
-          } else {
-            resolve(result);
-          }
+          if (error) reject(error);
+          else resolve(result);
         }
       );
       uploadStream.end(buffer);
@@ -59,10 +48,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(uploadResult);
   } catch (error: any) {
-    console.error("Cloudinary Upload API Error:", error);
-    return NextResponse.json({ 
-      error: "Upload failed",
-      message: error.message
-    }, { status: 500 });
+    console.error("Upload API Error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

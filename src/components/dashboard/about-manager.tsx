@@ -155,7 +155,7 @@ export function AboutManager() {
   }
 
   if (isVerifying) return <div className="flex flex-col items-center justify-center min-h-[400px] gap-4"><Loader2 className="h-12 w-12 animate-spin text-primary" /><p className="font-black text-slate-400">認証情報を照合中...</p></div>;
-  if (lockoutTime && lockoutTime > Date.now()) return <div className="max-w-4xl mx-auto mt-10"><Card className="shadow-2xl rounded-[3rem] p-16 text-center space-y-8"><div className="bg-red-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto"><ShieldAlert className="h-12 w-12 text-red-500" /></div><h2 className="text-3xl font-black text-slate-800">セキュリティ・ロック 🔒</h2><p className="text-slate-500 font-bold">一時的にこの機能を制限しています。約 {Math.ceil((lockoutTime - Date.now()) / 60000)} 分後にお試しください。</p></Card></div>;
+  if (lockoutTime && lockoutTime > Date.now()) return <div className="max-w-4xl mx-auto mt-10"><Card className="shadow-2xl rounded-[3rem] p-16 text-center space-y-8"><div className="bg-red-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto"><ShieldAlert className="h-12 w-12 text-red-500" /></div><h2 className="text-3xl font-black text-slate-800">セキュリティ・ロック</h2><p className="text-slate-500 font-bold">一時的に制限しています。あと {Math.ceil((lockoutTime - Date.now()) / 60000)} 分後にお試しください。</p></Card></div>;
   
   if (!isUnlocked) {
     return (
@@ -164,7 +164,7 @@ export function AboutManager() {
           <CardHeader className="text-center pt-10 pb-6 bg-slate-50/50">
             <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"><Lock className="h-10 w-10 text-primary" /></div>
             <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">About Us 管理</CardTitle>
-            <CardDescription className="text-sm font-bold text-slate-500 px-6 mt-2">この区画を編集するには認証が必要です。</CardDescription>
+            <CardDescription className="text-sm font-bold text-slate-500 px-6 mt-2">編集には認証が必要です。</CardDescription>
           </CardHeader>
           <CardContent className="p-10 pt-4 space-y-6">
             <div className="space-y-2">
@@ -185,10 +185,7 @@ export function AboutManager() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex items-center gap-4">
           <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100"><Info className="h-8 w-8 text-primary" /></div>
-          <div>
-            <h2 className="text-3xl font-black text-slate-800 tracking-tight">About Us 管理</h2>
-            <p className="text-sm font-bold text-slate-500">北海学園大学新聞の紹介内容を管理します。</p>
-          </div>
+          <h2 className="text-3xl font-black text-slate-800 tracking-tight">About Us 管理</h2>
         </div>
       </div>
 
@@ -204,19 +201,18 @@ export function AboutManager() {
               <Button type="button" variant="ghost" size="icon" className={cn("h-10 w-10 rounded-xl transition-all", editor?.isActive('heading', { level: 2 }) && "bg-white shadow-md text-primary")} onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}><Heading2 className="h-5 w-5" /></Button>
               <Button type="button" variant="ghost" size="icon" className={cn("h-10 w-10 rounded-xl transition-all", editor?.isActive('bulletList') && "bg-white shadow-md text-primary")} onClick={() => editor?.chain().focus().toggleBulletList().run()}><List className="h-5 w-5" /></Button>
               <div className="w-px h-6 bg-slate-200 mx-2" />
-              <div className="relative">
-                <input type="file" accept="image/*" className="hidden" id="about-image-upload" onChange={handleImageSelect}/>
-                <Button type="button" variant="ghost" size="icon" className="h-10 w-10 rounded-xl transition-all" onClick={() => document.getElementById('about-image-upload')?.click()} disabled={isSaving}><LucideImage className="h-5 w-5" /></Button>
-              </div>
+              <input type="file" accept="image/*" className="hidden" id="about-image-upload" onChange={handleImageSelect}/>
+              <Button type="button" variant="ghost" size="icon" className="h-10 w-10 rounded-xl transition-all" onClick={() => document.getElementById('about-image-upload')?.click()}><LucideImage className="h-5 w-5" /></Button>
             </div>
             
-            <div className="min-h-[600px] border-2 border-slate-100 rounded-[3rem] overflow-hidden bg-white shadow-inner">
+            <div className="min-h-[500px] border-2 border-slate-100 rounded-[3rem] overflow-hidden bg-white shadow-inner">
               <EditorContent editor={editor} />
             </div>
 
             <div className="flex justify-center pt-6 border-t border-slate-50">
-              <Button type="button" onClick={handleSave} disabled={isSaving} className="px-24 h-16 font-black rounded-2xl shadow-2xl bg-primary text-xl hover:scale-105 transition-transform active:scale-95 disabled:opacity-50">
-                {isSaving ? <><Loader2 className="h-6 w-6 animate-spin mr-3" /> 保存中...</> : <><Save className="h-6 w-6 mr-3" /> 保存する</>}
+              <Button type="button" onClick={handleSave} disabled={isSaving} className="px-24 h-16 font-black rounded-2xl shadow-2xl bg-primary text-xl active:scale-95 disabled:opacity-50 transition-all">
+                {isSaving ? <Loader2 className="h-6 w-6 animate-spin mr-3" /> : <Save className="h-6 w-6 mr-3" />}
+                {isSaving ? "保存中..." : "保存する"}
               </Button>
             </div>
           </div>

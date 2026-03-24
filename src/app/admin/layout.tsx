@@ -16,7 +16,6 @@ import {
   Info
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useUser, useAuth } from "@/firebase";
 import { signOut } from "firebase/auth";
@@ -177,7 +176,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </h2>
           </div>
           <div className="flex items-center gap-2 md:gap-3">
-            <Badge variant="outline" className="hidden sm:flex bg-slate-50 text-slate-500 font-bold border-slate-200 px-3 py-1 rounded-full">{user.email}</Badge>
+             <span className="hidden sm:inline-block text-xs font-bold text-slate-400">{user.email}</span>
           </div>
         </header>
         <main className="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto overflow-x-hidden">{children}</main>

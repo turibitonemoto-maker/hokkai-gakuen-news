@@ -206,7 +206,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
   const insertLink = useCallback(() => {
     if (!editor) return;
     const previousUrl = editor.getAttributes('link').href;
-    const url = window.prompt('埋め込むURLを入力:', previousUrl);
+    const url = window.prompt('URLを入力 (例: https://...)', previousUrl);
     if (url === null) return;
     if (url === '') {
       editor.chain().focus().extendMarkRange('link').unsetLink().run();
@@ -261,7 +261,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
               </div>
             </div>
           )}
-          <textarea className="w-full text-4xl md:text-5xl font-black border-none focus:ring-0 resize-none px-0 leading-tight placeholder:text-slate-200 bg-transparent" placeholder="記事タイトル" rows={1} value={form.watch("title")} onChange={(e) => { form.setValue("title", e.target.value); e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }} />
+          <textarea className="w-full text-4xl md:text-5xl font-black border-none focus:ring-0 resize-none px-0 leading-tight placeholder:text-slate-200 bg-transparent outline-none" placeholder="記事タイトル" rows={1} value={form.watch("title")} onChange={(e) => { form.setValue("title", e.target.value); e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }} />
           <div className="mt-8">{editor && <div className="prose-container relative"><EditorContent editor={editor} /></div>}</div>
         </div>
       </main>
