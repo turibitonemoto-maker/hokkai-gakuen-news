@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useDoc, useFirestore, useMemoFirebase, useUser } from "@/firebase";
@@ -6,14 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { Loader2, Save, Info, Bold, Italic, Heading2, List, Type, Image as LucideImage, ShieldCheck } from "lucide-react";
+import { Loader2, Save, Info, Bold, Italic, Heading2, List, Type, Image as LucideImage } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import ImageExtension from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 
 export function AboutManager() {
   const [isSaving, setIsSaving] = useState(false);
@@ -135,9 +135,6 @@ export function AboutManager() {
             <p className="text-sm font-bold text-slate-500">紹介ページの内容を管理します。</p>
           </div>
         </div>
-        <Badge variant="outline" className="bg-white text-green-600 border-green-200 font-black px-4 py-1 rounded-full flex gap-2 items-center h-10 shadow-sm">
-          <ShieldCheck className="h-4 w-4" /> 認証済み
-        </Badge>
       </div>
 
       <Card className="shadow-sm border-slate-200 rounded-[2.5rem] bg-white overflow-hidden">

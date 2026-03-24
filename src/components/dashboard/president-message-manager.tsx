@@ -6,7 +6,7 @@ import { doc, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/form";
 import { Slider } from "@/components/ui/slider";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,7 +21,6 @@ import {
   Heading2, 
   List, 
   Maximize,
-  ShieldCheck,
   User
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
@@ -29,7 +28,6 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { Badge } from "@/components/ui/badge";
 
 const presidentMessageSchema = z.object({
   title: z.string().min(1, "見出しを入力してください"),
@@ -127,12 +125,11 @@ export function PresidentMessageManager() {
         const res = await fetch("/api/upload", { method: "POST", body: formData });
         if (!res.ok) {
           const errData = await res.json();
-          throw new Error(errData.message || errData.error || "画像のアップロードに失敗しました");
+          throw new Error(errData.message || errData.error || "アップロードに失敗しました");
         }
         const data = await res.json();
         finalImageUrl = data.secure_url;
 
-        // 旧画像の自動抹消ロジック
         const oldUrl = messageData?.authorImageUrl;
         if (oldUrl && oldUrl !== finalImageUrl && oldUrl.includes("res.cloudinary.com")) {
           fetch("/api/upload/delete", {
@@ -171,9 +168,6 @@ export function PresidentMessageManager() {
           <h2 className="text-3xl font-black text-slate-800 tracking-tight">会長挨拶管理</h2>
           <p className="text-sm font-bold text-slate-500 mt-1">会長のプロフィールとメッセージを管理します。</p>
         </div>
-        <Badge variant="outline" className="bg-white text-green-600 border-green-200 font-black px-4 py-1 rounded-full flex gap-2 items-center h-10 shadow-sm">
-          <ShieldCheck className="h-4 w-4" /> 認証済み
-        </Badge>
       </div>
 
       <div className="flex flex-col items-center gap-8">

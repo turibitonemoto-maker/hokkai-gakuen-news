@@ -30,7 +30,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/co
 const MENU_ITEMS = [
   { id: "/admin", label: "ダッシュボード", icon: LayoutDashboard },
   { id: "/admin/articles", label: "記事・公開管理", icon: FileText },
-  { id: "/admin/viewer", label: "紙面ビューアー", icon: BookOpen },
+  { id: "/admin/viewer", label: "紙面アーカイブ", icon: BookOpen },
   { id: "/admin/ads", label: "広告管理", icon: Megaphone },
   { id: "/admin/president", label: "会長挨拶", icon: UserRound },
   { id: "/admin/about", label: "About Us", icon: Info },
@@ -137,7 +137,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (!user) {
     return (
-      <div className="min-h-screen flex flex-center items-center justify-center p-4 bg-[#F0F2F5]">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-[#F0F2F5]">
         <div className="w-full max-w-md"><LoginForm /></div>
       </div>
     );
@@ -154,13 +154,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="min-h-screen bg-slate-50 flex font-body overflow-x-hidden">
       {!isMobile && (
         <aside className={cn("bg-[#1e293b] text-slate-300 transition-all duration-300 flex flex-col fixed inset-y-0 z-50", isSidebarOpen ? "w-64" : "w-20")}>
-          <SidebarContent pathname={pathname} isSidebarOpen={isSidebarOpen} isMobile={false} onLogout={handleLogout} />
+          <SidebarContent pathname={pathname} isSidebarOpen={isSidebarOpen} onLogout={handleLogout} isMobile={false} />
         </aside>
       )}
 
       {isMobile && (
         <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-          <SheetTrigger asChild><div className="hidden" /></SheetTrigger>
           <SheetContent side="left" className="p-0 w-72 bg-[#1e293b] border-none">
             <SheetHeader className="sr-only"><SheetTitle>ナビゲーションメニュー</SheetTitle></SheetHeader>
             <SidebarContent pathname={pathname} isSidebarOpen={true} isMobile={true} onLogout={handleLogout} onCloseMobile={() => setIsMobileMenuOpen(false)} />

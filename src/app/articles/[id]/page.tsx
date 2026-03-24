@@ -30,7 +30,6 @@ export default function ArticleDetailPage() {
 
   useEffect(() => {
     if (article?.content) {
-      // リンクを許可するようにDOMPurifyを設定
       setSanitizedContent(DOMPurify.sanitize(article.content, {
         ADD_TAGS: ['a', 'strong', 'em', 'u', 'br', 'p', 'h1', 'h2', 'ul', 'ol', 'li', 'blockquote', 'div', 'img', 'span'],
         ADD_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'class', 'style', 'data-caption']
