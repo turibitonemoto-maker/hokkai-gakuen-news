@@ -15,7 +15,6 @@ import { Slider } from "@/components/ui/slider";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { 
   Image as LucideImage, 
-  Heading2, 
   Loader2, 
   Bold, 
   Italic, 
@@ -166,7 +165,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
     const res = await fetch("/api/upload", { method: "POST", body: formData });
     if (!res.ok) {
       const errData = await res.json();
-      throw new Error(errData.details || "アップロードに失敗しました");
+      throw new Error(errData.message || errData.error || "アップロードに失敗しました");
     }
     const data = await res.json();
     return data.secure_url;
@@ -177,7 +176,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
     setIsSaving(true);
     try {
       const uniqueId = article?.id || Date.now().toString(36);
-      const safeTitle = values.title.replace(/[\/\s]/g, '_').slice(0, 30);
+      const safeTitle = values.title.replace(/[\/\?\s]/g, '_').slice(0, 30);
       const folderPath = `newspaper_archive/${safeTitle}_${uniqueId}`;
       
       let finalMainImageUrl = values.mainImageUrl;
@@ -220,8 +219,13 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
       editor.chain().focus().extendMarkRange('link').unsetLink().run();
       return;
     }
+
+    let finalUrl = url;
+    if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
+      finalUrl = `https://${url}`;
+    }
     
-    editor.chain().focus().extendMarkRange('link').setLink({ href: url, target: '_blank' }).run();
+    editor.chain().focus().extendMarkRange('link').setLink({ href: finalUrl, target: '_blank' }).run();
   }, [editor]);
 
   return (

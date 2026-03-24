@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Menu, User, X } from 'lucide-react';
+import { Menu, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
@@ -50,7 +50,7 @@ export function PublicHeader() {
             </div>
             <div className="hidden sm:block">
               <h1 className="text-xl font-bold text-slate-800 leading-tight">北海学園大学新聞</h1>
-              <p className="text-[10px] text-slate-500 font-medium tracking-widest uppercase">北海学園大学新聞</p>
+              <p className="text-[10px] text-slate-500 font-medium tracking-widest uppercase">独立管制センター</p>
             </div>
           </Link>
 

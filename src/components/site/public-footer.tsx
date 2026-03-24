@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Twitter, Instagram, Mail, MapPin, BookOpen } from 'lucide-react';
+import { Twitter, Instagram, Mail, MapPin } from 'lucide-react';
 import Image from 'next/image';
 
 export function PublicFooter() {
@@ -26,7 +26,7 @@ export function PublicFooter() {
               <h1 className="text-xl font-bold text-white leading-tight">北海学園大学新聞</h1>
             </Link>
             <p className="text-sm leading-relaxed text-slate-400">
-              北海学園大学新聞は、学内のニュースや学生生活に密着した情報を発信する公認サークルです。
+              北海学園大学新聞は、学内のニュースや学生生活に密着した情報を発信するサークルです。
             </p>
             <div className="flex gap-4">
               <a href="https://twitter.com/hokkai_shinbun" target="_blank" rel="noopener noreferrer" className="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-primary transition-all">
