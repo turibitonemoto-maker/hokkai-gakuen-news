@@ -59,12 +59,11 @@ export function PresidentMessageManager() {
 
   const handleUnlock = () => {
     if (lockoutTime && lockoutTime > Date.now()) return;
-    // セキュリティ・プロトコル：ソースコードからの漏洩を防ぐため環境変数を参照
     const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
     if (password === correctPassword) {
       setIsUnlocked(true);
       setFailCount(0);
-      toast({ title: "認証完了" });
+      toast({ title: "認証成功" });
     } else {
       const newCount = failCount + 1;
       setFailCount(newCount);

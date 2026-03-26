@@ -44,7 +44,7 @@ export function AboutManager() {
     if (password === correctPassword) {
       setIsUnlocked(true);
       setFailCount(0);
-      toast({ title: "認証完了" });
+      toast({ title: "認証成功" });
     } else {
       const newCount = failCount + 1;
       setFailCount(newCount);

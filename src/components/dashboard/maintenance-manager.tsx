@@ -13,9 +13,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, Globe, ShieldCheck, ShieldAlert, Lock } from "lucide-react";
+import { Loader2, Save, Lock, ShieldAlert } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 
 const PUBLIC_SITE_URL = "/";
@@ -78,7 +77,7 @@ export function MaintenanceManager() {
     if (password === correctPassword) {
       setIsUnlocked(true);
       setFailCount(0);
-      toast({ title: "認証完了" });
+      toast({ title: "認証成功" });
     } else {
       const newCount = failCount + 1;
       setFailCount(newCount);
