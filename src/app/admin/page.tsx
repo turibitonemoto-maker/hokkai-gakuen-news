@@ -178,13 +178,13 @@ export default function AdminDashboard() {
             <Link href="/admin/articles">
               <Button className="w-full justify-start gap-3 h-12 shadow-sm font-bold text-sm rounded-xl">
                 <FileText className="h-5 w-5" />
-                <span>記事を新規作成・管理</span>
+                <span>記事を管理</span>
               </Button>
             </Link>
             <Link href="/admin/viewer">
               <Button variant="outline" className="w-full justify-start gap-3 h-12 border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-sm rounded-xl">
                 <BookOpen className="h-5 w-5" />
-                <span>紙面アーカイブ管理</span>
+                <span>紙面アーカイブ</span>
               </Button>
             </Link>
             <Link href="/admin/president">

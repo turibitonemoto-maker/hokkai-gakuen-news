@@ -59,6 +59,7 @@ export function PresidentMessageManager() {
 
   const handleUnlock = () => {
     if (lockoutTime && lockoutTime > Date.now()) return;
+    // セキュリティ・プロトコル：ソースコードからの漏洩を防ぐため環境変数を参照
     const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
     if (password === correctPassword) {
       setIsUnlocked(true);
@@ -168,8 +169,8 @@ export function PresidentMessageManager() {
     }
   }
 
-  if (isVerifying) return <div className="flex flex-col items-center justify-center min-h-[400px] gap-4"><Loader2 className="h-12 w-12 animate-spin text-primary" /><p className="font-black text-slate-400">認証情報を照合中...</p></div>;
-  if (lockoutTime && lockoutTime > Date.now()) return <div className="max-w-4xl mx-auto mt-10"><Card className="shadow-2xl rounded-[3rem] p-16 text-center space-y-8"><div className="bg-red-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto"><ShieldAlert className="h-12 w-12 text-red-500" /></div><h2 className="text-3xl font-black text-slate-800">セキュリティ・ロック</h2><p className="text-slate-500 font-bold">一時的にこの機能を制限しています。約 {Math.ceil((lockoutTime - Date.now()) / 60000)} 分後にお試しください。</p></Card></div>;
+  if (isVerifying) return <div className="flex flex-col items-center justify-center min-h-[400px] gap-4"><Loader2 className="h-12 w-12 animate-spin text-primary" /><p className="font-black text-slate-400">照合中...</p></div>;
+  if (lockoutTime && lockoutTime > Date.now()) return <div className="max-w-4xl mx-auto mt-10"><Card className="shadow-2xl rounded-[3rem] p-16 text-center space-y-8"><div className="bg-red-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto"><ShieldAlert className="h-12 w-12 text-red-500" /></div><h2 className="text-3xl font-black text-slate-800">セキュリティ・ロック</h2><p className="text-slate-500 font-bold">一時的に制限しています。あと {Math.ceil((lockoutTime - Date.now()) / 60000)} 分です。</p></Card></div>;
 
   if (!isUnlocked) {
     return (

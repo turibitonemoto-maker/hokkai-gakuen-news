@@ -37,18 +37,12 @@ export default function ArticleDetailPage() {
     }
     
     if (firestore && id && article && !isLoading && !hasIncremented.current) {
-      const incrementView = async () => {
-        try {
-          const articleRef = doc(firestore, 'articles', id as string);
-          await updateDoc(articleRef, {
-            viewCount: increment(1)
-          });
-          hasIncremented.current = true;
-        } catch (e) {
-          console.error("PV increment failed:", e);
-        }
-      };
-      incrementView();
+      const articleRef = doc(firestore, 'articles', id as string);
+      updateDoc(articleRef, {
+        viewCount: increment(1)
+      }).then(() => {
+        hasIncremented.current = true;
+      });
     }
   }, [article, firestore, id, isLoading]);
 
