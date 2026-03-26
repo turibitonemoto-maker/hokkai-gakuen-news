@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -25,7 +26,6 @@ import Image from "next/image";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
-// note管理を除外
 const MENU_ITEMS = [
   { id: "/admin", label: "ダッシュボード", icon: LayoutDashboard },
   { id: "/admin/articles", label: "記事・公開管理", icon: FileText },

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useDoc, useFirestore, useMemoFirebase, useUser } from "@/firebase";
@@ -58,10 +59,7 @@ export function PresidentMessageManager() {
 
   const handleUnlock = () => {
     if (lockoutTime && lockoutTime > Date.now()) return;
-    
-    // パスワードを 'zansin' に直結
     const correctPassword = "zansin";
-    
     if (password === correctPassword) {
       setIsUnlocked(true);
       setFailCount(0);
@@ -79,7 +77,7 @@ export function PresidentMessageManager() {
           toast({ variant: "destructive", title: "アクセス拒否" });
         }, 800);
       } else {
-        toast({ variant: "destructive", title: "不一致", description: `あと ${3 - newCount} 回でロックされます。` });
+        toast({ variant: "destructive", title: "不一致" });
       }
     }
   };
@@ -185,7 +183,7 @@ export function PresidentMessageManager() {
           <CardContent className="p-10 pt-4 space-y-6">
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">PASSCODE</label>
-              <Input type="password" placeholder="パスワードを入力" className="text-center h-14 text-lg font-bold rounded-2xl" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleUnlock()} autoFocus />
+              <Input type="password" placeholder="パスワードを入力してください" className="text-center h-14 text-lg font-bold rounded-2xl" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleUnlock()} autoFocus />
             </div>
             <Button className="w-full h-14 font-black rounded-2xl" onClick={handleUnlock}>認証する</Button>
           </CardContent>
