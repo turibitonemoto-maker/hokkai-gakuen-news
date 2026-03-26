@@ -129,7 +129,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
         autolink: true,
         linkOnPaste: true
       }),
-      Placeholder.configure({ placeholder: 'ここから物語を始めてください...' }),
+      Placeholder.configure({ placeholder: '記事本文を入力してください...' }),
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
     ],
     content: article?.content || "",
@@ -206,7 +206,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
   const insertLink = useCallback(() => {
     if (!editor) return;
     const previousUrl = editor.getAttributes('link').href;
-    const url = window.prompt('URLを入力', previousUrl);
+    const url = window.prompt('URLを入力してください', previousUrl);
     if (url === null) return;
     if (url === '') {
       editor.chain().focus().extendMarkRange('link').unsetLink().run();

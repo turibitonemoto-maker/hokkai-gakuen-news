@@ -59,7 +59,9 @@ export function PresidentMessageManager() {
 
   const handleUnlock = () => {
     if (lockoutTime && lockoutTime > Date.now()) return;
+    
     const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
+    
     if (password === correctPassword) {
       setIsUnlocked(true);
       setFailCount(0);
@@ -177,7 +179,7 @@ export function PresidentMessageManager() {
         <Card className="shadow-2xl border-none bg-white rounded-3xl overflow-hidden">
           <CardHeader className="text-center pt-10 pb-6 bg-slate-50/50">
             <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"><Lock className="h-10 w-10 text-primary" /></div>
-            <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">会長挨拶管理</CardTitle>
+            <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">会長挨拶 編集</CardTitle>
             <p className="text-sm font-bold text-slate-500 px-6 mt-2">編集には認証が必要です。</p>
           </CardHeader>
           <CardContent className="p-10 pt-4 space-y-6">
@@ -199,7 +201,6 @@ export function PresidentMessageManager() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-black text-slate-800 tracking-tight">会長挨拶管理</h2>
-          <p className="text-sm font-bold text-slate-500 mt-1">会長のプロフィールとメッセージを更新します。</p>
         </div>
       </div>
 
@@ -214,7 +215,7 @@ export function PresidentMessageManager() {
 
         {authorImagePreview && (
           <div className="w-full max-w-xl bg-white/50 p-8 rounded-[3rem] border border-slate-100 space-y-6">
-            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2"><Maximize className="h-3 w-3 text-primary" /> 写真の調整</h4>
+            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2"><Maximize className="h-3 w-3 text-primary" /> 構図調整</h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="space-y-3"><label className="text-[9px] font-bold text-slate-500 block text-center">ズーム</label><Slider min={-200} max={500} step={1} value={[transform.scale]} onValueChange={([val]) => form.setValue("authorImageTransform.scale", val)} /></div>
               <div className="space-y-3"><label className="text-[9px] font-bold text-slate-500 block text-center">水平位置</label><Slider min={-500} max={500} step={1} value={[transform.x]} onValueChange={([val]) => form.setValue("authorImageTransform.x", val)} /></div>

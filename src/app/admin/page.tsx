@@ -83,7 +83,7 @@ export default function AdminDashboard() {
           {maintenanceConfig?.isMaintenanceMode && (
             <Badge variant="destructive" className="px-3 py-1 flex gap-2 items-center animate-pulse shadow-md">
               <ShieldAlert className="h-3 w-3" />
-              管制: 制限中
+              システム停止中
             </Badge>
           )}
         </div>
@@ -91,7 +91,7 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <QuickStatCard 
-          title="DB登録記事数" 
+          title="登録記事数" 
           value={isArticlesLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : stats.total} 
           delta={`公開中: ${stats.published}`} 
           icon={Database} 
@@ -108,8 +108,8 @@ export default function AdminDashboard() {
         />
         <QuickStatCard 
           title="システム状態" 
-          value={maintenanceConfig?.isMaintenanceMode ? "制限" : "正常"} 
-          delta="インフラ稼働ステータス" 
+          value={maintenanceConfig?.isMaintenanceMode ? "停止中" : "正常"} 
+          delta="稼働ステータス" 
           icon={ShieldCheck} 
           color="purple"
           href="/admin/maintenance"
@@ -131,7 +131,6 @@ export default function AdminDashboard() {
                   <AlertCircle className="h-5 w-5 mt-0.5 shrink-0" />
                   <div>
                     <p className="font-bold text-sm">エラーが発生しました</p>
-                    <p className="text-[10px] mt-1 opacity-80 break-all">{activityError.message}</p>
                   </div>
                 </div>
               </div>
@@ -151,11 +150,6 @@ export default function AdminDashboard() {
                         <span className="text-[10px] text-slate-400 font-medium">
                           最終更新: {new Date(article.updatedAt?.seconds * 1000 || Date.now()).toLocaleString("ja-JP")}
                         </span>
-                        {article.updatedBy && (
-                          <span className="text-[10px] text-primary flex items-center gap-1 font-bold bg-primary/5 px-1.5 py-0.5 rounded">
-                            <User className="h-2 w-2" /> {article.updatedBy}
-                          </span>
-                        )}
                       </div>
                     </div>
                     <Badge variant={article.isPublished ? "default" : "outline"} className={article.isPublished ? "bg-green-100 text-green-700 border-green-200 text-[10px] font-bold" : "text-slate-400 text-[10px] font-bold"}>

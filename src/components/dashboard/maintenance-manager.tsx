@@ -17,8 +17,6 @@ import { Loader2, Save, Lock, ShieldAlert } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 
-const PUBLIC_SITE_URL = "/";
-
 const maintenanceSchema = z.object({
   isMaintenanceMode: z.boolean(),
   maintenanceMessage: z.string().min(1, "メッセージを入力してください"),
@@ -46,11 +44,8 @@ export function MaintenanceManager() {
     const storedLockout = localStorage.getItem("lockout_until");
     if (storedLockout) {
       const until = parseInt(storedLockout);
-      if (until > Date.now()) {
-        setLockoutTime(until);
-      } else {
-        localStorage.removeItem("lockout_until");
-      }
+      if (until > Date.now()) setLockoutTime(until);
+      else localStorage.removeItem("lockout_until");
     }
   }, []);
 
@@ -73,7 +68,9 @@ export function MaintenanceManager() {
 
   const handleUnlock = () => {
     if (lockoutTime && lockoutTime > Date.now()) return;
+    
     const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
+    
     if (password === correctPassword) {
       setIsUnlocked(true);
       setFailCount(0);
@@ -98,17 +95,15 @@ export function MaintenanceManager() {
 
   function onSubmit(maintenanceValues: MaintenanceValues) {
     if (!firestore || !docRef) return;
-
     setDocumentNonBlocking(docRef, {
       ...maintenanceValues,
       updatedAt: serverTimestamp(),
     }, { merge: true });
-
     toast({ title: "保存しました" });
   }
 
   if (isVerifying) return <div className="flex flex-col items-center justify-center min-h-[400px] gap-4"><Loader2 className="h-12 w-12 animate-spin text-primary" /><p className="font-black text-slate-400">照合中...</p></div>;
-  if (lockoutTime && lockoutTime > Date.now()) return <div className="max-w-4xl mx-auto mt-10"><Card className="shadow-2xl rounded-[3rem] p-16 text-center space-y-8"><div className="bg-red-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto"><ShieldAlert className="h-12 w-12 text-red-500" /></div><h2 className="text-3xl font-black text-slate-800">セキュリティ・ロック</h2><p className="text-slate-500 font-bold">一時的に制限しています。あと {Math.ceil((lockoutTime - Date.now()) / 60000)} 分後にお試しください。</p></Card></div>;
+  if (lockoutTime && lockoutTime > Date.now()) return <div className="max-w-4xl mx-auto mt-10"><Card className="shadow-2xl rounded-[3rem] p-16 text-center space-y-8"><div className="bg-red-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto"><ShieldAlert className="h-12 w-12 text-red-500" /></div><h2 className="text-3xl font-black text-slate-800">セキュリティ・ロック</h2><p className="text-slate-500 font-bold">一時的に制限しています。</p></Card></div>;
 
   if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
@@ -118,7 +113,7 @@ export function MaintenanceManager() {
         <Card className="shadow-2xl border-none bg-white rounded-3xl overflow-hidden">
           <CardHeader className="text-center pt-10 pb-6 bg-slate-50/50">
             <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"><Lock className="h-10 w-10 text-primary" /></div>
-            <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">システム設定</CardTitle>
+            <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">システム設定 編集</CardTitle>
             <p className="text-sm font-bold text-slate-500 px-6 mt-2">編集には認証が必要です。</p>
           </CardHeader>
           <CardContent className="p-10 pt-4 space-y-6">
@@ -138,9 +133,7 @@ export function MaintenanceManager() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-black text-slate-800 tracking-tight">システム設定</h2>
-          <p className="text-sm font-bold text-slate-500 mt-1">サイトの稼働状況をコントロールします。</p>
         </div>
-        <Button variant="outline" size="sm" className="font-black rounded-xl h-10 border-slate-200 px-5" onClick={() => window.open(PUBLIC_SITE_URL, '_blank')}>表示サイトを確認</Button>
       </div>
 
       <Card className="shadow-sm border-slate-200 overflow-hidden rounded-3xl bg-white">
