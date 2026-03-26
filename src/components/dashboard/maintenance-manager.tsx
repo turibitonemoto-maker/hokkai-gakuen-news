@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useDoc, useFirestore, useMemoFirebase } from "@/firebase";
@@ -69,7 +68,8 @@ export function MaintenanceManager() {
   const handleUnlock = () => {
     if (lockoutTime && lockoutTime > Date.now()) return;
     
-    const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
+    // パスワードを 'zansin' に直結
+    const correctPassword = "zansin";
     
     if (password === correctPassword) {
       setIsUnlocked(true);

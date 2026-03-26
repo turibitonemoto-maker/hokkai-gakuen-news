@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -60,7 +59,8 @@ export function AdManager() {
   const handleUnlock = () => {
     if (lockoutTime && lockoutTime > Date.now()) return;
 
-    const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "zansin";
+    // パスワードを 'zansin' に直結
+    const correctPassword = "zansin";
     
     if (password === correctPassword) {
       setIsUnlocked(true);
@@ -98,7 +98,7 @@ export function AdManager() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="font-black text-slate-400 animate-pulse">認証情報を照合中...</p>
+        <p className="font-black text-slate-400">認証情報を照合中...</p>
       </div>
     );
   }
@@ -111,15 +111,11 @@ export function AdManager() {
             <ShieldAlert className="h-12 w-12 text-red-500" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-3xl font-black text-slate-800">セキュリティ・ロック 🔒</h2>
+            <h2 className="text-3xl font-black text-slate-800">セキュリティ・ロック</h2>
             <p className="text-slate-500 font-bold">
-              不審なアクセスが検出されたため、一時的にこの機能を制限しています。<br />
-              再試行まであと約 {Math.ceil((lockoutTime - Date.now()) / 60000)} 分です。
+              不審なアクセスが検出されたため、一時的にこの機能を制限しています。
             </p>
           </div>
-          <Button variant="outline" className="h-12 px-8 rounded-2xl font-black" onClick={() => window.location.reload()}>
-            システム再読み込み
-          </Button>
         </Card>
       </div>
     );
@@ -127,13 +123,13 @@ export function AdManager() {
 
   if (!isUnlocked) {
     return (
-      <div className="max-w-md mx-auto mt-20 animate-in fade-in zoom-in duration-500">
+      <div className="max-w-md mx-auto mt-20">
         <Card className="shadow-2xl border-none bg-white rounded-3xl overflow-hidden">
           <CardHeader className="text-center pt-10 pb-6 bg-slate-50/50">
-            <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+            <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
               <Lock className="h-10 w-10 text-primary" />
             </div>
-            <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">広告管理 🔒</CardTitle>
+            <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">広告管理</CardTitle>
             <CardDescription className="text-sm font-bold text-slate-500 px-6 mt-2">
               このセクションを編集するには認証が必要です。
             </CardDescription>
@@ -144,14 +140,14 @@ export function AdManager() {
               <Input 
                 type="password" 
                 placeholder="" 
-                className="text-center h-14 text-lg font-bold rounded-2xl border-slate-200 shadow-sm"
+                className="text-center h-14 text-lg font-bold rounded-2xl"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
                 autoFocus
               />
             </div>
-            <Button className="w-full h-14 font-black text-md rounded-2xl shadow-lg hover:scale-[1.02] transition-transform" onClick={handleUnlock}>
+            <Button className="w-full h-14 font-black text-md rounded-2xl" onClick={handleUnlock}>
               認証する
             </Button>
           </CardContent>
@@ -170,7 +166,7 @@ export function AdManager() {
 
   if (selectedAd) {
     return (
-      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="space-y-6 animate-in fade-in duration-500">
         <div className="flex items-center gap-4">
           <Button variant="outline" size="icon" onClick={() => setSelectedAd(null)} className="rounded-full">
             <ArrowLeft className="h-4 w-4" />
@@ -186,7 +182,7 @@ export function AdManager() {
             <CardHeader className="bg-slate-50/50 border-b p-8">
               <CardTitle className="text-lg font-black flex items-center gap-2">
                 <Pencil className="h-5 w-5 text-primary" />
-                基本設定 🔒
+                基本設定
               </CardTitle>
             </CardHeader>
             <CardContent className="p-8">
@@ -207,16 +203,6 @@ export function AdManager() {
                   <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">累計クリック数</p>
                   <p className="text-5xl font-black text-primary">{(selectedAd.clickCount || 0).toLocaleString()}</p>
                 </div>
-                <div className="space-y-3 bg-slate-50 p-6 rounded-2xl">
-                  <div className="flex items-center gap-3 text-sm font-bold text-slate-600">
-                    <Calendar className="h-4 w-4 text-slate-400" />
-                    開始: {selectedAd.startDate ? new Date(selectedAd.startDate).toLocaleString("ja-JP") : "未設定"}
-                  </div>
-                  <div className="flex items-center gap-3 text-sm font-bold text-slate-600">
-                    <Clock className="h-4 w-4 text-slate-400" />
-                    終了: {selectedAd.endDate ? new Date(selectedAd.endDate).toLocaleString("ja-JP") : "無期限"}
-                  </div>
-                </div>
               </CardContent>
             </Card>
 
@@ -229,7 +215,7 @@ export function AdManager() {
               </CardHeader>
               <CardContent className="px-6 pb-6">
                 <Button variant="destructive" className="w-full h-12 font-black rounded-xl shadow-lg" onClick={() => setAdToDelete(selectedAd)}>
-                  この広告を完全に削除 🔒
+                  この広告を完全に削除
                 </Button>
               </CardContent>
             </Card>
@@ -241,12 +227,12 @@ export function AdManager() {
             <AlertDialogHeader>
               <AlertDialogTitle className="text-2xl font-black text-slate-800">本当に削除しますか？</AlertDialogTitle>
               <AlertDialogDescription className="text-sm font-bold text-slate-500 py-4">
-                「{adToDelete?.title}」のデータと統計情報もすべて削除されます。この操作は取り消せません。
+                「{adToDelete?.title}」のデータを完全に削除します。
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="gap-3">
               <AlertDialogCancel className="rounded-xl font-bold h-12 border-slate-200">キャンセル</AlertDialogCancel>
-              <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90 rounded-xl font-black h-12 px-8">削除を実行する</AlertDialogAction>
+              <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90 rounded-xl font-black h-12 px-8">削除を実行</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
@@ -256,7 +242,7 @@ export function AdManager() {
 
   if (isAdding) {
     return (
-      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="space-y-6 animate-in fade-in duration-500">
         <div className="flex items-center gap-4">
           <Button variant="outline" size="icon" onClick={() => setIsAdding(false)} className="rounded-full">
             <ArrowLeft className="h-4 w-4" />
@@ -276,23 +262,23 @@ export function AdManager() {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-black text-slate-800 tracking-tight">広告管理 🔒</h2>
+          <h2 className="text-3xl font-black text-slate-800 tracking-tight">広告管理</h2>
           <p className="text-sm font-bold text-slate-500 mt-1">広告バナーの掲載期間やクリック統計を管理します。</p>
         </div>
-        <Button onClick={() => setIsAdding(true)} className="flex items-center gap-2 h-12 px-8 font-black rounded-2xl shadow-lg shadow-primary/20">
+        <Button onClick={() => setIsAdding(true)} className="flex items-center gap-2 h-12 px-8 font-black rounded-2xl shadow-lg">
           <Plus className="h-5 w-5" />
           広告を追加
         </Button>
       </div>
 
       {ads && ads.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-700">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {ads.map((ad) => {
             const transform = ad.imageTransform || { scale: 0, x: 0, y: 0 };
             return (
               <Card 
                 key={ad.id} 
-                className="overflow-hidden group cursor-pointer border-slate-200 shadow-sm hover:shadow-xl hover:border-primary/50 transition-all rounded-3xl bg-white"
+                className="overflow-hidden group cursor-pointer border-slate-200 shadow-sm hover:shadow-xl transition-all rounded-3xl bg-white"
                 onClick={() => setSelectedAd(ad)}
               >
                 <div className="relative h-40 bg-slate-50 border-b overflow-hidden">
@@ -303,39 +289,27 @@ export function AdManager() {
                     className="object-cover transition-transform group-hover:scale-105"
                     style={{
                       transform: `scale(${Math.max(0.01, 1 + transform.scale / 100)}) translate(${transform.x}%, ${transform.y}%)`,
-                      willChange: 'transform'
                     }}
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     unoptimized
                   />
-                  <div className="absolute top-4 right-4 flex gap-1">
-                    <Badge variant="secondary" className="bg-white/95 backdrop-blur-md shadow-md font-black px-3 py-1 rounded-full border-none">
+                  <div className="absolute top-4 right-4">
+                    <Badge variant="secondary" className="bg-white/95 font-black px-3 py-1 rounded-full shadow-md">
                       <Users className="h-3 w-3 mr-1.5 text-primary" /> {(ad.clickCount || 0).toLocaleString()}
                     </Badge>
                   </div>
                 </div>
                 <CardContent className="p-6">
-                  <div className="flex justify-between items-start">
-                    <div className="truncate">
-                      <p className="font-black text-slate-800 truncate text-lg group-hover:text-primary transition-colors">{ad.title || "無題の広告"}</p>
-                      <p className="text-[11px] font-bold text-slate-400 truncate flex items-center mt-1.5">
-                        <ExternalLink className="h-3 w-3 mr-1.5 text-slate-300" /> {ad.linkUrl}
-                      </p>
-                    </div>
-                    <div className="bg-primary/10 p-2.5 rounded-full opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0 shadow-sm">
-                      <Pencil className="h-4 w-4 text-primary" />
-                    </div>
-                  </div>
+                  <p className="font-black text-slate-800 truncate text-lg group-hover:text-primary transition-colors">{ad.title || "無題の広告"}</p>
+                  <p className="text-[10px] font-bold text-slate-400 mt-1 truncate">{ad.linkUrl}</p>
                 </CardContent>
               </Card>
             );
           })}
         </div>
       ) : (
-        <div className="py-24 text-center border-4 border-dashed rounded-[3rem] text-slate-300 bg-white/50 backdrop-blur-sm">
+        <div className="py-24 text-center border-4 border-dashed rounded-[3rem] text-slate-300 bg-white">
           <Megaphone className="h-16 w-16 mx-auto opacity-10 mb-4" />
           <p className="text-xl font-black">広告データがありません</p>
-          <p className="text-sm font-bold mt-2 opacity-50">新しいスポンサーを登録しましょう。</p>
         </div>
       )}
     </div>
