@@ -41,6 +41,8 @@ import Image from "next/image";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
 const NoteImageComponent = ({ node, updateAttributes, selected, deleteNode }: any) => {
   const setWidth = (width: string) => updateAttributes({ width });
   const currentWidth = node.attrs.width || '60%';
@@ -143,6 +145,12 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
   const handleEditorImageSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !file.type.startsWith('image/') || !editor) return;
+
+    if (file.size > MAX_FILE_SIZE) {
+      toast({ variant: "destructive", title: "写真のデータが大きすぎます", description: "10MB以下の写真を選択するか、圧縮してください。" });
+      return;
+    }
+
     const blobUrl = URL.createObjectURL(file);
     setEditorFiles(prev => {
       const next = new Map(prev);
@@ -151,11 +159,17 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
     });
     editor.chain().focus().setImage({ src: blobUrl }).run();
     if (e.target) e.target.value = "";
-  }, [editor]);
+  }, [editor, toast]);
 
   const handleMainImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !file.type.startsWith('image/')) return;
+
+    if (file.size > MAX_FILE_SIZE) {
+      toast({ variant: "destructive", title: "写真のデータが大きすぎます", description: "10MB以下の写真を選択するか、圧縮してください。" });
+      return;
+    }
+
     const blobUrl = URL.createObjectURL(file);
     setMainImageFile(file);
     setMainImagePreview(blobUrl);

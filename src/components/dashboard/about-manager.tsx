@@ -16,6 +16,8 @@ import LinkExtension from '@tiptap/extension-link';
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
 export function AboutManager() {
   const [isSaving, setIsSaving] = useState(false);
   const [editorFiles, setEditorFiles] = useState<Map<string, File>>(new Map());
@@ -97,6 +99,12 @@ export function AboutManager() {
   const handleImageSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !file.type.startsWith('image/')) return;
+    
+    if (file.size > MAX_FILE_SIZE) {
+      toast({ variant: "destructive", title: "写真のデータが大きすぎます", description: "10MB以下の写真を選択するか、圧縮してください。" });
+      return;
+    }
+
     const blobUrl = URL.createObjectURL(file);
     setEditorFiles(prev => {
       const next = new Map(prev);
@@ -105,7 +113,7 @@ export function AboutManager() {
     });
     editor?.chain().focus().setImage({ src: blobUrl }).run();
     if (e.target) e.target.value = "";
-  }, [editor]);
+  }, [editor, toast]);
 
   useEffect(() => {
     if (aboutData && editor) {

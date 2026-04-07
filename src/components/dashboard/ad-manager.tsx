@@ -63,7 +63,7 @@ export function AdManager() {
     if (password === correctPassword) {
       setIsUnlocked(true);
       setFailCount(0);
-      toast({ title: "認証完了" });
+      toast({ title: "認証成功" });
     } else {
       const newCount = failCount + 1;
       setFailCount(newCount);
@@ -77,7 +77,7 @@ export function AdManager() {
           toast({ variant: "destructive", title: "アクセス拒否" });
         }, 800);
       } else {
-        toast({ variant: "destructive", title: "不一致" });
+        toast({ variant: "destructive", title: "パスワードが正しくありません" });
       }
     }
   };

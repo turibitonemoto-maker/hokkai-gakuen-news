@@ -13,8 +13,10 @@ import { Slider } from "@/components/ui/slider";
 import { setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useRef, useEffect } from "react";
-import { Loader2, Upload, Maximize, MoveHorizontal, MoveVertical } from "lucide-react";
+import { Loader2, Upload, Maximize } from "lucide-react";
 import Image from "next/image";
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 const adSchema = z.object({
   title: z.string().min(1, "広告名を入力してください"),
@@ -58,7 +60,6 @@ export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
   const imageUrl = form.watch("imageUrl");
   const transform = form.watch("imageTransform");
 
-  // 画像変更時に座標を完全に初期化
   useEffect(() => {
     if (imageUrl) {
       form.setValue("imageTransform", { scale: 0, x: 0, y: 0 });
@@ -77,6 +78,12 @@ export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
     }
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (file.size > MAX_FILE_SIZE) {
+      toast({ variant: "destructive", title: "写真のデータが大きすぎます", description: "10MB以下の写真を選択するか、圧縮してください。" });
+      return;
+    }
+
     setIsProcessing(true);
     try {
       const subFolder = sanitizeFolderName(titleValue);
@@ -143,7 +150,7 @@ export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
             />
             {imageUrl && (
               <div className="space-y-6 bg-slate-50 p-6 rounded-3xl border border-slate-100 shadow-sm">
-                <h4 className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-2"><Maximize className="h-3 w-3" /> 画像構図管制</h4>
+                <h4 className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-2"><Maximize className="h-3 w-3" /> 画像構図調整</h4>
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <div className="flex justify-between items-center"><label className="text-[10px] font-bold text-slate-500">倍率: {transform.scale.toFixed(0)}%</label></div>
@@ -162,7 +169,7 @@ export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
             )}
           </div>
           <div className="space-y-4">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">仕上がりプレビュー</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">プレビュー</label>
             <div className="relative h-28 rounded-2xl overflow-hidden bg-slate-100 border-4 border-white shadow-lg flex items-center justify-center">
               {imageUrl ? (
                 <Image src={imageUrl} alt="Preview" fill className="transition-transform duration-100" style={{ objectFit: "contain", transform: `translate(${transform.x}%, ${transform.y}%) scale(${Math.max(0.01, 1 + transform.scale / 100)})`, willChange: 'transform' }} unoptimized />

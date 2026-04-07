@@ -51,14 +51,15 @@ export function LoginForm() {
       setIsLoading(false);
       let errorMessage = "ログインに失敗しました。";
       
-      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-        errorMessage = "メールアドレスまたはパスワードが正しくありません。";
-      } else if (error.code === 'auth/too-many-requests') {
+      const errorCode = error.code || "";
+      if (errorCode === 'auth/invalid-credential' || errorCode === 'auth/user-not-found' || errorCode === 'auth/wrong-password') {
+        errorMessage = "パスワードが違います";
+      } else if (errorCode === 'auth/too-many-requests') {
         errorMessage = "何度も失敗したため、一時的にロックされています。少し時間を置いてからお試しください。";
-      } else if (error.code === 'auth/network-request-failed') {
+      } else if (errorCode === 'auth/network-request-failed') {
         errorMessage = "ネットワークエラーが発生しました。インターネット接続を確認してください。";
       } else {
-        errorMessage = `エラーが発生しました (${error.code || error.message})`;
+        errorMessage = `エラーが発生しました (${errorCode || error.message})`;
       }
       
       setServerError(errorMessage);

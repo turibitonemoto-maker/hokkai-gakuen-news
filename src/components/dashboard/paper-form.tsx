@@ -36,6 +36,8 @@ import {
   DialogContent,
 } from "@/components/ui/dialog";
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
 const paperSchema = z.object({
   title: z.string().min(1, "タイトルを入力してください"),
   publishDate: z.string().min(1, "発行日を選択してください"),
@@ -150,6 +152,14 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
 
   const handleFilesSelect = (files: FileList) => {
     const fileArray = Array.from(files);
+    
+    // サイズチェック
+    const overSized = fileArray.filter(f => f.size > MAX_FILE_SIZE);
+    if (overSized.length > 0) {
+      toast({ variant: "destructive", title: "写真のデータが大きすぎます", description: "10MB以下の写真を選択するか、圧縮してください。" });
+      return;
+    }
+
     const newPages: PageData[] = fileArray.map(file => {
       const tempUrl = URL.createObjectURL(file);
       return {

@@ -20,6 +20,8 @@ import StarterKit from '@tiptap/starter-kit';
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
 const presidentMessageSchema = z.object({
   title: z.string().min(1, "見出しを入力してください"),
   authorName: z.string().min(1, "氏名を入力してください"),
@@ -130,6 +132,12 @@ export function PresidentMessageManager() {
   const handleFacePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !file.type.startsWith('image/')) return;
+    
+    if (file.size > MAX_FILE_SIZE) {
+      toast({ variant: "destructive", title: "写真のデータが大きすぎます", description: "10MB以下の写真を選択するか、圧縮してください。" });
+      return;
+    }
+
     const blobUrl = URL.createObjectURL(file);
     setAuthorImageFile(file);
     setAuthorImagePreview(blobUrl);
