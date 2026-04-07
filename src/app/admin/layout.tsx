@@ -28,7 +28,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 
 const MENU_ITEMS = [
   { id: "/admin", label: "ダッシュボード", icon: LayoutDashboard },
-  { id: "/admin/articles", label: "記事・公開管理", icon: FileText },
+  { id: "/admin/articles", label: "記事管理", icon: FileText },
   { id: "/admin/viewer", label: "紙面アーカイブ", icon: BookOpen },
   { id: "/admin/ads", label: "広告管理", icon: Megaphone },
   { id: "/admin/president", label: "会長挨拶", icon: UserRound },

@@ -5,7 +5,7 @@ import { useState, useMemo } from "react";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc, orderBy, query, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Loader2, Filter, Tag as TagIcon, AlertCircle, RefreshCw, ExternalLink } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Filter, Tag as TagIcon, AlertCircle, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +13,6 @@ import { Switch } from "@/components/ui/switch";
 import { deleteDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -146,8 +145,8 @@ export function ArticleManager() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">記事・公開管理</h2>
-          <p className="text-sm font-bold text-slate-500 mt-1">オリジナル記事をリアルタイムに管理・監視します。</p>
+          <h2 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">記事管理</h2>
+          <p className="text-sm font-bold text-slate-500 mt-1">作成した記事の公開・編集を管理します。</p>
         </div>
         <div className="flex gap-2 w-full md:w-auto">
           <Button variant="outline" size="icon" onClick={() => window.location.reload()} className="rounded-xl h-12 w-12 border-slate-200">
@@ -164,7 +163,7 @@ export function ArticleManager() {
         <Alert variant="destructive" className="rounded-2xl">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>同期エラー</AlertTitle>
-          <AlertDescription>データの取得に失敗しました。ページを再読み込みしてください。</AlertDescription>
+          <AlertDescription>データの取得に失敗しました。</AlertDescription>
         </Alert>
       )}
 
@@ -172,7 +171,7 @@ export function ArticleManager() {
         <CardHeader className="pb-3 border-b bg-slate-50/30">
           <CardTitle className="text-xs font-black flex items-center gap-2 text-slate-500 uppercase tracking-widest">
             <Filter className="h-4 w-4" />
-            カテゴリーフィルター
+            フィルター
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4">
@@ -214,7 +213,6 @@ export function ArticleManager() {
                     <TableHead className="w-[180px] font-black text-xs uppercase tracking-widest">公開状態</TableHead>
                     <TableHead className="min-w-[300px] font-black text-xs uppercase tracking-widest">タイトル</TableHead>
                     <TableHead className="min-w-[120px] font-black text-xs uppercase tracking-widest">公開日</TableHead>
-                    <TableHead className="w-[100px] font-black text-xs uppercase tracking-widest text-center">表示</TableHead>
                     <TableHead className="text-right font-black text-xs uppercase tracking-widest">操作</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -245,13 +243,6 @@ export function ArticleManager() {
                       </TableCell>
                       <TableCell className="text-sm font-bold text-slate-500">
                         {new Date(article.publishDate).toLocaleDateString("ja-JP")}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Link href={`/articles/${article.id}`} target="_blank">
-                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-primary/10 hover:text-primary transition-colors">
-                            <ExternalLink className="h-4 w-4" />
-                          </Button>
-                        </Link>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">

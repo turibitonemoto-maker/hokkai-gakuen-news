@@ -52,14 +52,12 @@ export function LoginForm() {
       let errorMessage = "ログインに失敗しました。";
       
       const errorCode = error.code || "";
-      if (errorCode === 'auth/invalid-credential' || errorCode === 'auth/user-not-found' || errorCode === 'auth/wrong-password') {
+      if (errorCode === 'auth/invalid-credential' || errorCode === 'auth/user-not-found' || errorCode === 'auth/wrong-password' || errorCode === 'auth/invalid-email') {
         errorMessage = "パスワードが違います";
       } else if (errorCode === 'auth/too-many-requests') {
-        errorMessage = "何度も失敗したため、一時的にロックされています。少し時間を置いてからお試しください。";
-      } else if (errorCode === 'auth/network-request-failed') {
-        errorMessage = "ネットワークエラーが発生しました。インターネット接続を確認してください。";
+        errorMessage = "何度も失敗したため、一時的にロックされています。";
       } else {
-        errorMessage = `エラーが発生しました (${errorCode || error.message})`;
+        errorMessage = "パスワードが違います";
       }
       
       setServerError(errorMessage);
@@ -76,27 +74,27 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="w-full max-w-md shadow-2xl border-none bg-white/95 backdrop-blur-sm animate-in fade-in zoom-in duration-300 rounded-[3rem] overflow-hidden">
+    <Card className="w-full max-w-md shadow-2xl border-none bg-white rounded-[3rem] overflow-hidden">
       <CardHeader className="space-y-1 pb-6 text-center pt-12">
         <div className="flex justify-center mb-8">
-          <div className="bg-white p-2 rounded-[2rem] shadow-2xl border-4 border-slate-50 overflow-hidden transform hover:scale-110 transition-transform">
+          <div className="bg-white p-2 rounded-[2rem] shadow-xl border-4 border-slate-50 overflow-hidden transform hover:scale-105 transition-transform">
             <Image 
               src="/icon.png" 
               alt="北海学園大学新聞" 
-              width={100} 
-              height={100} 
+              width={80} 
+              height={80} 
               className="rounded-2xl"
               priority
             />
           </div>
         </div>
-        <CardTitle className="text-3xl font-black text-slate-800 tracking-tight">
+        <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">
           北海学園大学新聞
         </CardTitle>
       </CardHeader>
       <CardContent className="grid gap-6 px-10 pb-16">
         {serverError && (
-          <Alert variant="destructive" className="mb-4 bg-destructive/5 border-destructive/20 text-destructive rounded-2xl">
+          <Alert variant="destructive" className="mb-4 bg-red-50 border-red-100 text-red-600 rounded-2xl">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription className="text-xs font-bold">
               {serverError}
@@ -116,8 +114,8 @@ export function LoginForm() {
                     <div className="relative group">
                       <Mail className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300 group-focus-within:text-primary transition-colors" />
                       <Input
-                        placeholder=""
-                        className="pl-14 h-16 rounded-[1.5rem] border-slate-100 bg-slate-50/50 focus:border-primary focus:ring-primary transition-all duration-300 font-bold text-lg"
+                        placeholder="example@hgu.jp"
+                        className="pl-14 h-14 rounded-[1.25rem] border-slate-100 bg-slate-50/50 focus:border-primary font-bold"
                         {...field}
                       />
                     </div>
@@ -137,8 +135,8 @@ export function LoginForm() {
                       <Lock className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300 group-focus-within:text-primary transition-colors" />
                       <Input
                         type="password"
-                        placeholder=""
-                        className="pl-14 h-16 rounded-[1.5rem] border-slate-100 bg-slate-50/50 focus:border-primary focus:ring-primary transition-all duration-300 font-bold text-lg"
+                        placeholder="••••••••"
+                        className="pl-14 h-14 rounded-[1.25rem] border-slate-100 bg-slate-50/50 focus:border-primary font-bold"
                         {...field}
                       />
                     </div>
@@ -150,12 +148,12 @@ export function LoginForm() {
 
             <Button
               type="submit"
-              className="w-full h-16 bg-primary hover:bg-primary/90 text-white font-black text-xl rounded-[1.5rem] shadow-2xl shadow-primary/20 transition-all duration-300 mt-6 active:scale-95"
+              className="w-full h-14 bg-primary hover:bg-primary/90 text-white font-black text-lg rounded-[1.25rem] shadow-lg shadow-primary/20 transition-all active:scale-95"
               disabled={isLoading}
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-3 h-6 w-6 animate-spin" />
+                  <Loader2 className="mr-3 h-5 w-5 animate-spin" />
                   認証中
                 </>
               ) : (

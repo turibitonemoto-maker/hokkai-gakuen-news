@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { Loader2, Save, Info, Bold, Italic, Heading2, List, Type, Image as LucideImage, Lock, ShieldAlert } from "lucide-react";
+import { Loader2, Save, Info, Bold, Italic, Heading2, List, Type, Image as LucideImage, Lock } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -23,45 +23,18 @@ export function AboutManager() {
   const [editorFiles, setEditorFiles] = useState<Map<string, File>>(new Map());
   const [password, setPassword] = useState("");
   const [isUnlocked, setIsUnlocked] = useState(false);
-  const [failCount, setFailCount] = useState(0);
-  const [lockoutTime, setLockoutTime] = useState<number | null>(null);
-  const [isVerifying, setIsVerifying] = useState(false);
   
   const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
 
-  useEffect(() => {
-    const storedLockout = localStorage.getItem("lockout_until");
-    if (storedLockout) {
-      const until = parseInt(storedLockout);
-      if (until > Date.now()) setLockoutTime(until);
-      else localStorage.removeItem("lockout_until");
-    }
-  }, []);
-
   const handleUnlock = () => {
-    if (lockoutTime && lockoutTime > Date.now()) return;
     const correctPassword = "zansin";
     if (password === correctPassword) {
       setIsUnlocked(true);
-      setFailCount(0);
       toast({ title: "認証成功" });
     } else {
-      const newCount = failCount + 1;
-      setFailCount(newCount);
-      if (newCount >= 3) {
-        setIsVerifying(true);
-        setTimeout(() => {
-          setIsVerifying(false);
-          const until = Date.now() + 15 * 60 * 1000;
-          setLockoutTime(until);
-          localStorage.setItem("lockout_until", until.toString());
-          toast({ variant: "destructive", title: "アクセス拒否" });
-        }, 800);
-      } else {
-        toast({ variant: "destructive", title: "パスワードが正しくありません" });
-      }
+      toast({ variant: "destructive", title: "パスワードが正しくありません" });
     }
   };
 
@@ -167,9 +140,6 @@ export function AboutManager() {
       setIsSaving(false);
     }
   }
-
-  if (isVerifying) return <div className="flex flex-col items-center justify-center min-h-[400px] gap-4"><Loader2 className="h-12 w-12 animate-spin text-primary" /><p className="font-black text-slate-400">照合中...</p></div>;
-  if (lockoutTime && lockoutTime > Date.now()) return <div className="max-w-4xl mx-auto mt-10"><Card className="shadow-2xl rounded-[3rem] p-16 text-center space-y-8"><div className="bg-red-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto"><ShieldAlert className="h-12 w-12 text-red-500" /></div><h2 className="text-3xl font-black text-slate-800">セキュリティ・ロック</h2><p className="text-slate-500 font-bold">一時的に制限しています。</p></Card></div>;
   
   if (!isUnlocked) {
     return (
