@@ -1,10 +1,11 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc, orderBy, query, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Loader2, Filter, Tag as TagIcon, AlertCircle, RefreshCw, Eye } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Filter, Tag as TagIcon, AlertCircle, RefreshCw, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { deleteDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -117,12 +119,10 @@ export function ArticleManager() {
     setIsDeleting(true);
     
     try {
-      // 本文中の画像URLをすべて抽出
       const contentImages = extractCloudinaryUrls(articleToDelete.content || "");
       const urlsToDel = [...contentImages];
       if (articleToDelete.mainImageUrl) urlsToDel.push(articleToDelete.mainImageUrl);
       
-      // Cloudinaryから物理削除
       if (urlsToDel.length > 0) {
         await fetch("/api/upload/delete", {
           method: "POST",
@@ -132,7 +132,7 @@ export function ArticleManager() {
       }
 
       deleteDocumentNonBlocking(doc(firestore, "articles", articleToDelete.id));
-      toast({ title: "削除しました", description: `表紙と本文中の画像計 ${urlsToDel.length} 点も抹消されました。` });
+      toast({ title: "削除しました" });
     } catch (e) {
       console.error("Delete error:", e);
       toast({ variant: "destructive", title: "削除失敗" });
@@ -214,7 +214,7 @@ export function ArticleManager() {
                     <TableHead className="w-[180px] font-black text-xs uppercase tracking-widest">公開状態</TableHead>
                     <TableHead className="min-w-[300px] font-black text-xs uppercase tracking-widest">タイトル</TableHead>
                     <TableHead className="min-w-[120px] font-black text-xs uppercase tracking-widest">公開日</TableHead>
-                    <TableHead className="w-[100px] font-black text-xs uppercase tracking-widest text-center">PV</TableHead>
+                    <TableHead className="w-[100px] font-black text-xs uppercase tracking-widest text-center">表示</TableHead>
                     <TableHead className="text-right font-black text-xs uppercase tracking-widest">操作</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -247,10 +247,11 @@ export function ArticleManager() {
                         {new Date(article.publishDate).toLocaleDateString("ja-JP")}
                       </TableCell>
                       <TableCell className="text-center">
-                        <div className="flex items-center justify-center gap-1.5 text-slate-400 font-bold">
-                          <Eye className="h-3.5 w-3.5" />
-                          <span className="text-xs">{(article.viewCount || 0).toLocaleString()}</span>
-                        </div>
+                        <Link href={`/articles/${article.id}`} target="_blank">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-primary/10 hover:text-primary transition-colors">
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                        </Link>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
@@ -279,7 +280,7 @@ export function ArticleManager() {
               <AlertDialogTitle className="text-2xl font-black">記事を完全に消去しますか？</AlertDialogTitle>
             </div>
             <AlertDialogDescription className="font-bold text-slate-500">
-              「{articleToDelete?.title}」のデータと表紙画像、さらに本文中に挿入された画像もすべて物理的に抹消されます。
+              「{articleToDelete?.title}」のデータを完全に抹消します。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2 mt-6">

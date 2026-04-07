@@ -147,7 +147,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
     if (!file || !file.type.startsWith('image/') || !editor) return;
 
     if (file.size > MAX_FILE_SIZE) {
-      toast({ variant: "destructive", title: "写真のデータが大きすぎます", description: "10MB以下の写真を選択するか、圧縮してください。" });
+      toast({ variant: "destructive", title: "写真のデータが大きすぎます", description: "圧縮してください。" });
       return;
     }
 
@@ -166,7 +166,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
     if (!file || !file.type.startsWith('image/')) return;
 
     if (file.size > MAX_FILE_SIZE) {
-      toast({ variant: "destructive", title: "写真のデータが大きすぎます", description: "10MB以下の写真を選択するか、圧縮してください。" });
+      toast({ variant: "destructive", title: "写真のデータが大きすぎます", description: "圧縮してください。" });
       return;
     }
 

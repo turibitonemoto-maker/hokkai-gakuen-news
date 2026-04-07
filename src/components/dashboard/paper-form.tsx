@@ -153,10 +153,9 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
   const handleFilesSelect = (files: FileList) => {
     const fileArray = Array.from(files);
     
-    // サイズチェック
     const overSized = fileArray.filter(f => f.size > MAX_FILE_SIZE);
     if (overSized.length > 0) {
-      toast({ variant: "destructive", title: "写真のデータが大きすぎます", description: "10MB以下の写真を選択するか、圧縮してください。" });
+      toast({ variant: "destructive", title: "写真のデータが大きすぎます", description: "圧縮してください。" });
       return;
     }
 
