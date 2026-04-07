@@ -6,6 +6,9 @@ import { NextResponse } from "next/server";
 export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
 
+/**
+ * 高精細画像の自動圧縮 ＆ 最適化アップロード API
+ */
 export async function POST(request: Request) {
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME?.trim();
   const apiKey = process.env.CLOUDINARY_API_KEY?.trim();
@@ -38,7 +41,15 @@ export async function POST(request: Request) {
 
     const uploadResult: any = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
-        { folder, resource_type: "auto" },
+        { 
+          folder, 
+          resource_type: "auto",
+          // 高精細を維持しつつ自動圧縮
+          quality: "auto",
+          // WebPなどの次世代形式へ自動変換
+          fetch_format: "auto",
+          flags: "attachment:false"
+        },
         (error, result) => {
           if (error) reject(error);
           else resolve(result);

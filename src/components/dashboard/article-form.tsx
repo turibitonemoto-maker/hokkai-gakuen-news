@@ -189,7 +189,6 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
       let match;
       const uploadedMap = new Map<string, string>();
       
-      // BLOB URLをすべて抽出してCloudinaryにアップロード
       const blobsInContent: string[] = [];
       while ((match = blobRegex.exec(finalContent)) !== null) {
         blobsInContent.push(match[1]);
@@ -203,7 +202,6 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
         }
       }
 
-      // 本文内のURLを実体に差し替え
       uploadedMap.forEach((cloud, blob) => {
         finalContent = finalContent.split(blob).join(cloud);
       });
