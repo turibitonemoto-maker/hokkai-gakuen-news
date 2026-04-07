@@ -15,7 +15,8 @@ import { Badge } from '@/components/ui/badge';
 import DOMPurify from 'dompurify';
 import { Button } from '@/components/ui/button';
 
-const DEFAULT_IMAGE = "https://picsum.photos/seed/hgu-campus/1200/800";
+// 最高司令官提供のデフォルト画像（北海学園ビルディング）
+const DEFAULT_IMAGE = "https://picsum.photos/seed/hokkai1/1200/800";
 
 export default function ArticleDetailPage() {
   const { id } = useParams();
@@ -106,7 +107,6 @@ export default function ArticleDetailPage() {
                   </Badge>
                   <div className="flex items-center gap-4 text-xs font-bold text-slate-400">
                     <span className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> {article.publishDate}</span>
-                    <span className="flex items-center gap-1.5"><Eye className="h-3.5 w-3.5" /> {article.viewCount || 0} views</span>
                   </div>
                 </div>
 

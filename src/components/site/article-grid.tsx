@@ -16,7 +16,8 @@ const CATEGORY_LABELS: Record<string, string> = {
   Viewer: "紙面ビューアー",
 };
 
-const DEFAULT_IMAGE = "https://picsum.photos/seed/hgu-campus/1200/800";
+// 最高司令官提供のデフォルト画像（北海学園ビルディング）
+const DEFAULT_IMAGE = "https://picsum.photos/seed/hokkai1/1200/800";
 
 function stripHtmlTags(html: string) {
   if (!html) return "";
