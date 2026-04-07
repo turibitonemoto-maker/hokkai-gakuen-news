@@ -15,6 +15,8 @@ import { Badge } from '@/components/ui/badge';
 import DOMPurify from 'dompurify';
 import { Button } from '@/components/ui/button';
 
+const DEFAULT_IMAGE = "https://picsum.photos/seed/hgu-campus/1200/800";
+
 export default function ArticleDetailPage() {
   const { id } = useParams();
   const firestore = useFirestore();
@@ -65,6 +67,7 @@ export default function ArticleDetailPage() {
     );
   }
 
+  const imageUrl = article.mainImageUrl && article.mainImageUrl.trim() !== "" ? article.mainImageUrl : DEFAULT_IMAGE;
   const transform = article.mainImageTransform || { scale: 0, x: 0, y: 0 };
 
   return (
@@ -80,22 +83,21 @@ export default function ArticleDetailPage() {
             </Link>
 
             <article className="bg-white rounded-[3rem] shadow-sm border border-slate-100 overflow-hidden">
-              {article.mainImageUrl && (
-                <div className="relative aspect-[21/9] w-full bg-slate-100 overflow-hidden">
-                  <Image 
-                    src={article.mainImageUrl} 
-                    alt={article.title} 
-                    fill 
-                    className="transition-transform duration-700"
-                    style={{
-                      objectFit: "contain",
-                      transform: `translate(${transform.x}%, ${transform.y}%) scale(${Math.max(0.01, 1 + transform.scale / 100)})`,
-                    }}
-                    unoptimized
-                    priority
-                  />
-                </div>
-              )}
+              <div className="relative aspect-[21/9] w-full bg-slate-100 overflow-hidden">
+                <Image 
+                  src={imageUrl} 
+                  alt={article.title} 
+                  fill 
+                  className="transition-transform duration-700"
+                  style={{
+                    objectFit: "contain",
+                    transform: `translate(${transform.x}%, ${transform.y}%) scale(${Math.max(0.01, 1 + transform.scale / 100)})`,
+                  }}
+                  unoptimized
+                  data-ai-hint="university building"
+                  priority
+                />
+              </div>
 
               <div className="p-8 md:p-16">
                 <div className="flex flex-wrap items-center gap-4 mb-8">

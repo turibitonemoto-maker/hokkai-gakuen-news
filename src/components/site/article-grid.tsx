@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, ArrowRight, ImageOff } from 'lucide-react';
+import { Calendar, ArrowRight } from 'lucide-react';
 
 const CATEGORY_LABELS: Record<string, string> = {
   Campus: "キャンパス",
@@ -15,6 +15,9 @@ const CATEGORY_LABELS: Record<string, string> = {
   Opinion: "オピニオン",
   Viewer: "紙面ビューアー",
 };
+
+// 最高司令官提供のデフォルト画像
+const DEFAULT_IMAGE = "https://picsum.photos/seed/hgu-campus/1200/800";
 
 function stripHtmlTags(html: string) {
   if (!html) return "";
@@ -43,34 +46,27 @@ export function ArticleGrid({ articles }: { articles: any[] }) {
 }
 
 function ArticleCard({ article }: { article: any }) {
-  const hasImage = !!article.mainImageUrl && article.mainImageUrl.trim() !== "";
+  const imageUrl = article.mainImageUrl && article.mainImageUrl.trim() !== "" ? article.mainImageUrl : DEFAULT_IMAGE;
   const textSnippet = stripHtmlTags(article.content || "");
   const transform = article.mainImageTransform || { scale: 0, x: 0, y: 0 };
 
   return (
     <div className="group bg-white rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-slate-100 flex flex-col h-full">
       <div className="relative h-60 overflow-hidden bg-slate-100 flex items-center justify-center">
-        {hasImage ? (
-          <Image
-            src={article.mainImageUrl}
-            alt={article.title}
-            fill
-            className="transition-transform duration-500 ease-out"
-            style={{
-              // 座標整合性プロトコル：管理画面と完全に同一の正規化計算を適用
-              objectFit: "contain",
-              transform: `translate(${transform.x}%, ${transform.y}%) scale(${Math.max(0.01, 1 + transform.scale / 100)})`,
-              willChange: 'transform'
-            }}
-            unoptimized
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          />
-        ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center text-slate-200 gap-2">
-            <ImageOff className="h-12 w-12 opacity-10" />
-            <span className="text-[10px] font-black uppercase tracking-widest opacity-20">No Image</span>
-          </div>
-        )}
+        <Image
+          src={imageUrl}
+          alt={article.title}
+          fill
+          className="transition-transform duration-500 ease-out"
+          style={{
+            objectFit: "contain",
+            transform: `translate(${transform.x}%, ${transform.y}%) scale(${Math.max(0.01, 1 + transform.scale / 100)})`,
+            willChange: 'transform'
+          }}
+          unoptimized
+          data-ai-hint="university building"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        />
         <div className="absolute top-6 left-6">
           <Badge className="font-black px-4 py-1.5 shadow-lg border-none rounded-full text-[10px] uppercase tracking-wider bg-primary">
             {CATEGORY_LABELS[article.categoryId] || article.categoryId}

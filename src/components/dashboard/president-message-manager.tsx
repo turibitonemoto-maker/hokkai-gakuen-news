@@ -77,7 +77,7 @@ export function PresidentMessageManager() {
           toast({ variant: "destructive", title: "アクセス拒否" });
         }, 800);
       } else {
-        toast({ variant: "destructive", title: "不いち" });
+        toast({ variant: "destructive", title: "パスワードが正しくありません" });
       }
     }
   };
@@ -177,8 +177,8 @@ export function PresidentMessageManager() {
         <Card className="shadow-2xl border-none bg-white rounded-3xl overflow-hidden">
           <CardHeader className="text-center pt-10 pb-6 bg-slate-50/50">
             <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"><Lock className="h-10 w-10 text-primary" /></div>
-            <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">会長挨拶 編集</CardTitle>
-            <p className="text-sm font-bold text-slate-500 px-6 mt-2">編集には認証が必要です。</p>
+            <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">北海学園大学新聞</CardTitle>
+            <CardDescription className="text-sm font-bold text-slate-500 px-6 mt-2">編集には認証が必要です。</CardDescription>
           </CardHeader>
           <CardContent className="p-10 pt-4 space-y-6">
             <div className="space-y-2">
