@@ -144,7 +144,11 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
     const file = e.target.files?.[0];
     if (!file || !file.type.startsWith('image/') || !editor) return;
     const blobUrl = URL.createObjectURL(file);
-    setEditorFiles(prev => new Map(prev).set(blobUrl, file));
+    setEditorFiles(prev => {
+      const next = new Map(prev);
+      next.set(blobUrl, file);
+      return next;
+    });
     editor.chain().focus().setImage({ src: blobUrl }).run();
     if (e.target) e.target.value = "";
   }, [editor]);
@@ -163,7 +167,10 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
     formData.append("file", file);
     formData.append("folder", folder);
     const res = await fetch("/api/upload", { method: "POST", body: formData });
-    if (!res.ok) throw new Error("アップロードに失敗しました");
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error || "アップロードに失敗しました");
+    }
     const data = await res.json();
     return data.secure_url;
   }
@@ -181,22 +188,41 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
       const blobRegex = /src="(blob:[^"]+)"/g;
       let match;
       const uploadedMap = new Map<string, string>();
+      
+      // BLOB URLをすべて抽出してCloudinaryにアップロード
+      const blobsInContent: string[] = [];
       while ((match = blobRegex.exec(finalContent)) !== null) {
-        const file = editorFiles.get(match[1]);
+        blobsInContent.push(match[1]);
+      }
+
+      for (const blobUrl of blobsInContent) {
+        const file = editorFiles.get(blobUrl);
         if (file) {
           const cloudUrl = await uploadToCloudinary(file, folderPath);
-          uploadedMap.set(match[1], cloudUrl);
+          uploadedMap.set(blobUrl, cloudUrl);
         }
       }
-      uploadedMap.forEach((cloud, blob) => finalContent = finalContent.split(blob).join(cloud));
 
-      const data = { ...values, content: finalContent, mainImageUrl: finalMainImageUrl, updatedAt: serverTimestamp(), updatedBy: user?.email || "unknown" };
+      // 本文内のURLを実体に差し替え
+      uploadedMap.forEach((cloud, blob) => {
+        finalContent = finalContent.split(blob).join(cloud);
+      });
+
+      const data = { 
+        ...values, 
+        content: finalContent, 
+        mainImageUrl: finalMainImageUrl, 
+        updatedAt: serverTimestamp(), 
+        updatedBy: user?.email || "unknown" 
+      };
+
       if (article?.id) setDocumentNonBlocking(doc(firestore, "articles", article.id), data, { merge: true });
       else addDocumentNonBlocking(collection(firestore, "articles"), { ...data, createdAt: serverTimestamp(), viewCount: 0 });
 
       toast({ title: "保存しました" });
       onSuccess();
     } catch (error: any) {
+      console.error("Save Error:", error);
       toast({ variant: "destructive", title: "失敗", description: error.message });
     } finally {
       setIsSaving(false);
@@ -261,7 +287,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
               </div>
             </div>
           )}
-          <textarea className="w-full text-4xl md:text-5xl font-black border-none focus:ring-0 resize-none px-0 leading-tight placeholder:text-slate-200 bg-transparent outline-none" placeholder="記事タイトル" rows={1} value={form.watch("title")} onChange={(e) => { form.setValue("title", e.target.value); e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }} />
+          <textarea className="w-full text-4xl md:text-5xl font-black border-none focus:ring-0 resize-none px-0 leading-tight placeholder:text-slate-200 bg-transparent outline-none" placeholder="記事タイトル" rows={1} value={form.watch("title")} onChange={(e: any) => { form.setValue("title", e.target.value); e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }} />
           <div className="mt-8">{editor && <div className="prose-container relative"><EditorContent editor={editor} /></div>}</div>
         </div>
       </main>

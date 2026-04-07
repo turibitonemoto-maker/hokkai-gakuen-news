@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     const folder = rawFolder && /^[a-zA-Z0-9_\-/]+$/.test(rawFolder) ? rawFolder : "newspaper_archive";
 
     if (!file) {
-      return NextResponse.json({ error: "No file" }, { status: 400 });
+      return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
     const arrayBuffer = await file.arrayBuffer();

@@ -98,7 +98,11 @@ export function AboutManager() {
     const file = e.target.files?.[0];
     if (!file || !file.type.startsWith('image/')) return;
     const blobUrl = URL.createObjectURL(file);
-    setEditorFiles(prev => new Map(prev).set(blobUrl, file));
+    setEditorFiles(prev => {
+      const next = new Map(prev);
+      next.set(blobUrl, file);
+      return next;
+    });
     editor?.chain().focus().setImage({ src: blobUrl }).run();
     if (e.target) e.target.value = "";
   }, [editor]);
@@ -120,7 +124,9 @@ export function AboutManager() {
       let match;
       const uploadedUrlsMap = new Map<string, string>();
       const blobUrls: string[] = [];
-      while ((match = blobRegex.exec(finalContent)) !== null) blobUrls.push(match[1]);
+      while ((match = blobRegex.exec(finalContent)) !== null) {
+        blobUrls.push(match[1]);
+      }
 
       for (const blobUrl of blobUrls) {
         const file = editorFiles.get(blobUrl);
