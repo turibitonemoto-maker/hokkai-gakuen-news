@@ -77,7 +77,7 @@ export function PresidentMessageManager() {
           toast({ variant: "destructive", title: "アクセス拒否" });
         }, 800);
       } else {
-        toast({ variant: "destructive", title: "不一致" });
+        toast({ variant: "destructive", title: "不いち" });
       }
     }
   };

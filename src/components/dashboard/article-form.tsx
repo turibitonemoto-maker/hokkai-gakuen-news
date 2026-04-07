@@ -169,7 +169,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
     const res = await fetch("/api/upload", { method: "POST", body: formData });
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.error || "アップロードに失敗しました");
+      throw new Error(errData.error || "アップロードに失敗しました（10MB超過の可能性あり）");
     }
     const data = await res.json();
     return data.secure_url;

@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 
 /**
  * 高精細画像の自動圧縮 ＆ 最適化アップロード API
+ * quality: "auto" により資源を保護します。
  */
 export async function POST(request: Request) {
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME?.trim();
@@ -29,7 +30,7 @@ export async function POST(request: Request) {
     const file = formData.get("file") as File;
     const rawFolder = formData.get("folder") as string;
     
-    // 常に英数字ベースの安全なフォルダ名を使用
+    // 安全な英数字フォルダ名を使用
     const folder = rawFolder && /^[a-zA-Z0-9_\-/]+$/.test(rawFolder) ? rawFolder : "newspaper_archive";
 
     if (!file) {
@@ -44,9 +45,9 @@ export async function POST(request: Request) {
         { 
           folder, 
           resource_type: "auto",
-          // 高精細を維持しつつ自動圧縮
+          // 高精細を維持しつつ自動圧縮（資源保護）
           quality: "auto",
-          // WebPなどの次世代形式へ自動変換
+          // 次世代形式へ自動変換
           fetch_format: "auto",
           flags: "attachment:false"
         },

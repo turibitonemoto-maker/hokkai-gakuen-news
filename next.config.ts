@@ -1,3 +1,4 @@
+
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
@@ -8,7 +9,7 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // 大容量画像のアップロードを許可
+  // クラウド資源保護のため10MBに制限
   experimental: {
     serverActions: {
       bodySizeLimit: '10mb',
