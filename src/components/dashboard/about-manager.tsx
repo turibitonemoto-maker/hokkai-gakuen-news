@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useDoc, useFirestore, useMemoFirebase, useUser } from "@/firebase";
@@ -29,8 +28,7 @@ export function AboutManager() {
   const { toast } = useToast();
 
   const handleUnlock = () => {
-    const correctPassword = "zansin";
-    if (password === correctPassword) {
+    if (password === "zansin") {
       setIsUnlocked(true);
       toast({ title: "認証成功" });
     } else {

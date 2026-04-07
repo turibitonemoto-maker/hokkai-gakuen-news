@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -35,22 +34,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   Opinion: "オピニオン",
 };
 
-const getTagColor = (tag: string, isActive: boolean) => {
-  const colorMap: Record<string, string> = {
-    "キャンパス": "bg-blue-500",
-    "イベント": "bg-emerald-500",
-    "インタビュー": "bg-violet-500",
-    "スポーツ": "bg-amber-500",
-    "コラム": "bg-rose-500",
-    "オピニオン": "bg-indigo-500",
-  };
-
-  if (!isActive) return "bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200 hover:text-slate-600";
-
-  const baseColor = colorMap[tag] || "bg-primary";
-  return `${baseColor} text-white border-transparent shadow-md ring-2 ring-offset-1 ring-primary/20`;
-};
-
 export function ArticleManager() {
   const router = useRouter();
   const [articleToDelete, setArticleToDelete] = useState<any>(null);
@@ -70,18 +53,6 @@ export function ArticleManager() {
   }, [firestore, user]);
 
   const { data: allArticles, isLoading, error } = useCollection(articlesQuery);
-
-  const allTags = useMemo(() => {
-    const tagsSet = new Set<string>();
-    Object.values(CATEGORY_LABELS).forEach(label => tagsSet.add(label));
-    allArticles?.forEach(article => {
-      if (article.categoryId === "Viewer") return;
-      article.tags?.forEach((tag: string) => {
-        if (tag && tag.trim()) tagsSet.add(tag.trim());
-      });
-    });
-    return Array.from(tagsSet);
-  }, [allArticles]);
 
   const filteredArticles = useMemo(() => {
     if (!allArticles) return [];
@@ -167,40 +138,6 @@ export function ArticleManager() {
         </Alert>
       )}
 
-      <Card className="shadow-sm border-slate-200 rounded-2xl overflow-hidden bg-white">
-        <CardHeader className="pb-3 border-b bg-slate-50/30">
-          <CardTitle className="text-xs font-black flex items-center gap-2 text-slate-500 uppercase tracking-widest">
-            <Filter className="h-4 w-4" />
-            フィルター
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-4">
-          <div className="flex flex-wrap gap-2">
-            {allTags.map(tag => {
-              const isActive = selectedTags.includes(tag);
-              return (
-                <button
-                  key={tag}
-                  onClick={() => toggleTag(tag)}
-                  className={cn(
-                    "inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black border transition-all duration-200 transform hover:translate-y-[-1px]",
-                    getTagColor(tag, isActive)
-                  )}
-                >
-                  <TagIcon className={cn("h-3 w-3", isActive ? "text-white" : "text-slate-400")} />
-                  {tag}
-                </button>
-              );
-            })}
-            {selectedTags.length > 0 && (
-              <Button variant="ghost" size="sm" onClick={() => setSelectedTags([])} className="text-xs text-slate-400 font-bold hover:text-slate-600 h-auto p-2">
-                リセット
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
       <Card className="shadow-sm overflow-hidden border-slate-200 rounded-2xl bg-white">
         <div className="overflow-x-auto">
           <CardContent className="p-0">
@@ -213,7 +150,7 @@ export function ArticleManager() {
                     <TableHead className="w-[180px] font-black text-xs uppercase tracking-widest">公開状態</TableHead>
                     <TableHead className="min-w-[300px] font-black text-xs uppercase tracking-widest">タイトル</TableHead>
                     <TableHead className="min-w-[120px] font-black text-xs uppercase tracking-widest">公開日</TableHead>
-                    <TableHead className="text-right font-black text-xs uppercase tracking-widest">操作</TableHead>
+                    <TableHead className="text-right font-black text-xs uppercase tracking-widest px-8">操作</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -244,7 +181,7 @@ export function ArticleManager() {
                       <TableCell className="text-sm font-bold text-slate-500">
                         {new Date(article.publishDate).toLocaleDateString("ja-JP")}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right px-8">
                         <div className="flex justify-end gap-1">
                           <Button variant="ghost" size="icon" onClick={() => router.push(`/admin/edit/${article.id}`)} className="rounded-full hover:bg-primary/10 hover:text-primary">
                             <Pencil className="h-4 w-4" />

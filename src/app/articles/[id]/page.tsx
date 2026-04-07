@@ -1,5 +1,4 @@
-
-'use client';
+"use client";
 
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc, updateDoc, increment } from 'firebase/firestore';
@@ -8,14 +7,13 @@ import { useEffect, useState, useRef } from 'react';
 import { PublicHeader } from '@/components/site/public-header';
 import { PublicFooter } from '@/components/site/public-footer';
 import { SidebarContent } from '@/components/site/sidebar-content';
-import { Loader2, Calendar, Eye, Tag as TagIcon, ArrowLeft } from 'lucide-react';
+import { Loader2, Calendar, Tag as TagIcon, ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import DOMPurify from 'dompurify';
 import { Button } from '@/components/ui/button';
 
-// 最高司令官提供のデフォルト画像（北海学園ビルディング）
 const DEFAULT_IMAGE = "https://picsum.photos/seed/hokkai1/1200/800";
 
 export default function ArticleDetailPage() {

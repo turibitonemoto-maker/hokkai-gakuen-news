@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -16,7 +15,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   Viewer: "紙面ビューアー",
 };
 
-// 最高司令官提供のデフォルト画像（北海学園ビルディング）
+// 最高司令官提供のデフォルト画像
 const DEFAULT_IMAGE = "https://picsum.photos/seed/hokkai1/1200/800";
 
 function stripHtmlTags(html: string) {
