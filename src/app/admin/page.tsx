@@ -74,7 +74,7 @@ export default function AdminDashboard() {
           </p>
         </div>
         
-        <div className="flex flex-wrap gap-2">
+        <div className="flex wrap gap-2">
           <Badge variant="outline" className="bg-white border-blue-200 text-blue-700 px-3 py-1 flex gap-2 items-center shadow-sm">
             <UserCheck className="h-3 w-3" />
             管理者: {user?.email}

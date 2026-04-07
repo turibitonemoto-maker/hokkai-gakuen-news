@@ -94,7 +94,7 @@ function SidebarContent({
         <Button 
           variant="ghost" 
           className="w-full text-slate-400 hover:text-white hover:bg-slate-800 justify-start gap-3 px-3 rounded-xl h-12"
-          onClick={handleLogout}
+          onClick={onLogout}
         >
           <LogOut className="h-5 w-5" />
           {(isSidebarOpen || isMobile) && <span className="text-sm font-bold">ログアウト</span>}
@@ -151,7 +151,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="min-h-screen bg-slate-50 flex font-body overflow-x-hidden">
       {!isMobile && (
         <aside className={cn("bg-[#1e293b] text-slate-300 transition-all duration-300 flex flex-col fixed inset-y-0 z-50", isSidebarOpen ? "w-64" : "w-20")}>
-          <SidebarContent pathname={pathname} isSidebarOpen={isSidebarOpen} onLogout={handleLogout} isMobile={false} />
+          <SidebarContent 
+            pathname={pathname} 
+            isSidebarOpen={isSidebarOpen} 
+            onLogout={handleLogout} 
+            isMobile={false} 
+          />
         </aside>
       )}
 
@@ -159,7 +164,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
           <SheetContent side="left" className="p-0 w-72 bg-[#1e293b] border-none">
             <SheetHeader className="sr-only"><SheetTitle>ナビゲーションメニュー</SheetTitle></SheetHeader>
-            <SidebarContent pathname={pathname} isSidebarOpen={true} isMobile={true} onLogout={handleLogout} onCloseMobile={() => setIsMobileMenuOpen(false)} />
+            <SidebarContent 
+              pathname={pathname} 
+              isSidebarOpen={true} 
+              isMobile={true} 
+              onLogout={handleLogout} 
+              onCloseMobile={() => setIsMobileMenuOpen(false)} 
+            />
           </SheetContent>
         </Sheet>
       )}

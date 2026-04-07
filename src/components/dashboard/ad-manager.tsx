@@ -100,7 +100,7 @@ export function AdManager() {
         <Card className="shadow-2xl border-none bg-white rounded-3xl overflow-hidden">
           <CardHeader className="text-center pt-10 pb-6 bg-slate-50/50">
             <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"><Lock className="h-10 w-10 text-primary" /></div>
-            <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">広告管理</CardTitle>
+            <CardTitle className="text-2xl font-black text-slate-800 tracking-tight">北海学園大学新聞</CardTitle>
             <CardDescription className="text-sm font-bold text-slate-500 px-6 mt-2">編集には認証が必要です。</CardDescription>
           </CardHeader>
           <CardContent className="p-10 pt-4 space-y-6">

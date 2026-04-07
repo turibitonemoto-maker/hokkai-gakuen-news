@@ -16,7 +16,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   Viewer: "紙面ビューアー",
 };
 
-// 最高司令官提供のデフォルト画像
 const DEFAULT_IMAGE = "https://picsum.photos/seed/hgu-campus/1200/800";
 
 function stripHtmlTags(html: string) {
