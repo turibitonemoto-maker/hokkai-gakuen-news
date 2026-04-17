@@ -18,7 +18,6 @@ import {
   Loader2, 
   Bold, 
   Italic, 
-  List, 
   Maximize, 
   Trash2, 
   Plus, 
@@ -26,7 +25,8 @@ import {
   ArrowLeft,
   AlignCenter,
   Quote,
-  Check
+  Check,
+  UserPen
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditor, EditorContent, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react';
@@ -81,6 +81,7 @@ const CustomResizableImage = ImageExtension.extend({
 
 const articleSchema = z.object({
   title: z.string().min(1, "タイトルを入力してください"),
+  authorName: z.string().optional().or(z.literal("")),
   articleType: z.literal("Standard"),
   content: z.string().min(1, "本文を入力してください"),
   categoryId: z.enum(["Campus", "Event", "Interview", "Sports", "Column", "Opinion"]),
@@ -109,6 +110,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
     resolver: zodResolver(articleSchema),
     defaultValues: {
       title: article?.title || "",
+      authorName: article?.authorName || "",
       articleType: "Standard",
       content: article?.content || "",
       categoryId: (article?.categoryId === "Viewer" ? "Campus" : article?.categoryId) || "Campus",
@@ -273,6 +275,9 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
                 <div className="space-y-6">
                   <FormField control={form.control} name="categoryId" render={({ field }) => (
                     <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest">カテゴリー</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-12 rounded-xl font-bold"><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="Campus">キャンパス</SelectItem><SelectItem value="Event">イベント</SelectItem><SelectItem value="Interview">インタビュー</SelectItem><SelectItem value="Sports">スポーツ</SelectItem><SelectItem value="Column">コラム</SelectItem><SelectItem value="Opinion">オピニオン</SelectItem></SelectContent></Select></FormItem>
+                  )} />
+                  <FormField control={form.control} name="authorName" render={({ field }) => (
+                    <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest">記者名</FormLabel><FormControl><div className="relative"><UserPen className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"/><Input placeholder="執筆者名" className="pl-10 h-12 rounded-xl font-bold" {...field} /></div></FormControl></FormItem>
                   )} />
                   <FormField control={form.control} name="publishDate" render={({ field }) => (
                     <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest">公開日</FormLabel><FormControl><Input type="date" className="h-12 rounded-xl font-bold" {...field} /></FormControl></FormItem>

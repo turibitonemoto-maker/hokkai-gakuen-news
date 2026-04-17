@@ -1,11 +1,12 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc, orderBy, query, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Loader2, Filter, Tag as TagIcon, AlertCircle, RefreshCw } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Plus, Pencil, Trash2, Loader2, RefreshCw } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -23,7 +24,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { cn, extractCloudinaryUrls } from "@/lib/utils";
+import { AlertCircle } from "lucide-react";
+import { extractCloudinaryUrls } from "@/lib/utils";
 
 const CATEGORY_LABELS: Record<string, string> = {
   Campus: "キャンパス",
@@ -37,7 +39,6 @@ const CATEGORY_LABELS: Record<string, string> = {
 export function ArticleManager() {
   const router = useRouter();
   const [articleToDelete, setArticleToDelete] = useState<any>(null);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
   
   const firestore = useFirestore();
@@ -56,22 +57,8 @@ export function ArticleManager() {
 
   const filteredArticles = useMemo(() => {
     if (!allArticles) return [];
-    const baseArticles = allArticles.filter(a => a.categoryId !== "Viewer");
-    if (selectedTags.length === 0) return baseArticles;
-    return baseArticles.filter(article => {
-      const articleTags = [
-        CATEGORY_LABELS[article.categoryId] || article.categoryId,
-        ...(article.tags || [])
-      ];
-      return selectedTags.every(tag => articleTags.includes(tag));
-    });
-  }, [allArticles, selectedTags]);
-
-  const toggleTag = (tag: string) => {
-    setSelectedTags(prev => 
-      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
-    );
-  };
+    return allArticles.filter(a => a.categoryId !== "Viewer");
+  }, [allArticles]);
 
   const handleTogglePublish = (article: any) => {
     if (!firestore) return;

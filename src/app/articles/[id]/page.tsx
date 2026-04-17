@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
@@ -7,7 +8,7 @@ import { useEffect, useState, useRef } from 'react';
 import { PublicHeader } from '@/components/site/public-header';
 import { PublicFooter } from '@/components/site/public-footer';
 import { SidebarContent } from '@/components/site/sidebar-content';
-import { Loader2, Calendar, Tag as TagIcon, ArrowLeft } from 'lucide-react';
+import { Loader2, Calendar, Tag as TagIcon, ArrowLeft, UserPen } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
@@ -68,6 +69,7 @@ export default function ArticleDetailPage() {
 
   const imageUrl = article.mainImageUrl && article.mainImageUrl.trim() !== "" ? article.mainImageUrl : DEFAULT_IMAGE;
   const transform = article.mainImageTransform || { scale: 0, x: 0, y: 0 };
+  const reporter = article.authorName || "北海学園大学新聞会";
 
   return (
     <div className="min-h-screen bg-slate-50 font-body">
@@ -99,12 +101,13 @@ export default function ArticleDetailPage() {
               </div>
 
               <div className="p-8 md:p-16">
-                <div className="flex flex-wrap items-center gap-4 mb-8">
+                <div className="flex flex-wrap items-center gap-6 mb-8">
                   <Badge className="bg-primary text-white font-black px-4 py-1 rounded-full text-[10px] uppercase tracking-wider">
                     {article.categoryId}
                   </Badge>
-                  <div className="flex items-center gap-4 text-xs font-bold text-slate-400">
+                  <div className="flex items-center gap-6 text-xs font-bold text-slate-400">
                     <span className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> {article.publishDate}</span>
+                    <span className="flex items-center gap-1.5 text-primary"><UserPen className="h-3.5 w-3.5" /> 記者: {reporter}</span>
                   </div>
                 </div>
 

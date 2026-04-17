@@ -8,6 +8,7 @@
       "properties": {
         "id": { "type": "string" },
         "title": { "type": "string" },
+        "authorName": { "type": "string", "description": "記事の執筆記者名" },
         "articleType": { "type": "string", "enum": ["Standard", "Note"] },
         "content": { "type": "string" },
         "imageCaption": { "type": "string" },

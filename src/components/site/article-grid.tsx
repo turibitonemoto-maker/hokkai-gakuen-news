@@ -1,9 +1,10 @@
+
 "use client";
 
 import Link from 'next/link';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, ArrowRight } from 'lucide-react';
+import { Calendar, ArrowRight, UserPen } from 'lucide-react';
 
 const CATEGORY_LABELS: Record<string, string> = {
   Campus: "キャンパス",
@@ -48,6 +49,7 @@ function ArticleCard({ article }: { article: any }) {
   const imageUrl = article.mainImageUrl && article.mainImageUrl.trim() !== "" ? article.mainImageUrl : DEFAULT_IMAGE;
   const textSnippet = stripHtmlTags(article.content || "");
   const transform = article.mainImageTransform || { scale: 0, x: 0, y: 0 };
+  const reporter = article.authorName || "北海学園大学新聞会";
 
   return (
     <div className="group bg-white rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-slate-100 flex flex-col h-full">
@@ -74,9 +76,15 @@ function ArticleCard({ article }: { article: any }) {
       </div>
 
       <div className="p-8 md:p-10 flex-1 flex flex-col">
-        <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 mb-4 uppercase tracking-widest">
-          <Calendar className="h-3.5 w-3.5" />
-          {article.publishDate}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+            <Calendar className="h-3.5 w-3.5" />
+            {article.publishDate}
+          </div>
+          <div className="flex items-center gap-1.5 text-[9px] font-black text-primary uppercase tracking-tight">
+            <UserPen className="h-3 w-3" />
+            {reporter}
+          </div>
         </div>
         
         <h3 className="text-2xl font-black text-slate-800 mb-5 line-clamp-2 leading-tight group-hover:text-primary transition-colors tracking-tighter">
