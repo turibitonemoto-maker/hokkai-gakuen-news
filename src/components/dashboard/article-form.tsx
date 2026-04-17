@@ -60,7 +60,13 @@ const NoteImageComponent = ({ node, updateAttributes, selected, deleteNode }: an
           </div>
         )}
       </div>
-      <input type="text" placeholder="キャプション..." value={node.attrs.caption || ''} onChange={(e) => updateAttributes({ caption: e.target.value })} className="w-full mt-3 text-center text-sm font-bold text-slate-400 bg-transparent outline-none" />
+      <input 
+        type="text" 
+        placeholder="キャプション..." 
+        value={node.attrs.caption || ''} 
+        onChange={(e) => updateAttributes({ caption: e.target.value })} 
+        className="w-full mt-3 text-center text-sm font-bold text-slate-400 bg-transparent outline-none" 
+      />
     </NodeViewWrapper>
   );
 };
@@ -69,13 +75,25 @@ const CustomResizableImage = ImageExtension.extend({
   addAttributes() {
     return {
       ...this.parent?.(),
-      width: { default: '60%', renderHTML: attr => ({ style: `width: ${attr.width}; height: auto;` }) },
-      caption: { default: '', renderHTML: attr => ({ 'data-caption': attr.caption }) },
+      width: { 
+        default: '60%', 
+        renderHTML: attr => ({ style: `width: ${attr.width}; height: auto;` }) 
+      },
+      caption: { 
+        default: '', 
+        parseHTML: element => element.getAttribute('data-caption') || element.querySelector('img')?.getAttribute('data-caption'),
+        renderHTML: attr => ({ 'data-caption': attr.caption }) 
+      },
     };
   },
   addNodeView() { return ReactNodeViewRenderer(NoteImageComponent); },
   renderHTML({ HTMLAttributes }) {
-    return ['div', { class: 'resizable-image-container' }, ['img', { ...HTMLAttributes, class: 'mx-auto' }], ['span', { class: 'image-caption-text' }, HTMLAttributes['data-caption'] || '']];
+    return [
+      'div', 
+      { class: 'resizable-image-container' }, 
+      ['img', { ...HTMLAttributes, class: 'mx-auto' }], 
+      ['span', { class: 'image-caption-text' }, HTMLAttributes['data-caption'] || '']
+    ];
   },
 });
 
