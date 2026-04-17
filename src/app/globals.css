@@ -78,9 +78,9 @@
   @apply border-l-4 border-primary/20 pl-6 italic text-slate-500 my-6;
 }
 
-/* 本文内画像コンテナ */
+/* 本文内画像コンテナ ＆ 報道キャプション装飾 */
 .resizable-image-container {
-  @apply relative inline-block my-8 max-w-full text-center;
+  @apply relative inline-block my-10 max-w-full text-center;
   display: block;
   margin-left: auto;
   margin-right: auto;
@@ -96,9 +96,9 @@
   @apply ring-4 ring-primary/50 shadow-2xl;
 }
 
-/* キャプション表示スタイル（マルチライン対応） */
+/* 報道用キャプション・スタイル（Deneb準拠） */
 .image-caption-text {
-  @apply mt-3 text-sm font-bold text-slate-400 text-center block max-w-2xl mx-auto break-words whitespace-pre-wrap leading-relaxed;
+  @apply mt-4 p-4 text-sm font-bold text-slate-500 text-left block max-w-2xl mx-auto break-words whitespace-pre-wrap leading-relaxed border-l-4 border-primary/30 bg-slate-100/50 rounded-r-xl;
 }
 
 .page-fade-in {

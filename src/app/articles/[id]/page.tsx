@@ -99,6 +99,15 @@ export default function ArticleDetailPage() {
                 />
               </div>
 
+              {/* 報道用キャプション直通回路 (mainImageCaption) */}
+              {article.mainImageCaption && (
+                <div className="px-8 md:px-16 pt-8">
+                  <p className="image-caption-text">
+                    {article.mainImageCaption}
+                  </p>
+                </div>
+              )}
+
               <div className="p-8 md:p-16">
                 <div className="flex flex-wrap items-center gap-6 mb-8">
                   <Badge className="bg-primary text-white font-black px-4 py-1 rounded-full text-[10px] uppercase tracking-wider">

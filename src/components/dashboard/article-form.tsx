@@ -26,7 +26,8 @@ import {
   AlignCenter,
   Quote,
   Check,
-  UserPen
+  UserPen,
+  FileText
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditor, EditorContent, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react';
@@ -40,6 +41,7 @@ import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
@@ -70,7 +72,7 @@ const NoteImageComponent = ({ node, updateAttributes, selected, deleteNode }: an
           e.target.style.height = e.target.scrollHeight + 'px';
         }} 
         rows={1}
-        className="w-full mt-3 text-center text-sm font-bold text-slate-400 bg-transparent outline-none resize-none overflow-hidden leading-relaxed block max-w-2xl mx-auto" 
+        className="w-full mt-4 p-4 text-sm font-bold text-slate-500 bg-slate-100/50 outline-none resize-none overflow-hidden leading-relaxed block max-w-2xl mx-auto border-l-4 border-primary/30 rounded-r-xl" 
       />
     </NodeViewWrapper>
   );
@@ -93,7 +95,6 @@ const CustomResizableImage = ImageExtension.extend({
   },
   addNodeView() { return ReactNodeViewRenderer(NoteImageComponent); },
   renderHTML({ HTMLAttributes }) {
-    // 保存時のHTMLから冗長なテキストノードを排除
     return [
       'div', 
       { class: 'resizable-image-container', 'data-caption': HTMLAttributes['data-caption'] }, 
@@ -122,6 +123,7 @@ const articleSchema = z.object({
   authorName: z.string().optional().or(z.literal("")),
   articleType: z.literal("Standard"),
   content: z.string().min(1, "本文を入力してください"),
+  mainImageCaption: z.string().optional().or(z.literal("")),
   categoryId: z.enum(["Campus", "Event", "Interview", "Sports", "Column", "Opinion"]),
   publishDate: z.string(),
   mainImageUrl: z.string().optional().or(z.literal("")),
@@ -151,6 +153,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
       authorName: article?.authorName || "",
       articleType: "Standard",
       content: article?.content || "",
+      mainImageCaption: article?.mainImageCaption || "",
       categoryId: (article?.categoryId === "Viewer" ? "Campus" : article?.categoryId) || "Campus",
       publishDate: article?.publishDate || new Date().toISOString().split("T")[0],
       mainImageUrl: article?.mainImageUrl || "",
@@ -334,11 +337,24 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
       <main className="flex-1 overflow-y-auto pb-40">
         <div className="max-w-3xl mx-auto px-6 pt-12">
           {mainImagePreview && (
-            <div className="relative aspect-[21/9] w-full rounded-3xl overflow-hidden border-4 border-white shadow-2xl bg-slate-50 mb-12">
-              <Image src={mainImagePreview} alt="" fill className="object-cover" style={{ transform: `translate(${transform.x}%, ${transform.y}%) scale(${Math.max(0.01, 1 + transform.scale / 100)})` }} unoptimized />
-              <div className="absolute top-4 right-4 flex gap-2">
-                <Popover><PopoverTrigger asChild><Button variant="secondary" size="icon" className="rounded-full shadow-lg"><Maximize className="h-4 w-4" /></Button></PopoverTrigger><PopoverContent className="w-80 p-6 rounded-3xl"><h4 className="text-[10px] font-black uppercase mb-4">調整</h4><div className="space-y-4"><div><label className="text-[9px] font-bold">ズーム</label><Slider min={-500} max={500} step={1} value={[transform.scale]} onValueChange={([v]) => form.setValue("mainImageTransform.scale", v)} /></div><div><label className="text-[9px] font-bold">水平</label><Slider min={-500} max={500} step={1} value={[transform.x]} onValueChange={([v]) => form.setValue("mainImageTransform.x", v)} /></div><div><label className="text-[9px] font-bold">垂直</label><Slider min={-500} max={500} step={1} value={[transform.y]} onValueChange={([v]) => form.setValue("mainImageTransform.y", v)} /></div><Button variant="ghost" className="w-full text-[10px]" onClick={() => form.setValue("mainImageTransform", { scale: 0, x: 0, y: 0 })}>リセット</Button></div></PopoverContent></Popover>
-                <Button variant="destructive" size="icon" className="rounded-full" onClick={() => { setMainImagePreview(""); setMainImageFile(null); form.setValue("mainImageUrl", ""); }}><Trash2 className="h-4 w-4" /></Button>
+            <div className="space-y-4 mb-12">
+              <div className="relative aspect-[21/9] w-full rounded-3xl overflow-hidden border-4 border-white shadow-2xl bg-slate-50">
+                <Image src={mainImagePreview} alt="" fill className="object-cover" style={{ transform: `translate(${transform.x}%, ${transform.y}%) scale(${Math.max(0.01, 1 + transform.scale / 100)})` }} unoptimized />
+                <div className="absolute top-4 right-4 flex gap-2">
+                  <Popover><PopoverTrigger asChild><Button variant="secondary" size="icon" className="rounded-full shadow-lg"><Maximize className="h-4 w-4" /></Button></PopoverTrigger><PopoverContent className="w-80 p-6 rounded-3xl"><h4 className="text-[10px] font-black uppercase mb-4">調整</h4><div className="space-y-4"><div><label className="text-[9px] font-bold">ズーム</label><Slider min={-500} max={500} step={1} value={[transform.scale]} onValueChange={([v]) => form.setValue("mainImageTransform.scale", v)} /></div><div><label className="text-[9px] font-bold">水平</label><Slider min={-500} max={500} step={1} value={[transform.x]} onValueChange={([v]) => form.setValue("mainImageTransform.x", v)} /></div><div><label className="text-[9px] font-bold">垂直</label><Slider min={-500} max={500} step={1} value={[transform.y]} onValueChange={([v]) => form.setValue("mainImageTransform.y", v)} /></div><Button variant="ghost" className="w-full text-[10px]" onClick={() => form.setValue("mainImageTransform", { scale: 0, x: 0, y: 0 })}>リセット</Button></div></PopoverContent></Popover>
+                  <Button variant="destructive" size="icon" className="rounded-full" onClick={() => { setMainImagePreview(""); setMainImageFile(null); form.setValue("mainImageUrl", ""); }}><Trash2 className="h-4 w-4" /></Button>
+                </div>
+              </div>
+              <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 flex items-start gap-4">
+                <FileText className="h-5 w-5 text-primary mt-1 shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">メイン画像報道キャプション</label>
+                  <Textarea 
+                    placeholder="報道用解説文を入力（Denebサイトへ直接反映されます）" 
+                    className="min-h-[80px] bg-white rounded-xl border-slate-100 font-bold text-sm leading-relaxed"
+                    {...form.register("mainImageCaption")}
+                  />
+                </div>
               </div>
             </div>
           )}
