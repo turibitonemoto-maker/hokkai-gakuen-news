@@ -121,7 +121,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   }, [isMobile]);
 
-  const handleLogout = async () => {
+  const handleLogoutAction = async () => {
     await signOut(auth);
     router.push('/admin');
   };
@@ -154,7 +154,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <SidebarContent 
             pathname={pathname} 
             isSidebarOpen={isSidebarOpen} 
-            onLogout={handleLogout} 
+            onLogout={handleLogoutAction} 
             isMobile={false} 
           />
         </aside>
@@ -173,7 +173,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               pathname={pathname} 
               isSidebarOpen={true} 
               isMobile={true} 
-              onLogout={handleLogout} 
+              onLogout={handleLogoutAction} 
               onCloseMobile={() => setIsMobileMenuOpen(false)} 
             />
           </SheetContent>
