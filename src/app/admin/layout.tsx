@@ -163,7 +163,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {isMobile && (
         <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
           <SheetContent side="left" className="p-0 w-72 bg-[#1e293b] border-none">
-            <SheetHeader className="sr-only"><SheetTitle>ナビゲーションメニュー</SheetTitle></SheetHeader>
+            <SheetHeader className="p-6 border-b border-slate-700/50">
+              <SheetTitle className="flex items-center gap-3 text-white">
+                <Image src="/icon.png" alt="" width={24} height={24} />
+                北海学園大学新聞
+              </SheetTitle>
+            </SheetHeader>
             <SidebarContent 
               pathname={pathname} 
               isSidebarOpen={true} 

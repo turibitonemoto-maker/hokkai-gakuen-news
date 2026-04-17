@@ -93,6 +93,7 @@ const CustomResizableImage = ImageExtension.extend({
   },
   addNodeView() { return ReactNodeViewRenderer(NoteImageComponent); },
   renderHTML({ HTMLAttributes }) {
+    // 保存時のHTMLから冗長なテキストノードを排除
     return [
       'div', 
       { class: 'resizable-image-container', 'data-caption': HTMLAttributes['data-caption'] }, 
@@ -104,7 +105,14 @@ const CustomResizableImage = ImageExtension.extend({
     return [
       {
         tag: 'div.resizable-image-container',
+        getAttrs: element => ({
+          caption: (element as HTMLElement).getAttribute('data-caption') || '',
+          src: (element as HTMLElement).querySelector('img')?.getAttribute('src') || '',
+        }),
       },
+      {
+        tag: 'img[src]',
+      }
     ];
   },
 });
@@ -327,7 +335,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
         <div className="max-w-3xl mx-auto px-6 pt-12">
           {mainImagePreview && (
             <div className="relative aspect-[21/9] w-full rounded-3xl overflow-hidden border-4 border-white shadow-2xl bg-slate-50 mb-12">
-              <Image src={mainImagePreview} alt="" fill className="object-contain" style={{ transform: `translate(${transform.x}%, ${transform.y}%) scale(${Math.max(0.01, 1 + transform.scale / 100)})` }} unoptimized />
+              <Image src={mainImagePreview} alt="" fill className="object-cover" style={{ transform: `translate(${transform.x}%, ${transform.y}%) scale(${Math.max(0.01, 1 + transform.scale / 100)})` }} unoptimized />
               <div className="absolute top-4 right-4 flex gap-2">
                 <Popover><PopoverTrigger asChild><Button variant="secondary" size="icon" className="rounded-full shadow-lg"><Maximize className="h-4 w-4" /></Button></PopoverTrigger><PopoverContent className="w-80 p-6 rounded-3xl"><h4 className="text-[10px] font-black uppercase mb-4">調整</h4><div className="space-y-4"><div><label className="text-[9px] font-bold">ズーム</label><Slider min={-500} max={500} step={1} value={[transform.scale]} onValueChange={([v]) => form.setValue("mainImageTransform.scale", v)} /></div><div><label className="text-[9px] font-bold">水平</label><Slider min={-500} max={500} step={1} value={[transform.x]} onValueChange={([v]) => form.setValue("mainImageTransform.x", v)} /></div><div><label className="text-[9px] font-bold">垂直</label><Slider min={-500} max={500} step={1} value={[transform.y]} onValueChange={([v]) => form.setValue("mainImageTransform.y", v)} /></div><Button variant="ghost" className="w-full text-[10px]" onClick={() => form.setValue("mainImageTransform", { scale: 0, x: 0, y: 0 })}>リセット</Button></div></PopoverContent></Popover>
                 <Button variant="destructive" size="icon" className="rounded-full" onClick={() => { setMainImagePreview(""); setMainImageFile(null); form.setValue("mainImageUrl", ""); }}><Trash2 className="h-4 w-4" /></Button>

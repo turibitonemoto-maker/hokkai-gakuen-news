@@ -16,7 +16,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   Viewer: "紙面ビューアー",
 };
 
-// 最高司令官提供のデフォルト画像
 const DEFAULT_IMAGE = "https://picsum.photos/seed/hokkai1/1200/800";
 
 function stripHtmlTags(html: string) {
@@ -58,9 +57,8 @@ function ArticleCard({ article }: { article: any }) {
           src={imageUrl}
           alt={article.title}
           fill
-          className="transition-transform duration-500 ease-out"
+          className="transition-transform duration-500 ease-out object-cover"
           style={{
-            objectFit: "contain",
             transform: `translate(${transform.x}%, ${transform.y}%) scale(${Math.max(0.01, 1 + transform.scale / 100)})`,
             willChange: 'transform'
           }}

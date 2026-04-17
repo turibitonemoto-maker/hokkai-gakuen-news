@@ -34,7 +34,7 @@ export default function ArticleDetailPage() {
     if (article?.content) {
       setSanitizedContent(DOMPurify.sanitize(article.content, {
         ADD_TAGS: ['a', 'strong', 'em', 'u', 'br', 'p', 'h1', 'h2', 'ul', 'ol', 'li', 'blockquote', 'div', 'img', 'span'],
-        ADD_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'class', 'style', 'data-caption']
+        ADD_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'class', 'style', 'data-caption', 'width']
       }));
     }
     
@@ -89,9 +89,8 @@ export default function ArticleDetailPage() {
                   src={imageUrl} 
                   alt={article.title} 
                   fill 
-                  className="transition-transform duration-700"
+                  className="transition-transform duration-700 object-cover"
                   style={{
-                    objectFit: "contain",
                     transform: `translate(${transform.x}%, ${transform.y}%) scale(${Math.max(0.01, 1 + transform.scale / 100)})`,
                   }}
                   unoptimized
