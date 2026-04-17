@@ -96,9 +96,9 @@
   @apply ring-4 ring-primary/50 shadow-2xl;
 }
 
-/* キャプション表示スタイル */
+/* キャプション表示スタイル（マルチライン対応） */
 .image-caption-text {
-  @apply mt-3 text-sm font-bold text-slate-400 text-center block;
+  @apply mt-3 text-sm font-bold text-slate-400 text-center block max-w-2xl mx-auto break-words whitespace-pre-wrap leading-relaxed;
 }
 
 .page-fade-in {

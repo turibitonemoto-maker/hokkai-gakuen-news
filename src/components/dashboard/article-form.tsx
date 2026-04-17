@@ -46,6 +46,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const NoteImageComponent = ({ node, updateAttributes, selected, deleteNode }: any) => {
   const setWidth = (width: string) => updateAttributes({ width });
   const currentWidth = node.attrs.width || '60%';
+  
   return (
     <NodeViewWrapper className={cn("resizable-image-container group", selected && "is-selected")}>
       <div className="relative inline-block mx-auto" style={{ width: currentWidth }}>
@@ -60,12 +61,16 @@ const NoteImageComponent = ({ node, updateAttributes, selected, deleteNode }: an
           </div>
         )}
       </div>
-      <input 
-        type="text" 
+      <textarea 
         placeholder="キャプション..." 
         value={node.attrs.caption || ''} 
-        onChange={(e) => updateAttributes({ caption: e.target.value })} 
-        className="w-full mt-3 text-center text-sm font-bold text-slate-400 bg-transparent outline-none" 
+        onChange={(e) => {
+          updateAttributes({ caption: e.target.value });
+          e.target.style.height = 'auto';
+          e.target.style.height = e.target.scrollHeight + 'px';
+        }} 
+        rows={1}
+        className="w-full mt-3 text-center text-sm font-bold text-slate-400 bg-transparent outline-none resize-none overflow-hidden leading-relaxed block max-w-2xl mx-auto" 
       />
     </NodeViewWrapper>
   );
@@ -81,7 +86,7 @@ const CustomResizableImage = ImageExtension.extend({
       },
       caption: { 
         default: '', 
-        parseHTML: element => element.getAttribute('data-caption') || element.querySelector('img')?.getAttribute('data-caption'),
+        parseHTML: element => element.getAttribute('data-caption') || '',
         renderHTML: attr => ({ 'data-caption': attr.caption }) 
       },
     };
@@ -90,9 +95,16 @@ const CustomResizableImage = ImageExtension.extend({
   renderHTML({ HTMLAttributes }) {
     return [
       'div', 
-      { class: 'resizable-image-container' }, 
+      { class: 'resizable-image-container', 'data-caption': HTMLAttributes['data-caption'] }, 
       ['img', { ...HTMLAttributes, class: 'mx-auto' }], 
       ['span', { class: 'image-caption-text' }, HTMLAttributes['data-caption'] || '']
+    ];
+  },
+  parseHTML() {
+    return [
+      {
+        tag: 'div.resizable-image-container',
+      },
     ];
   },
 });

@@ -49,15 +49,13 @@ export function LoginForm() {
   useEffect(() => {
     const handleAuthError = (error: any) => {
       setIsLoading(false);
-      let errorMessage = "ログインに失敗しました。";
+      let errorMessage = "パスワードが違います";
       
       const errorCode = error.code || "";
       if (errorCode === 'auth/invalid-credential' || errorCode === 'auth/user-not-found' || errorCode === 'auth/wrong-password' || errorCode === 'auth/invalid-email') {
         errorMessage = "パスワードが違います";
       } else if (errorCode === 'auth/too-many-requests') {
         errorMessage = "何度も失敗したため、一時的にロックされています。";
-      } else {
-        errorMessage = "パスワードが違います";
       }
       
       setServerError(errorMessage);
