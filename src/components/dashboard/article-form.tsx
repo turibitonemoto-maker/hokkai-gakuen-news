@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -44,7 +45,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 /**
  * note風画像コンポーネント (NodeView)
- * 画像とキャプションを一つの物理的なブロックとして管理します。
+ * 画像とキャプションを一つの物理的なブロックとして管理し、重複を防止します。
  */
 const NoteImageComponent = ({ node, updateAttributes, selected, deleteNode }: any) => {
   const { src, alt, width, caption } = node.attrs;
@@ -70,9 +71,7 @@ const NoteImageComponent = ({ node, updateAttributes, selected, deleteNode }: an
         <textarea 
           placeholder="キャプションを入力..." 
           value={caption || ''} 
-          onChange={(e) => {
-            updateAttributes({ caption: e.target.value });
-          }} 
+          onChange={(e) => updateAttributes({ caption: e.target.value })} 
           rows={1}
           className="w-full mt-4 p-4 text-sm font-bold text-slate-500 bg-slate-100/30 outline-none resize-none overflow-hidden leading-relaxed block max-w-2xl mx-auto border-l-4 border-primary/20 rounded-r-xl" 
         />
@@ -89,13 +88,16 @@ const CustomResizableImage = ImageExtension.extend({
       caption: { default: '' },
     };
   },
+  group: 'block',
+  atom: true, // 重要：子ノードを許可せず、一つの塊として扱う
   addNodeView() { return ReactNodeViewRenderer(NoteImageComponent); },
   renderHTML({ HTMLAttributes }) {
+    const { caption, ...imgAttrs } = HTMLAttributes;
     return [
       'figure', 
-      { class: 'resizable-image-container', 'data-caption': HTMLAttributes.caption }, 
-      ['img', { ...HTMLAttributes, class: 'mx-auto' }], 
-      ['figcaption', { class: 'image-caption-text' }, HTMLAttributes.caption || '']
+      { class: 'resizable-image-container', 'data-caption': caption }, 
+      ['img', { ...imgAttrs, class: 'mx-auto' }], 
+      ['figcaption', { class: 'image-caption-text' }, caption || '']
     ];
   },
   parseHTML() {
@@ -183,7 +185,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
     if (!file || !file.type.startsWith('image/') || !editor) return;
 
     if (file.size > MAX_FILE_SIZE) {
-      toast({ variant: "destructive", title: "写真のデータが大きすぎます", description: "10MB以下に圧縮してください。" });
+      toast({ variant: "destructive", title: "写真のデータが大きすぎます", description: "圧縮してください。" });
       return;
     }
 
@@ -202,7 +204,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
     if (!file || !file.type.startsWith('image/')) return;
 
     if (file.size > MAX_FILE_SIZE) {
-      toast({ variant: "destructive", title: "写真のデータが大きすぎます", description: "10MB以下に圧縮してください。" });
+      toast({ variant: "destructive", title: "写真のデータが大きすぎます", description: "圧縮してください。" });
       return;
     }
 
@@ -337,7 +339,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
       </main>
 
       <div className="fixed bottom-0 left-0 right-0 bg-white/95 border-t z-50 h-16 flex items-center px-4">
-        <div className="max-w-3xl mx-auto w-full flex items-center gap-2">
+        <div className="max-w-3xl auto w-full flex items-center gap-2">
           <Button variant="ghost" size="icon" className="h-12 w-12 text-white bg-primary rounded-2xl shadow-xl" onClick={() => editorImageInputRef.current?.click()}><Plus className="h-7 w-7" /></Button>
           <Separator orientation="vertical" className="h-8 mx-2" />
           <div className="flex-1 flex gap-1">

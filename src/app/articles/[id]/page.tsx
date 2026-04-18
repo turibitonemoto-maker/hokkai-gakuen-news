@@ -14,8 +14,7 @@ import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import DOMPurify from 'dompurify';
 import { Button } from '@/components/ui/button';
-
-const DEFAULT_IMAGE = "https://picsum.photos/seed/hokkai1/1200/800";
+import { PlaceholderImages } from '@/lib/placeholder-images';
 
 export default function ArticleDetailPage() {
   const { id } = useParams();
@@ -67,7 +66,8 @@ export default function ArticleDetailPage() {
     );
   }
 
-  const imageUrl = article.mainImageUrl && article.mainImageUrl.trim() !== "" ? article.mainImageUrl : DEFAULT_IMAGE;
+  const defaultImage = PlaceholderImages[0].imageUrl;
+  const imageUrl = article.mainImageUrl && article.mainImageUrl.trim() !== "" ? article.mainImageUrl : defaultImage;
   const transform = article.mainImageTransform || { scale: 0, x: 0, y: 0 };
   const reporter = article.authorName || "北海学園大学新聞会";
 

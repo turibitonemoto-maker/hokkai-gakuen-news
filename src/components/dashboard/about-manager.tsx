@@ -152,7 +152,7 @@ export function AboutManager() {
           <CardContent className="p-10 pt-4 space-y-6">
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">PASSCODE</label>
-              <Input type="password" placeholder="パスワードを入力してください" className="text-center h-14 text-lg font-bold rounded-2xl" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleUnlock()} autoFocus />
+              <Input type="password" placeholder="" className="text-center h-14 text-lg font-bold rounded-2xl" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleUnlock()} autoFocus />
             </div>
             <Button className="w-full h-14 font-black rounded-2xl" onClick={handleUnlock}>認証する</Button>
           </CardContent>
