@@ -44,17 +44,20 @@ import { Separator } from "@/components/ui/separator";
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 /**
- * 報道用画像コンポーネント (note風キャプション)
- * 表示サイトが属性値(data-caption)だけでなく、中身のテキストも拾えるように構造化して出力します。
+ * note風画像コンポーネント
  */
 const NoteImageComponent = ({ node, updateAttributes, selected, deleteNode }: any) => {
   const setWidth = (width: string) => updateAttributes({ width });
-  const currentWidth = node.attrs.width || '60%';
+  const currentWidth = node.attrs.width || '100%';
   
   return (
     <NodeViewWrapper className={cn("resizable-image-container group", selected && "is-selected")}>
-      <div className="relative inline-block mx-auto" style={{ width: currentWidth }}>
-        <img src={node.attrs.src} alt={node.attrs.alt} className="rounded-2xl shadow-lg border-4 border-white" style={{ width: '100%', height: 'auto' }} />
+      <figure className="relative inline-block mx-auto w-full" style={{ maxWidth: currentWidth }}>
+        <img 
+          src={node.attrs.src} 
+          alt={node.attrs.alt} 
+          className="rounded-2xl shadow-lg border-4 border-white w-full h-auto" 
+        />
         {selected && (
           <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-white/90 border rounded-full p-1 shadow-2xl flex items-center gap-1 z-50">
             <button type="button" onClick={() => setWidth('30%')} className={cn("px-3 py-1 rounded-full text-[10px] font-black", currentWidth === '30%' ? "bg-primary text-white" : "hover:bg-slate-100 text-slate-500")}>小</button>
@@ -64,18 +67,18 @@ const NoteImageComponent = ({ node, updateAttributes, selected, deleteNode }: an
             <button type="button" onClick={() => deleteNode()} className="p-1.5 rounded-full hover:bg-red-50 text-red-500"><Trash2 className="h-3.5 w-3.5" /></button>
           </div>
         )}
-      </div>
-      <textarea 
-        placeholder="キャプションを入力..." 
-        value={node.attrs.caption || ''} 
-        onChange={(e) => {
-          updateAttributes({ caption: e.target.value });
-          e.target.style.height = 'auto';
-          e.target.style.height = e.target.scrollHeight + 'px';
-        }} 
-        rows={1}
-        className="w-full mt-4 p-4 text-sm font-bold text-slate-500 bg-slate-100/30 outline-none resize-none overflow-hidden leading-relaxed block max-w-2xl mx-auto border-l-4 border-primary/20 rounded-r-xl" 
-      />
+        <textarea 
+          placeholder="キャプションを入力..." 
+          value={node.attrs.caption || ''} 
+          onChange={(e) => {
+            updateAttributes({ caption: e.target.value });
+            e.target.style.height = 'auto';
+            e.target.style.height = e.target.scrollHeight + 'px';
+          }} 
+          rows={1}
+          className="w-full mt-4 p-4 text-sm font-bold text-slate-500 bg-slate-100/30 outline-none resize-none overflow-hidden leading-relaxed block max-w-2xl mx-auto border-l-4 border-primary/20 rounded-r-xl" 
+        />
+      </figure>
     </NodeViewWrapper>
   );
 };
@@ -85,33 +88,33 @@ const CustomResizableImage = ImageExtension.extend({
     return {
       ...this.parent?.(),
       width: { 
-        default: '60%', 
+        default: '100%', 
         renderHTML: attr => ({ style: `width: ${attr.width}; height: auto;` }) 
       },
       caption: { 
         default: '', 
-        parseHTML: element => element.getAttribute('data-caption') || '',
+        parseHTML: element => element.getAttribute('data-caption') || element.closest('figure')?.querySelector('figcaption')?.innerText || '',
         renderHTML: attr => ({ 'data-caption': attr.caption }) 
       },
     };
   },
   addNodeView() { return ReactNodeViewRenderer(NoteImageComponent); },
   renderHTML({ HTMLAttributes }) {
-    // 表示サイトが「迷わない」ように、属性とテキストの両方で構造化して出力
     return [
-      'div', 
+      'figure', 
       { class: 'resizable-image-container', 'data-caption': HTMLAttributes['data-caption'] }, 
       ['img', { ...HTMLAttributes, class: 'mx-auto' }], 
-      ['span', { class: 'image-caption-text' }, HTMLAttributes['data-caption'] || '']
+      ['figcaption', { class: 'image-caption-text' }, HTMLAttributes['data-caption'] || '']
     ];
   },
   parseHTML() {
     return [
       {
-        tag: 'div.resizable-image-container',
+        tag: 'figure.resizable-image-container',
         getAttrs: element => ({
-          caption: (element as HTMLElement).getAttribute('data-caption') || '',
+          caption: (element as HTMLElement).getAttribute('data-caption') || (element as HTMLElement).querySelector('figcaption')?.innerText || '',
           src: (element as HTMLElement).querySelector('img')?.getAttribute('src') || '',
+          width: (element as HTMLElement).style.width || '100%',
         }),
       },
       { tag: 'img[src]' }
