@@ -45,6 +45,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 /**
  * note風画像コンポーネント
+ * 画像とキャプションを一つの物理的な塊として扱い、テキストの漏れ出しを防止します。
  */
 const NoteImageComponent = ({ node, updateAttributes, selected, deleteNode }: any) => {
   const setWidth = (width: string) => updateAttributes({ width });
@@ -93,7 +94,6 @@ const CustomResizableImage = ImageExtension.extend({
       },
       caption: { 
         default: '', 
-        parseHTML: element => element.getAttribute('data-caption') || element.closest('figure')?.querySelector('figcaption')?.innerText || '',
         renderHTML: attr => ({ 'data-caption': attr.caption }) 
       },
     };
@@ -112,8 +112,8 @@ const CustomResizableImage = ImageExtension.extend({
       {
         tag: 'figure.resizable-image-container',
         getAttrs: element => ({
-          caption: (element as HTMLElement).getAttribute('data-caption') || (element as HTMLElement).querySelector('figcaption')?.innerText || '',
           src: (element as HTMLElement).querySelector('img')?.getAttribute('src') || '',
+          caption: (element as HTMLElement).getAttribute('data-caption') || (element as HTMLElement).querySelector('figcaption')?.innerText || '',
           width: (element as HTMLElement).style.width || '100%',
         }),
       },
