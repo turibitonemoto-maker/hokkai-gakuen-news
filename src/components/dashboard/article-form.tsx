@@ -44,8 +44,8 @@ import { Separator } from "@/components/ui/separator";
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 /**
- * note風画像コンポーネント
- * 画像とキャプションを一つの物理的な塊として扱い、テキストの漏れ出しを防止します。
+ * note風画像コンポーネント (NodeView)
+ * キャプションを属性値(data-caption)として完全にカプセル化し、テキスト漏れを防ぎます。
  */
 const NoteImageComponent = ({ node, updateAttributes, selected, deleteNode }: any) => {
   const setWidth = (width: string) => updateAttributes({ width });
@@ -100,24 +100,28 @@ const CustomResizableImage = ImageExtension.extend({
   },
   addNodeView() { return ReactNodeViewRenderer(NoteImageComponent); },
   renderHTML({ HTMLAttributes }) {
+    // 物理的なHTMLとしてもfigcaptionとして出力。
+    // 表示サイト側はこれを見て描画すれば、属性値をパースする必要がなくなる。
     return [
       'figure', 
-      { class: 'resizable-image-container', 'data-caption': HTMLAttributes['data-caption'] }, 
+      { class: 'resizable-image-container', 'data-caption': HTMLAttributes.caption }, 
       ['img', { ...HTMLAttributes, class: 'mx-auto' }], 
-      ['figcaption', { class: 'image-caption-text' }, HTMLAttributes['data-caption'] || '']
+      ['figcaption', { class: 'image-caption-text' }, HTMLAttributes.caption || '']
     ];
   },
   parseHTML() {
     return [
       {
         tag: 'figure.resizable-image-container',
-        getAttrs: element => ({
-          src: (element as HTMLElement).querySelector('img')?.getAttribute('src') || '',
-          caption: (element as HTMLElement).getAttribute('data-caption') || (element as HTMLElement).querySelector('figcaption')?.innerText || '',
-          width: (element as HTMLElement).style.width || '100%',
-        }),
-      },
-      { tag: 'img[src]' }
+        getAttrs: element => {
+          const el = element as HTMLElement;
+          return {
+            src: el.querySelector('img')?.getAttribute('src') || '',
+            caption: el.getAttribute('data-caption') || el.querySelector('figcaption')?.innerText || '',
+            width: el.style.width || '100%',
+          };
+        },
+      }
     ];
   },
 });
@@ -125,7 +129,6 @@ const CustomResizableImage = ImageExtension.extend({
 const articleSchema = z.object({
   title: z.string().min(1, "タイトルを入力してください"),
   authorName: z.string().optional().or(z.literal("")),
-  articleType: z.literal("Standard"),
   content: z.string().min(1, "本文を入力してください"),
   categoryId: z.enum(["Campus", "Event", "Interview", "Sports", "Column", "Opinion"]),
   publishDate: z.string(),
@@ -154,7 +157,6 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
     defaultValues: {
       title: article?.title || "",
       authorName: article?.authorName || "",
-      articleType: "Standard",
       content: article?.content || "",
       categoryId: (article?.categoryId === "Viewer" ? "Campus" : article?.categoryId) || "Campus",
       publishDate: article?.publishDate || new Date().toISOString().split("T")[0],
@@ -172,9 +174,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
       CustomResizableImage,
       LinkExtension.configure({ 
         openOnClick: false, 
-        HTMLAttributes: { class: 'text-primary font-bold underline' },
-        autolink: true,
-        linkOnPaste: true
+        HTMLAttributes: { class: 'text-primary font-bold underline' }
       }),
       Placeholder.configure({ placeholder: '記事本文を入力してください...' }),
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
@@ -226,10 +226,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
     formData.append("file", file);
     formData.append("folder", folder);
     const res = await fetch("/api/upload", { method: "POST", body: formData });
-    if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.error || "アップロードに失敗しました");
-    }
+    if (!res.ok) throw new Error("アップロードに失敗しました");
     const data = await res.json();
     return data.secure_url;
   }
@@ -247,7 +244,6 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
       const blobRegex = /src="(blob:[^"]+)"/g;
       let match;
       const uploadedMap = new Map<string, string>();
-      
       const blobsInContent: string[] = [];
       while ((match = blobRegex.exec(finalContent)) !== null) {
         blobsInContent.push(match[1]);
@@ -267,6 +263,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
 
       const data = { 
         ...values, 
+        articleType: "Standard",
         content: finalContent, 
         mainImageUrl: finalMainImageUrl, 
         updatedAt: serverTimestamp(), 
@@ -279,7 +276,6 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
       toast({ title: "保存しました" });
       onSuccess();
     } catch (error: any) {
-      console.error("Save Error:", error);
       toast({ variant: "destructive", title: "失敗", description: error.message });
     } finally {
       setIsSaving(false);
@@ -291,10 +287,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
     const previousUrl = editor.getAttributes('link').href;
     const url = window.prompt('URLを入力してください', previousUrl);
     if (url === null) return;
-    if (url === '') {
-      editor.chain().focus().extendMarkRange('link').unsetLink().run();
-      return;
-    }
+    if (url === '') { editor.chain().focus().extendMarkRange('link').unsetLink().run(); return; }
     let finalUrl = url;
     if (url && !url.startsWith('http://') && !url.startsWith('https://')) finalUrl = `https://${url}`;
     editor.chain().focus().extendMarkRange('link').setLink({ href: finalUrl, target: '_blank' }).run();
@@ -320,7 +313,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
                     <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest">カテゴリー</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-12 rounded-xl font-bold"><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="Campus">キャンパス</SelectItem><SelectItem value="Event">イベント</SelectItem><SelectItem value="Interview">インタビュー</SelectItem><SelectItem value="Sports">スポーツ</SelectItem><SelectItem value="Column">コラム</SelectItem><SelectItem value="Opinion">オピニオン</SelectItem></SelectContent></Select></FormItem>
                   )} />
                   <FormField control={form.control} name="authorName" render={({ field }) => (
-                    <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest">記者名</FormLabel><FormControl><div className="relative"><UserPen className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"/><Input placeholder="執筆者名" className="pl-10 h-12 rounded-xl font-bold" {...field} /></div></FormControl></FormItem>
+                    <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest">記者名</FormLabel><FormControl><div className="relative"><UserPen className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"/><Input placeholder="執筆記者名" className="pl-10 h-12 rounded-xl font-bold" {...field} /></div></FormControl></FormItem>
                   )} />
                   <FormField control={form.control} name="publishDate" render={({ field }) => (
                     <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest">公開日</FormLabel><FormControl><Input type="date" className="h-12 rounded-xl font-bold" {...field} /></FormControl></FormItem>
@@ -339,22 +332,20 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
       <main className="flex-1 overflow-y-auto pb-40">
         <div className="max-w-3xl mx-auto px-6 pt-12">
           {mainImagePreview && (
-            <div className="space-y-4 mb-12">
-              <div className="relative aspect-[21/9] w-full rounded-3xl overflow-hidden border-4 border-white shadow-2xl bg-slate-50">
-                <Image src={mainImagePreview} alt="" fill className="object-cover" style={{ transform: `translate(${transform.x}%, ${transform.y}%) scale(${Math.max(0.01, 1 + transform.scale / 100)})` }} unoptimized />
-                <div className="absolute top-4 right-4 flex gap-2">
-                  <Popover><PopoverTrigger asChild><Button variant="secondary" size="icon" className="rounded-full shadow-lg"><Maximize className="h-4 w-4" /></Button></PopoverTrigger><PopoverContent className="w-80 p-6 rounded-3xl"><h4 className="text-[10px] font-black uppercase mb-4">調整</h4><div className="space-y-4"><div><label className="text-[9px] font-bold">ズーム</label><Slider min={-500} max={500} step={1} value={[transform.scale]} onValueChange={([v]) => form.setValue("mainImageTransform.scale", v)} /></div><div><label className="text-[9px] font-bold">水平</label><Slider min={-500} max={500} step={1} value={[transform.x]} onValueChange={([v]) => form.setValue("mainImageTransform.x", v)} /></div><div><label className="text-[9px] font-bold">垂直</label><Slider min={-500} max={500} step={1} value={[transform.y]} onValueChange={([v]) => form.setValue("mainImageTransform.y", v)} /></div><Button variant="ghost" className="w-full text-[10px]" onClick={() => form.setValue("mainImageTransform", { scale: 0, x: 0, y: 0 })}>リセット</Button></div></PopoverContent></Popover>
-                  <Button variant="destructive" size="icon" className="rounded-full" onClick={() => { setMainImagePreview(""); setMainImageFile(null); form.setValue("mainImageUrl", ""); }}><Trash2 className="h-4 w-4" /></Button>
-                </div>
+            <div className="relative aspect-[21/9] w-full rounded-3xl overflow-hidden border-4 border-white shadow-2xl bg-slate-50 mb-12">
+              <Image src={mainImagePreview} alt="" fill className="object-cover" style={{ transform: `translate(${transform.x}%, ${transform.y}%) scale(${Math.max(0.01, 1 + transform.scale / 100)})` }} unoptimized />
+              <div className="absolute top-4 right-4 flex gap-2">
+                <Popover><PopoverTrigger asChild><Button variant="secondary" size="icon" className="rounded-full shadow-lg"><Maximize className="h-4 w-4" /></Button></PopoverTrigger><PopoverContent className="w-80 p-6 rounded-3xl"><h4 className="text-[10px] font-black uppercase mb-4">調整</h4><div className="space-y-4"><div><label className="text-[9px] font-bold">ズーム</label><Slider min={-500} max={500} step={1} value={[transform.scale]} onValueChange={([v]) => form.setValue("mainImageTransform.scale", v)} /></div><div><label className="text-[9px] font-bold">水平</label><Slider min={-500} max={500} step={1} value={[transform.x]} onValueChange={([v]) => form.setValue("mainImageTransform.x", v)} /></div><div><label className="text-[9px] font-bold">垂直</label><Slider min={-500} max={500} step={1} value={[transform.y]} onValueChange={([v]) => form.setValue("mainImageTransform.y", v)} /></div><Button variant="ghost" className="w-full text-[10px]" onClick={() => form.setValue("mainImageTransform", { scale: 0, x: 0, y: 0 })}>リセット</Button></div></PopoverContent></Popover>
+                <Button variant="destructive" size="icon" className="rounded-full" onClick={() => { setMainImagePreview(""); setMainImageFile(null); form.setValue("mainImageUrl", ""); }}><Trash2 className="h-4 w-4" /></Button>
               </div>
             </div>
           )}
           <textarea className="w-full text-4xl md:text-5xl font-black border-none focus:ring-0 resize-none px-0 leading-tight placeholder:text-slate-200 bg-transparent outline-none" placeholder="記事タイトル" rows={1} value={form.watch("title")} onChange={(e: any) => { form.setValue("title", e.target.value); e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }} />
-          <div className="mt-8">{editor && <div className="prose-container relative"><EditorContent editor={editor} /></div>}</div>
+          <div className="mt-12">{editor && <div className="prose-container"><EditorContent editor={editor} /></div>}</div>
         </div>
       </main>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-white/95 border-t z-50 h-16 flex items-center px-4 gap-2">
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 border-t z-50 h-16 flex items-center px-4">
         <div className="max-w-3xl mx-auto w-full flex items-center gap-2">
           <Button variant="ghost" size="icon" className="h-12 w-12 text-white bg-primary rounded-2xl shadow-xl" onClick={() => editorImageInputRef.current?.click()}><Plus className="h-7 w-7" /></Button>
           <Separator orientation="vertical" className="h-8 mx-2" />

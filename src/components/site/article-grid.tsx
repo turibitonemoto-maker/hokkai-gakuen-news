@@ -81,7 +81,7 @@ function ArticleCard({ article }: { article: any }) {
           </div>
           <div className="flex items-center gap-1.5 text-[9px] font-black text-primary uppercase tracking-tight">
             <UserPen className="h-3 w-3" />
-            {reporter}
+            記者: {reporter}
           </div>
         </div>
         

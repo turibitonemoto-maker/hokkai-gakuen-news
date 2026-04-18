@@ -49,7 +49,7 @@ export function LoginForm() {
   useEffect(() => {
     const handleAuthError = (error: any) => {
       setIsLoading(false);
-      let errorMessage = "パスワードが違います";
+      let errorMessage = "ログインに失敗しました";
       
       const errorCode = error.code || "";
       if (errorCode === 'auth/invalid-credential' || errorCode === 'auth/user-not-found' || errorCode === 'auth/wrong-password' || errorCode === 'auth/invalid-email') {
@@ -75,7 +75,7 @@ export function LoginForm() {
     <Card className="w-full max-w-md shadow-2xl border-none bg-white rounded-[3rem] overflow-hidden font-body">
       <CardHeader className="space-y-1 pb-6 text-center pt-12">
         <div className="flex justify-center mb-8">
-          <div className="bg-white p-2 rounded-[2rem] shadow-xl border-4 border-slate-50 overflow-hidden transform hover:scale-105 transition-transform">
+          <div className="bg-white p-2 rounded-[2rem] shadow-xl border-4 border-slate-50 overflow-hidden">
             <Image 
               src="/icon.png" 
               alt="北海学園大学新聞" 
@@ -146,14 +146,11 @@ export function LoginForm() {
 
             <Button
               type="submit"
-              className="w-full h-14 bg-primary hover:bg-primary/90 text-white font-black text-lg rounded-[1.25rem] shadow-lg shadow-primary/20 transition-all active:scale-95"
+              className="w-full h-14 bg-primary hover:bg-primary/90 text-white font-black text-lg rounded-[1.25rem] shadow-lg transition-all"
               disabled={isLoading}
             >
               {isLoading ? (
-                <>
-                  <Loader2 className="mr-3 h-5 w-5 animate-spin" />
-                  認証中
-                </>
+                <><Loader2 className="mr-3 h-5 w-5 animate-spin" />認証中</>
               ) : (
                 "ログイン"
               )}
