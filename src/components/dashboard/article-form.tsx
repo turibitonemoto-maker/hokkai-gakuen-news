@@ -49,16 +49,29 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
  */
 const NoteImageComponent = ({ node, updateAttributes, selected, deleteNode }: any) => {
   const { src, alt, width, caption } = node.attrs;
+  
+  const handleCaptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    updateAttributes({ caption: e.target.value });
+  };
+
   const setWidth = (w: string) => updateAttributes({ width: w });
   
   return (
     <NodeViewWrapper className={cn("resizable-image-container group", selected && "is-selected")}>
       <figure className="relative inline-block mx-auto w-full" style={{ maxWidth: width || '100%' }}>
-        <img 
-          src={src} 
-          alt={alt} 
-          className="rounded-2xl shadow-lg border-4 border-white w-full h-auto block" 
-        />
+        {src ? (
+          <img 
+            src={src} 
+            alt={alt || ''} 
+            className="rounded-2xl shadow-lg border-4 border-white w-full h-auto block" 
+          />
+        ) : (
+          <div className="bg-slate-100 rounded-2xl p-10 flex flex-col items-center justify-center border-4 border-dashed border-slate-200">
+            <LucideImage className="h-10 w-10 text-slate-300 mb-2" />
+            <p className="text-xs font-bold text-slate-400">画像がありません</p>
+          </div>
+        )}
+
         {selected && (
           <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-white/90 border rounded-full p-1 shadow-2xl flex items-center gap-1 z-50">
             <button type="button" onClick={() => setWidth('30%')} className={cn("px-3 py-1 rounded-full text-[10px] font-black", width === '30%' ? "bg-primary text-white" : "hover:bg-slate-100 text-slate-500")}>小</button>
@@ -68,10 +81,11 @@ const NoteImageComponent = ({ node, updateAttributes, selected, deleteNode }: an
             <button type="button" onClick={() => deleteNode()} className="p-1.5 rounded-full hover:bg-red-50 text-red-500"><Trash2 className="h-3.5 w-3.5" /></button>
           </div>
         )}
+        
         <textarea 
           placeholder="キャプションを入力..." 
           value={caption || ''} 
-          onChange={(e) => updateAttributes({ caption: e.target.value })} 
+          onChange={handleCaptionChange} 
           rows={1}
           className="w-full mt-4 p-4 text-sm font-bold text-slate-500 bg-slate-100/30 outline-none resize-none overflow-hidden leading-relaxed block max-w-2xl mx-auto border-l-4 border-primary/20 rounded-r-xl" 
         />
@@ -83,19 +97,27 @@ const NoteImageComponent = ({ node, updateAttributes, selected, deleteNode }: an
 const CustomResizableImage = ImageExtension.extend({
   addAttributes() {
     return {
-      ...this.parent?.(),
+      src: { default: null },
+      alt: { default: null },
       width: { default: '100%' },
       caption: { default: '' },
     };
   },
   group: 'block',
-  atom: true, // 重要：一つの塊として扱う（中身がテキストとして漏れ出すのを防ぐ）
-  addNodeView() { return ReactNodeViewRenderer(NoteImageComponent); },
+  atom: true, // 重要：内部テキストが漏れ出さないよう、全体を一つの原子として扱う
+  draggable: true,
+  addNodeView() {
+    return ReactNodeViewRenderer(NoteImageComponent);
+  },
   renderHTML({ HTMLAttributes }) {
-    const { caption, ...imgAttrs } = HTMLAttributes;
+    const { caption, width, ...imgAttrs } = HTMLAttributes;
     return [
       'figure', 
-      { class: 'resizable-image-container', 'data-caption': caption || '' }, 
+      { 
+        class: 'resizable-image-container', 
+        'data-caption': caption || '',
+        style: `max-width: ${width || '100%'}`
+      }, 
       ['img', mergeAttributes(imgAttrs, { class: 'mx-auto' })], 
       ['figcaption', { class: 'image-caption-text' }, caption || '']
     ];
@@ -111,10 +133,20 @@ const CustomResizableImage = ImageExtension.extend({
             src: img?.getAttribute('src') || '',
             alt: img?.getAttribute('alt') || '',
             caption: el.getAttribute('data-caption') || el.querySelector('figcaption')?.textContent || '',
-            width: el.style.width || '100%',
+            width: el.style.maxWidth || '100%',
           };
         },
-      }
+      },
+      {
+        tag: 'img[src]',
+        getAttrs: element => {
+          const el = element as HTMLElement;
+          return {
+            src: el.getAttribute('src'),
+            alt: el.getAttribute('alt'),
+          };
+        },
+      },
     ];
   },
 });
