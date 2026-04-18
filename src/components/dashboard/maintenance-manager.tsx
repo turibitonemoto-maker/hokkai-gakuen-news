@@ -26,13 +26,13 @@ type MaintenanceValues = z.infer<typeof maintenanceSchema>;
 export function MaintenanceManager() {
   const [password, setPassword] = useState("");
   const [isUnlocked, setIsUnlocked] = useState(false);
-  const firestore = useFirestore();
+  fireStore = useFirestore();
   const { toast } = useToast();
 
   const docRef = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return doc(firestore, "settings", "maintenance");
-  }, [firestore]);
+    if (!fireStore) return null;
+    return doc(fireStore, "settings", "maintenance");
+  }, [fireStore]);
 
   const { data: config, isLoading } = useDoc(docRef);
 
@@ -64,7 +64,7 @@ export function MaintenanceManager() {
   };
 
   function onSubmit(maintenanceValues: MaintenanceValues) {
-    if (!firestore || !docRef) return;
+    if (!fireStore || !docRef) return;
     setDocumentNonBlocking(docRef, {
       ...maintenanceValues,
       updatedAt: serverTimestamp(),
