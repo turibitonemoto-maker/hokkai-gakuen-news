@@ -29,7 +29,7 @@ import {
   UserPen
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useEditor, EditorContent, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react';
+import { useEditor, EditorContent, NodeViewWrapper, ReactNodeViewRenderer, mergeAttributes } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import ImageExtension from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
@@ -41,11 +41,11 @@ import Image from "next/image";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 /**
  * note風画像コンポーネント (NodeView)
- * 画像とキャプションを一つの物理的なブロックとして管理し、重複を防止します。
+ * 画像とキャプションを一つの物理的なブロックとして管理
  */
 const NoteImageComponent = ({ node, updateAttributes, selected, deleteNode }: any) => {
   const { src, alt, width, caption } = node.attrs;
@@ -89,14 +89,14 @@ const CustomResizableImage = ImageExtension.extend({
     };
   },
   group: 'block',
-  atom: true, // 重要：子ノードを許可せず、一つの塊として扱う
+  atom: true, // 重要：一つの塊として扱う（中身がテキストとして漏れ出すのを防ぐ）
   addNodeView() { return ReactNodeViewRenderer(NoteImageComponent); },
   renderHTML({ HTMLAttributes }) {
     const { caption, ...imgAttrs } = HTMLAttributes;
     return [
       'figure', 
-      { class: 'resizable-image-container', 'data-caption': caption }, 
-      ['img', { ...imgAttrs, class: 'mx-auto' }], 
+      { class: 'resizable-image-container', 'data-caption': caption || '' }, 
+      ['img', mergeAttributes(imgAttrs, { class: 'mx-auto' })], 
       ['figcaption', { class: 'image-caption-text' }, caption || '']
     ];
   },
@@ -110,7 +110,7 @@ const CustomResizableImage = ImageExtension.extend({
           return {
             src: img?.getAttribute('src') || '',
             alt: img?.getAttribute('alt') || '',
-            caption: el.querySelector('figcaption')?.textContent || el.getAttribute('data-caption') || '',
+            caption: el.getAttribute('data-caption') || el.querySelector('figcaption')?.textContent || '',
             width: el.style.width || '100%',
           };
         },
