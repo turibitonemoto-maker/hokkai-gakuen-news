@@ -4,9 +4,9 @@
 import { redirect } from 'next/navigation';
 
 /**
- * 公開ページは無効化されました。
+ * 公開サイトは無効化されました。管理画面へ強制誘導します。
  */
-export default function ViewerListPage() {
+export default function ViewerPage() {
   redirect('/admin');
   return null;
 }

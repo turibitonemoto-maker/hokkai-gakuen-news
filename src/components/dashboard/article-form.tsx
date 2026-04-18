@@ -45,7 +45,6 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 /**
  * note風画像コンポーネント (NodeView)
- * 画像とキャプションを一つの物理的なブロックとして管理
  */
 const NoteImageComponent = ({ node, updateAttributes, selected, deleteNode }: any) => {
   const { src, alt, width, caption } = node.attrs;
@@ -68,7 +67,7 @@ const NoteImageComponent = ({ node, updateAttributes, selected, deleteNode }: an
         ) : (
           <div className="bg-slate-100 rounded-2xl p-10 flex flex-col items-center justify-center border-4 border-dashed border-slate-200">
             <LucideImage className="h-10 w-10 text-slate-300 mb-2" />
-            <p className="text-xs font-bold text-slate-400">画像がありません</p>
+            <p className="text-xs font-bold text-slate-400">画像データ読み込み中...</p>
           </div>
         )}
 
@@ -130,8 +129,8 @@ const CustomResizableImage = ImageExtension.extend({
           const el = element as HTMLElement;
           const img = el.querySelector('img');
           return {
-            src: img?.getAttribute('src') || '',
-            alt: img?.getAttribute('alt') || '',
+            src: img?.getAttribute('src'),
+            alt: img?.getAttribute('alt'),
             caption: el.getAttribute('data-caption') || el.querySelector('figcaption')?.textContent || '',
             width: el.style.maxWidth || '100%',
           };
@@ -139,14 +138,15 @@ const CustomResizableImage = ImageExtension.extend({
       },
       {
         tag: 'img[src]',
-        getAttrs: element => {
+        getAttrs: (element) => {
           const el = element as HTMLElement;
+          if (el.closest('figure.resizable-image-container')) return false;
           return {
             src: el.getAttribute('src'),
             alt: el.getAttribute('alt'),
-          };
-        },
-      },
+          }
+        }
+      }
     ];
   },
 });

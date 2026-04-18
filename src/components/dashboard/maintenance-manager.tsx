@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useDoc, useFirestore, useMemoFirebase } from "@/firebase";
@@ -54,8 +55,7 @@ export function MaintenanceManager() {
   }, [config, form]);
 
   const handleUnlock = () => {
-    const correctPassword = "zansin";
-    if (password === correctPassword) {
+    if (password === "zansin") {
       setIsUnlocked(true);
       toast({ title: "認証成功" });
     } else {
@@ -86,7 +86,7 @@ export function MaintenanceManager() {
           <CardContent className="p-10 pt-4 space-y-6">
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">PASSCODE</label>
-              <Input type="password" placeholder="パスワードを入力してください" className="text-center h-14 text-lg font-bold rounded-2xl" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleUnlock()} autoFocus />
+              <Input type="password" placeholder="" className="text-center h-14 text-lg font-bold rounded-2xl" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleUnlock()} autoFocus />
             </div>
             <Button className="w-full h-14 font-black rounded-2xl" onClick={handleUnlock}>認証する</Button>
           </CardContent>
@@ -97,47 +97,21 @@ export function MaintenanceManager() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-700 font-body">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-3xl font-black text-slate-800 tracking-tight">システム設定</h2>
-        </div>
-      </div>
-
-      <Card className="shadow-sm border-slate-200 overflow-hidden rounded-3xl bg-white">
+      <h2 className="text-3xl font-black text-slate-800 tracking-tight">システム設定</h2>
+      <Card className="shadow-sm border-slate-200 rounded-3xl bg-white overflow-hidden">
         <CardContent className="p-8 md:p-12">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
-              <FormField
-                control={form.control}
-                name="isMaintenanceMode"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-3xl border border-slate-100 p-8 bg-slate-50/30">
-                    <div className="space-y-1.5">
-                      <FormLabel className="text-lg font-black text-slate-800">メンテナンスモード</FormLabel>
-                      <FormDescription className="text-sm font-medium text-slate-500">
-                        有効にすると一般公開が一時的に停止されます。
-                      </FormDescription>
-                    </div>
-                    <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} className="scale-125 data-[state=checked]:bg-destructive" /></FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="maintenanceMessage"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="font-black text-slate-700 text-sm uppercase tracking-widest">停止中に表示するメッセージ</FormLabel>
-                    <FormControl><Textarea className="min-h-[120px] rounded-2xl p-4 font-medium" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div className="flex justify-end pt-8 border-t border-slate-100">
-                <Button type="submit" className="font-black px-10 h-12 shadow-lg rounded-xl transition-transform">
-                  <Save className="h-5 w-5 mr-3" /> 設定を保存する
-                </Button>
-              </div>
+              <FormField control={form.control} name="isMaintenanceMode" render={({ field }) => (
+                <FormItem className="flex items-center justify-between rounded-3xl border p-8 bg-slate-50/30">
+                  <div><FormLabel className="text-lg font-black">メンテナンスモード</FormLabel><FormDescription>有効にすると一般公開が停止されます。</FormDescription></div>
+                  <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} className="scale-125 data-[state=checked]:bg-destructive" /></FormControl>
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="maintenanceMessage" render={({ field }) => (
+                <FormItem><FormLabel className="font-black text-sm uppercase tracking-widest">表示メッセージ</FormLabel><FormControl><Textarea className="min-h-[120px] rounded-2xl" {...field} /></FormControl><FormMessage /></FormItem>
+              )} />
+              <div className="flex justify-end pt-8 border-t"><Button type="submit" className="font-black px-10 h-12 rounded-xl"><Save className="h-5 w-5 mr-3" /> 設定を保存する</Button></div>
             </form>
           </Form>
         </CardContent>
