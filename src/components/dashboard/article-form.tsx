@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -42,6 +43,10 @@ import { Separator } from "@/components/ui/separator";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
+/**
+ * 報道用画像コンポーネント (note風キャプション)
+ * 表示サイトが属性値(data-caption)だけでなく、中身のテキストも拾えるように構造化して出力します。
+ */
 const NoteImageComponent = ({ node, updateAttributes, selected, deleteNode }: any) => {
   const setWidth = (width: string) => updateAttributes({ width });
   const currentWidth = node.attrs.width || '60%';
@@ -92,6 +97,7 @@ const CustomResizableImage = ImageExtension.extend({
   },
   addNodeView() { return ReactNodeViewRenderer(NoteImageComponent); },
   renderHTML({ HTMLAttributes }) {
+    // 表示サイトが「迷わない」ように、属性とテキストの両方で構造化して出力
     return [
       'div', 
       { class: 'resizable-image-container', 'data-caption': HTMLAttributes['data-caption'] }, 
@@ -108,9 +114,7 @@ const CustomResizableImage = ImageExtension.extend({
           src: (element as HTMLElement).querySelector('img')?.getAttribute('src') || '',
         }),
       },
-      {
-        tag: 'img[src]',
-      }
+      { tag: 'img[src]' }
     ];
   },
 });

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -39,13 +40,13 @@ function SidebarContent({
   pathname, 
   isSidebarOpen, 
   isMobile, 
-  onLogout, 
+  handleLogout, 
   onCloseMobile 
 }: { 
   pathname: string; 
   isSidebarOpen: boolean; 
   isMobile: boolean; 
-  onLogout: () => void;
+  handleLogout: () => void;
   onCloseMobile?: () => void;
 }) {
   return (
@@ -93,7 +94,7 @@ function SidebarContent({
         <Button 
           variant="ghost" 
           className="w-full text-slate-400 hover:text-white hover:bg-slate-800 justify-start gap-3 px-3 rounded-xl h-12"
-          onClick={onLogout}
+          onClick={handleLogout}
         >
           <LogOut className="h-5 w-5" />
           {(isSidebarOpen || isMobile) && <span className="text-sm font-bold">ログアウト</span>}
@@ -153,7 +154,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <SidebarContent 
             pathname={pathname} 
             isSidebarOpen={isSidebarOpen} 
-            onLogout={handleLogoutAction} 
+            handleLogout={handleLogoutAction} 
             isMobile={false} 
           />
         </aside>
@@ -172,7 +173,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               pathname={pathname} 
               isSidebarOpen={true} 
               isMobile={true} 
-              onLogout={handleLogoutAction} 
+              handleLogout={handleLogoutAction} 
               onCloseMobile={() => setIsMobileMenuOpen(false)} 
             />
           </SheetContent>

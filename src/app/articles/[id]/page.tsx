@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
@@ -14,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import DOMPurify from 'dompurify';
 import { Button } from '@/components/ui/button';
 
+// 最高司令官提供のキャンパス風景をデフォルトに設定
 const DEFAULT_IMAGE = "https://picsum.photos/seed/hokkai1/1200/800";
 
 export default function ArticleDetailPage() {
@@ -31,6 +33,7 @@ export default function ArticleDetailPage() {
 
   useEffect(() => {
     if (article?.content) {
+      // 報道用キャプション(span.image-caption-text)を許可リストに追加
       setSanitizedContent(DOMPurify.sanitize(article.content, {
         ADD_TAGS: ['a', 'strong', 'em', 'u', 'br', 'p', 'h1', 'h2', 'ul', 'ol', 'li', 'blockquote', 'div', 'img', 'span'],
         ADD_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'class', 'style', 'data-caption', 'width']
