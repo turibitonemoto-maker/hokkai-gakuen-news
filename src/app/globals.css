@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -26,12 +25,6 @@
     --ring: 210 60% 35%;
     --radius: 1.25rem;
   }
-
-  .dark {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
-    --primary: 210 50% 50%;
-  }
 }
 
 @layer base {
@@ -52,7 +45,6 @@
   @apply mb-4 leading-normal; 
 }
 
-/* Placeholder Extension Styling */
 .ProseMirror p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
   @apply text-slate-200 float-left pointer-events-none h-0 font-bold text-xl;
@@ -78,7 +70,7 @@
   @apply border-l-4 border-primary/20 pl-6 italic text-slate-500 my-6;
 }
 
-/* 本文内画像コンテナ ＆ 報道キャプション装飾 */
+/* 本文内画像コンテナ ＆ note風キャプション装飾 */
 .resizable-image-container {
   @apply relative inline-block my-10 max-w-full text-center;
   display: block;
@@ -96,9 +88,8 @@
   @apply ring-4 ring-primary/50 shadow-2xl;
 }
 
-/* 報道用キャプション・スタイル（Deneb準拠） */
 .image-caption-text {
-  @apply mt-4 p-4 text-sm font-bold text-slate-500 text-left block max-w-2xl mx-auto break-words whitespace-pre-wrap leading-relaxed border-l-4 border-primary/30 bg-slate-100/50 rounded-r-xl;
+  @apply mt-4 p-4 text-sm font-bold text-slate-500 text-left block max-w-2xl mx-auto break-words whitespace-pre-wrap leading-relaxed border-l-4 border-primary/20 bg-slate-100/30 rounded-r-xl;
 }
 
 .page-fade-in {

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
@@ -98,15 +97,6 @@ export default function ArticleDetailPage() {
                   priority
                 />
               </div>
-
-              {/* 報道用キャプション直通回路 (mainImageCaption) */}
-              {article.mainImageCaption && (
-                <div className="px-8 md:px-16 pt-8">
-                  <p className="image-caption-text">
-                    {article.mainImageCaption}
-                  </p>
-                </div>
-              )}
 
               <div className="p-8 md:p-16">
                 <div className="flex flex-wrap items-center gap-6 mb-8">
