@@ -26,7 +26,7 @@ type MaintenanceValues = z.infer<typeof maintenanceSchema>;
 export function MaintenanceManager() {
   const [password, setPassword] = useState("");
   const [isUnlocked, setIsUnlocked] = useState(false);
-  fireStore = useFirestore();
+  const fireStore = useFirestore();
   const { toast } = useToast();
 
   const docRef = useMemoFirebase(() => {
