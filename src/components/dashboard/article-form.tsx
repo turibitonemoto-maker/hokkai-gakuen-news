@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -45,35 +44,34 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 /**
  * note風画像コンポーネント (NodeView)
+ * 画像とキャプションを一つの物理的なブロックとして管理します。
  */
 const NoteImageComponent = ({ node, updateAttributes, selected, deleteNode }: any) => {
-  const setWidth = (width: string) => updateAttributes({ width });
-  const currentWidth = node.attrs.width || '100%';
+  const { src, alt, width, caption } = node.attrs;
+  const setWidth = (w: string) => updateAttributes({ width: w });
   
   return (
     <NodeViewWrapper className={cn("resizable-image-container group", selected && "is-selected")}>
-      <figure className="relative inline-block mx-auto w-full" style={{ maxWidth: currentWidth }}>
+      <figure className="relative inline-block mx-auto w-full" style={{ maxWidth: width || '100%' }}>
         <img 
-          src={node.attrs.src} 
-          alt={node.attrs.alt} 
+          src={src} 
+          alt={alt} 
           className="rounded-2xl shadow-lg border-4 border-white w-full h-auto block" 
         />
         {selected && (
           <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-white/90 border rounded-full p-1 shadow-2xl flex items-center gap-1 z-50">
-            <button type="button" onClick={() => setWidth('30%')} className={cn("px-3 py-1 rounded-full text-[10px] font-black", currentWidth === '30%' ? "bg-primary text-white" : "hover:bg-slate-100 text-slate-500")}>小</button>
-            <button type="button" onClick={() => setWidth('60%')} className={cn("px-3 py-1 rounded-full text-[10px] font-black", currentWidth === '60%' ? "bg-primary text-white" : "hover:bg-slate-100 text-slate-500")}>中</button>
-            <button type="button" onClick={() => setWidth('100%')} className={cn("px-3 py-1 rounded-full text-[10px] font-black", currentWidth === '100%' ? "bg-primary text-white" : "hover:bg-slate-100 text-slate-500")}>大</button>
+            <button type="button" onClick={() => setWidth('30%')} className={cn("px-3 py-1 rounded-full text-[10px] font-black", width === '30%' ? "bg-primary text-white" : "hover:bg-slate-100 text-slate-500")}>小</button>
+            <button type="button" onClick={() => setWidth('60%')} className={cn("px-3 py-1 rounded-full text-[10px] font-black", width === '60%' ? "bg-primary text-white" : "hover:bg-slate-100 text-slate-500")}>中</button>
+            <button type="button" onClick={() => setWidth('100%')} className={cn("px-3 py-1 rounded-full text-[10px] font-black", width === '100%' ? "bg-primary text-white" : "hover:bg-slate-100 text-slate-500")}>大</button>
             <div className="w-px h-4 bg-slate-200 mx-1" />
             <button type="button" onClick={() => deleteNode()} className="p-1.5 rounded-full hover:bg-red-50 text-red-500"><Trash2 className="h-3.5 w-3.5" /></button>
           </div>
         )}
         <textarea 
           placeholder="キャプションを入力..." 
-          value={node.attrs.caption || ''} 
+          value={caption || ''} 
           onChange={(e) => {
             updateAttributes({ caption: e.target.value });
-            e.target.style.height = 'auto';
-            e.target.style.height = e.target.scrollHeight + 'px';
           }} 
           rows={1}
           className="w-full mt-4 p-4 text-sm font-bold text-slate-500 bg-slate-100/30 outline-none resize-none overflow-hidden leading-relaxed block max-w-2xl mx-auto border-l-4 border-primary/20 rounded-r-xl" 
@@ -106,9 +104,11 @@ const CustomResizableImage = ImageExtension.extend({
         tag: 'figure.resizable-image-container',
         getAttrs: element => {
           const el = element as HTMLElement;
+          const img = el.querySelector('img');
           return {
-            src: el.querySelector('img')?.getAttribute('src') || '',
-            caption: el.getAttribute('data-caption') || '',
+            src: img?.getAttribute('src') || '',
+            alt: img?.getAttribute('alt') || '',
+            caption: el.querySelector('figcaption')?.textContent || el.getAttribute('data-caption') || '',
             width: el.style.width || '100%',
           };
         },
@@ -183,7 +183,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
     if (!file || !file.type.startsWith('image/') || !editor) return;
 
     if (file.size > MAX_FILE_SIZE) {
-      toast({ variant: "destructive", title: "写真のデータが大きすぎます", description: "圧縮してください。" });
+      toast({ variant: "destructive", title: "写真のデータが大きすぎます", description: "10MB以下に圧縮してください。" });
       return;
     }
 
@@ -202,7 +202,7 @@ export function ArticleForm({ article, onSuccess }: { article?: any; onSuccess: 
     if (!file || !file.type.startsWith('image/')) return;
 
     if (file.size > MAX_FILE_SIZE) {
-      toast({ variant: "destructive", title: "写真のデータが大きすぎます", description: "圧縮してください。" });
+      toast({ variant: "destructive", title: "写真のデータが大きすぎます", description: "10MB以下に圧縮してください。" });
       return;
     }
 

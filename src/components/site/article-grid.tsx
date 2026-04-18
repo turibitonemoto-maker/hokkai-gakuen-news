@@ -1,10 +1,10 @@
-
 "use client";
 
 import Link from 'next/link';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, ArrowRight, UserPen } from 'lucide-react';
+import { PlaceholderImages } from '@/lib/placeholder-images';
 
 const CATEGORY_LABELS: Record<string, string> = {
   Campus: "キャンパス",
@@ -15,8 +15,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   Opinion: "オピニオン",
   Viewer: "紙面ビューアー",
 };
-
-const DEFAULT_IMAGE = "https://picsum.photos/seed/hokkai1/1200/800";
 
 function stripHtmlTags(html: string) {
   if (!html) return "";
@@ -45,7 +43,8 @@ export function ArticleGrid({ articles }: { articles: any[] }) {
 }
 
 function ArticleCard({ article }: { article: any }) {
-  const imageUrl = article.mainImageUrl && article.mainImageUrl.trim() !== "" ? article.mainImageUrl : DEFAULT_IMAGE;
+  const defaultImage = PlaceholderImages[0].imageUrl;
+  const imageUrl = article.mainImageUrl && article.mainImageUrl.trim() !== "" ? article.mainImageUrl : defaultImage;
   const textSnippet = stripHtmlTags(article.content || "");
   const transform = article.mainImageTransform || { scale: 0, x: 0, y: 0 };
   const reporter = article.authorName || "北海学園大学新聞会";
