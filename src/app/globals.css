@@ -55,7 +55,6 @@
 
 .resizable-image-container img {
   @apply rounded-2xl shadow-lg border-4 border-white transition-all duration-300 mx-auto;
-  display: block;
 }
 
 .resizable-image-container.is-selected img {

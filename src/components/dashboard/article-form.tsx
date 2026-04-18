@@ -45,7 +45,6 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 /**
  * note風画像コンポーネント (NodeView)
- * キャプションを属性値(data-caption)として完全にカプセル化し、テキスト漏れを防ぎます。
  */
 const NoteImageComponent = ({ node, updateAttributes, selected, deleteNode }: any) => {
   const setWidth = (width: string) => updateAttributes({ width });
@@ -57,7 +56,7 @@ const NoteImageComponent = ({ node, updateAttributes, selected, deleteNode }: an
         <img 
           src={node.attrs.src} 
           alt={node.attrs.alt} 
-          className="rounded-2xl shadow-lg border-4 border-white w-full h-auto" 
+          className="rounded-2xl shadow-lg border-4 border-white w-full h-auto block" 
         />
         {selected && (
           <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-white/90 border rounded-full p-1 shadow-2xl flex items-center gap-1 z-50">
@@ -88,20 +87,12 @@ const CustomResizableImage = ImageExtension.extend({
   addAttributes() {
     return {
       ...this.parent?.(),
-      width: { 
-        default: '100%', 
-        renderHTML: attr => ({ style: `width: ${attr.width}; height: auto;` }) 
-      },
-      caption: { 
-        default: '', 
-        renderHTML: attr => ({ 'data-caption': attr.caption }) 
-      },
+      width: { default: '100%' },
+      caption: { default: '' },
     };
   },
   addNodeView() { return ReactNodeViewRenderer(NoteImageComponent); },
   renderHTML({ HTMLAttributes }) {
-    // 物理的なHTMLとしてもfigcaptionとして出力。
-    // 表示サイト側はこれを見て描画すれば、属性値をパースする必要がなくなる。
     return [
       'figure', 
       { class: 'resizable-image-container', 'data-caption': HTMLAttributes.caption }, 
@@ -117,7 +108,7 @@ const CustomResizableImage = ImageExtension.extend({
           const el = element as HTMLElement;
           return {
             src: el.querySelector('img')?.getAttribute('src') || '',
-            caption: el.getAttribute('data-caption') || el.querySelector('figcaption')?.innerText || '',
+            caption: el.getAttribute('data-caption') || '',
             width: el.style.width || '100%',
           };
         },
