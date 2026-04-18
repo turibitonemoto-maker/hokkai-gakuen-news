@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -29,14 +28,14 @@ function stripHtmlTags(html: string) {
 export function ArticleGrid({ articles }: { articles: any[] }) {
   if (articles.length === 0) {
     return (
-      <div className="bg-white rounded-3xl p-20 text-center border-4 border-dashed border-slate-100">
+      <div className="bg-white rounded-3xl p-20 text-center border-4 border-dashed border-slate-100 font-body">
         <p className="text-slate-400 font-black italic">現在、公開されている記事はありません。</p>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-10 font-body">
       {articles.map((article) => (
         <ArticleCard key={article.id} article={article} />
       ))}

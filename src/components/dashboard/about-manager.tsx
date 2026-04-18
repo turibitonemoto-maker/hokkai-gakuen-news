@@ -141,7 +141,7 @@ export function AboutManager() {
   
   if (!isUnlocked) {
     return (
-      <div className="max-w-md mx-auto mt-20">
+      <div className="max-w-md mx-auto mt-20 font-body">
         <Card className="shadow-2xl border-none bg-white rounded-3xl overflow-hidden">
           <CardHeader className="text-center pt-10 pb-6 bg-slate-50/50">
             <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"><Lock className="h-10 w-10 text-primary" /></div>
@@ -163,7 +163,7 @@ export function AboutManager() {
   if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 pb-20 animate-in fade-in duration-700">
+    <div className="max-w-5xl mx-auto space-y-8 pb-20 animate-in fade-in duration-700 font-body">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex items-center gap-4">
           <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100"><Info className="h-8 w-8 text-primary" /></div>

@@ -149,7 +149,7 @@ export function PresidentMessageManager() {
 
   if (!isUnlocked) {
     return (
-      <div className="max-w-md mx-auto mt-20">
+      <div className="max-w-md mx-auto mt-20 font-body">
         <Card className="shadow-2xl border-none bg-white rounded-3xl overflow-hidden">
           <CardHeader className="text-center pt-10 pb-6 bg-slate-50/50">
             <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"><Lock className="h-10 w-10 text-primary" /></div>
@@ -171,7 +171,7 @@ export function PresidentMessageManager() {
   if (isLoading) return <div className="flex justify-center p-20"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in duration-700 pb-20">
+    <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in duration-700 pb-20 font-body">
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-black text-slate-800 tracking-tight">会長挨拶管理</h2>

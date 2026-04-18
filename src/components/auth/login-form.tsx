@@ -71,7 +71,7 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="w-full max-w-md shadow-2xl border-none bg-white rounded-[3rem] overflow-hidden">
+    <Card className="w-full max-w-md shadow-2xl border-none bg-white rounded-[3rem] overflow-hidden font-body">
       <CardHeader className="space-y-1 pb-6 text-center pt-12">
         <div className="flex justify-center mb-8">
           <div className="bg-white p-2 rounded-[2rem] shadow-xl border-4 border-slate-50 overflow-hidden transform hover:scale-105 transition-transform">

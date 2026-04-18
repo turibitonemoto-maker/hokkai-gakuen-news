@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -249,7 +248,7 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10 max-w-5xl mx-auto pb-20">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10 max-w-5xl mx-auto pb-20 font-body">
         <div className="bg-slate-50/50 p-8 rounded-[2.5rem] border border-slate-100 shadow-sm grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}
@@ -341,7 +340,7 @@ export function PaperForm({ paper, onSuccess }: { paper?: any; onSuccess: () => 
       </form>
 
       <Dialog open={!!previewUrl} onOpenChange={() => setPreviewUrl(null)}>
-        <DialogContent className="max-w-[95vw] h-[90vh] p-0 overflow-hidden bg-slate-900 border-none">
+        <DialogContent className="max-w-[95vw] h-[90vh] p-0 overflow-hidden bg-slate-900 border-none font-body">
           <Button 
             variant="ghost" 
             size="icon" 

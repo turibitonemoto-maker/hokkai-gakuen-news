@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useDoc, useFirestore, useMemoFirebase } from "@/firebase";
@@ -77,7 +76,7 @@ export function MaintenanceManager() {
 
   if (!isUnlocked) {
     return (
-      <div className="max-w-md mx-auto mt-20">
+      <div className="max-w-md mx-auto mt-20 font-body">
         <Card className="shadow-2xl border-none bg-white rounded-3xl overflow-hidden">
           <CardHeader className="text-center pt-10 pb-6 bg-slate-50/50">
             <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"><Lock className="h-10 w-10 text-primary" /></div>
@@ -97,7 +96,7 @@ export function MaintenanceManager() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-700">
+    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-700 font-body">
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-black text-slate-800 tracking-tight">システム設定</h2>

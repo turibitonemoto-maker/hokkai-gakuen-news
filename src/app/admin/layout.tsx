@@ -49,7 +49,7 @@ function SidebarContent({
   onCloseMobile?: () => void;
 }) {
   return (
-    <div className="flex flex-col h-full bg-[#1e293b] text-slate-300">
+    <div className="flex flex-col h-full bg-[#1e293b] text-slate-300 font-body">
       <div className="p-6 flex items-center gap-3 border-b border-slate-700/50">
         <div className="bg-white p-1 rounded-lg shrink-0 shadow-lg">
           <Image 

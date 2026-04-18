@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -118,7 +117,7 @@ export function AdForm({ ad, onSuccess, onCancel }: AdFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 font-body">
         <FormField
           control={form.control}
           name="title"

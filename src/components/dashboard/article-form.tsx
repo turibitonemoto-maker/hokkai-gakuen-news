@@ -25,8 +25,7 @@ import {
   AlignCenter,
   Quote,
   Check,
-  UserPen,
-  FileText
+  UserPen
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditor, EditorContent, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react';
